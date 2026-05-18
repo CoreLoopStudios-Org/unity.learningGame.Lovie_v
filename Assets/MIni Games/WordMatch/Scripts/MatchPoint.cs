@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 namespace CoreLoop.WordMatch
 {
+    [RequireComponent(typeof(Image))]
     public class MatchPoint : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
         [SerializeField] private Image dotImage;
@@ -22,7 +23,7 @@ namespace CoreLoop.WordMatch
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            manager.OnMatchPointDown(this);
+            manager.OnMatchPointDown(this, eventData.position);
         }
 
         public void OnDrag(PointerEventData eventData)

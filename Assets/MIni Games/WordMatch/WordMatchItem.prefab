@@ -96,6 +96,7 @@ MonoBehaviour:
   contentText: {fileID: 3094855720379007470}
   audioButton: {fileID: 3995023120595707736}
   matchPoint: {fileID: 9033574318062258291}
+  dotOffset: 80
 --- !u!1 &1152471417684161790
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +131,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 343.5556, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7403745665675495001
@@ -376,6 +377,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4699156400382959844}
   - component: {fileID: 9033574318062258291}
+  - component: {fileID: 1087075851839042098}
+  - component: {fileID: 1180507580831071740}
   m_Layer: 5
   m_Name: MatchPoint
   m_TagString: Untagged
@@ -416,6 +419,44 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoreLoop.WordMatch.MatchPoint
   dotImage: {fileID: 7141704823088824714}
+--- !u!222 &1087075851839042098
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6138285335135708479}
+  m_CullTransparentMesh: 1
+--- !u!114 &1180507580831071740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6138285335135708479}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &6140353506626534724
 GameObject:
   m_ObjectHideFlags: 0

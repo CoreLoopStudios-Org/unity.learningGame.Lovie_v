@@ -14,6 +14,8 @@ namespace CoreLoop.WordMatch
         [SerializeField] private Button audioButton;
         [SerializeField] private MatchPoint matchPoint;
 
+        [SerializeField] private float dotOffset = 20f;
+
         private WordMatchEntry entry;
         private ItemType type;
         private AudioSource audioSource;
@@ -28,12 +30,20 @@ namespace CoreLoop.WordMatch
             this.type = type;
             this.audioSource = audioSource;
 
+            RectTransform dotRect = matchPoint.RectTransform;
+
             if (type == ItemType.Image)
             {
                 contentImage.gameObject.SetActive(true);
                 contentText.gameObject.SetActive(false);
                 audioButton.gameObject.SetActive(false);
                 contentImage.sprite = entry.image;
+
+                // Anchor to Middle Right
+                dotRect.anchorMin = new Vector2(1, 0.5f);
+                dotRect.anchorMax = new Vector2(1, 0.5f);
+                dotRect.pivot = new Vector2(0.5f, 0.5f);
+                dotRect.anchoredPosition = new Vector2(dotOffset, 0);
             }
             else
             {
@@ -44,6 +54,12 @@ namespace CoreLoop.WordMatch
                 
                 audioButton.onClick.RemoveAllListeners();
                 audioButton.onClick.AddListener(PlayAudio);
+
+                // Anchor to Middle Left
+                dotRect.anchorMin = new Vector2(0, 0.5f);
+                dotRect.anchorMax = new Vector2(0, 0.5f);
+                dotRect.pivot = new Vector2(0.5f, 0.5f);
+                dotRect.anchoredPosition = new Vector2(-dotOffset, 0);
             }
 
             matchPoint.Setup(this);
