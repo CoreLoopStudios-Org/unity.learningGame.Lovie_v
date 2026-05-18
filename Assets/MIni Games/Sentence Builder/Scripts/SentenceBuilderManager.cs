@@ -172,13 +172,22 @@ namespace CoreLoop.SentenceBuilder
             // Change parent, layout group will instantly snap it to its final local position
             item.transform.SetParent(targetParent, false);
             
+            // If it's going into a slot, we must explicitly center it
+            if (targetParent != wordPoolContainer)
+            {
+                item.RectTransform.anchoredPosition = Vector2.zero;
+            }
+            
             // Force layout update to determine where it SHOULD be
             Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(targetParent as RectTransform);
             if (targetParent == wordPoolContainer)
-                LayoutRebuilder.ForceRebuildLayoutImmediate(slotContainer as RectTransform);
-            else
+            {
                 LayoutRebuilder.ForceRebuildLayoutImmediate(wordPoolContainer as RectTransform);
+            }
+            else
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(slotContainer as RectTransform);
+            }
 
             Vector3 endPos = item.RectTransform.position;
             
@@ -196,6 +205,10 @@ namespace CoreLoop.SentenceBuilder
 
             // Snap to final just in case
             item.RectTransform.position = endPos;
+            if (targetParent != wordPoolContainer)
+            {
+                item.RectTransform.anchoredPosition = Vector2.zero;
+            }
             item.SetInteractable(true);
             isAnimating = false;
         }
