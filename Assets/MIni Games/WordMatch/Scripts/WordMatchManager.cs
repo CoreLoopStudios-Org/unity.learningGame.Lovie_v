@@ -30,12 +30,13 @@ namespace CoreLoop.WordMatch
 
         private List<WordMatchItem> leftItems = new List<WordMatchItem>();
         private List<WordMatchItem> rightItems = new List<WordMatchItem>();
-        private List<UILineConnector> activeLines = new List<UILineConnector>();
         
         private UILineConnector currentDrawingLine;
         private MatchPoint currentStartPoint;
 
         private Dictionary<MatchPoint, MatchPoint> matches = new Dictionary<MatchPoint, MatchPoint>();
+        // Using a dictionary to easily track which line belongs to which points
+        private Dictionary<MatchPoint, UILineConnector> pointLines = new Dictionary<MatchPoint, UILineConnector>();
 
         private void Start()
         {
@@ -52,7 +53,8 @@ namespace CoreLoop.WordMatch
             foreach (Transform child in lineContainer) Destroy(child.gameObject);
             leftItems.Clear();
             rightItems.Clear();
-            activeLines.Clear();
+            matches.Clear();
+            pointLines.Clear();
 
             // Spawn left column (Images)
             foreach (var entry in currentLevel.entries)
@@ -74,7 +76,7 @@ namespace CoreLoop.WordMatch
 
         public void OnMatchPointDown(MatchPoint point, Vector2 position)
         {
-            // If point already has a match, remove it
+            // If point already has a match, remove it so we can draw a new one
             if (matches.ContainsKey(point))
             {
                 RemoveMatch(point);
@@ -116,7 +118,6 @@ namespace CoreLoop.WordMatch
                 // Finalize line with color feedback
                 currentDrawingLine.UpdateLine(currentStartPoint.RectTransform.position, hitPoint.RectTransform.position);
                 currentDrawingLine.SetColor(feedbackColor);
-                activeLines.Add(currentDrawingLine);
                 
                 // Play feedback sound
                 if (audioSource != null)
@@ -127,6 +128,10 @@ namespace CoreLoop.WordMatch
                 // Store match
                 matches[currentStartPoint] = hitPoint;
                 matches[hitPoint] = currentStartPoint;
+                
+                // Store line reference to make removal robust
+                pointLines[currentStartPoint] = currentDrawingLine;
+                pointLines[hitPoint] = currentDrawingLine;
                 
                 currentStartPoint.SetConnected(true);
                 hitPoint.SetConnected(true);
@@ -141,9 +146,18 @@ namespace CoreLoop.WordMatch
             currentStartPoint = null;
         }
 
-        private void UpdateDrawingLine(Vector2 endPos)
+        private void UpdateDrawingLine(Vector2 screenPos)
         {
-            currentDrawingLine.UpdateLine(currentStartPoint.RectTransform.position, endPos);
+            Canvas canvas = lineContainer.GetComponentInParent<Canvas>();
+            
+            // Correctly convert screen position to a world position compatible with the UI
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(
+                lineContainer as RectTransform, 
+                screenPos, 
+                canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, 
+                out Vector3 worldPos);
+            
+            currentDrawingLine.UpdateLine(currentStartPoint.RectTransform.position, worldPos);
         }
 
         private MatchPoint GetMatchPointUnderPointer(PointerEventData eventData)
@@ -151,8 +165,6 @@ namespace CoreLoop.WordMatch
             var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, results);
             
-            Debug.Log($"Raycast hit {results.Count} objects");
-
             foreach (var result in results)
             {
                 // Ignore the line we are currently drawing so it doesn't block the raycast
@@ -161,19 +173,14 @@ namespace CoreLoop.WordMatch
                     continue;
                 }
 
-                Debug.Log($"Hit object: {result.gameObject.name} at {result.gameObject.transform.position}");
-
                 MatchPoint point = result.gameObject.GetComponent<MatchPoint>();
                 if (point == null) point = result.gameObject.GetComponentInParent<MatchPoint>();
 
                 if (point != null)
                 {
-                    Debug.Log($"Found MatchPoint: {point.gameObject.name} (Owner: {point.OwnerItem.Entry.word})");
                     return point;
                 }
             }
-            
-            Debug.LogWarning("No MatchPoint found under pointer.");
             return null;
         }
 
@@ -181,19 +188,20 @@ namespace CoreLoop.WordMatch
         {
             if (matches.TryGetValue(point, out MatchPoint otherPoint))
             {
-                // Find and destroy the line between these two points
-                UILineConnector lineToRemove = activeLines.FirstOrDefault(l => 
-                    (Vector2.Distance(l.GetComponent<Image>().rectTransform.position, point.RectTransform.position) < 1f ||
-                     Vector2.Distance(l.GetComponent<Image>().rectTransform.position, otherPoint.RectTransform.position) < 1f));
-                
-                if (lineToRemove != null)
+                // Accurately find and destroy the specific line object for these points
+                if (pointLines.TryGetValue(point, out UILineConnector lineToRemove))
                 {
-                    activeLines.Remove(lineToRemove);
-                    Destroy(lineToRemove.gameObject);
+                    if (lineToRemove != null)
+                    {
+                        Destroy(lineToRemove.gameObject);
+                    }
+                    pointLines.Remove(point);
+                    pointLines.Remove(otherPoint);
                 }
 
                 matches.Remove(point);
                 matches.Remove(otherPoint);
+                
                 point.SetConnected(false);
                 otherPoint.SetConnected(false);
             }
