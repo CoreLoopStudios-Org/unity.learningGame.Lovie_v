@@ -165,50 +165,51 @@ namespace CoreLoop.SentenceBuilder
         {
             isAnimating = true;
             item.SetInteractable(false);
-            
-            // Save the starting world position
+
             Vector3 startPos = item.RectTransform.position;
-            
-            // Change parent, layout group will instantly snap it to its final local position
+
             item.transform.SetParent(targetParent, false);
-            
-            // If it's going into a slot, we must explicitly center it
+
+            // Force anchors + pivot to center so anchoredPosition zero = perfectly centered in slot
             if (targetParent != wordPoolContainer)
             {
+                item.RectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                item.RectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                item.RectTransform.pivot    = new Vector2(0.5f, 0.5f);
                 item.RectTransform.anchoredPosition = Vector2.zero;
             }
-            
-            // Force layout update to determine where it SHOULD be
+
             Canvas.ForceUpdateCanvases();
-            if (targetParent == wordPoolContainer)
-            {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(wordPoolContainer as RectTransform);
-            }
-            else
-            {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(slotContainer as RectTransform);
-            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(wordPoolContainer as RectTransform);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(slotContainer as RectTransform);
 
             Vector3 endPos = item.RectTransform.position;
-            
-            // Move it back to where it was visually
+
+            // Disable layout groups so they don't fight the manual lerp
+            LayoutGroup poolLayout = wordPoolContainer.GetComponent<LayoutGroup>();
+            LayoutGroup slotLayout = slotContainer.GetComponent<LayoutGroup>();
+            if (poolLayout != null) poolLayout.enabled = false;
+            if (slotLayout != null) slotLayout.enabled = false;
+
             item.RectTransform.position = startPos;
 
-            // Interpolate position over time
             float elapsed = 0;
             while (elapsed < animationDuration)
             {
                 elapsed += Time.deltaTime;
-                item.RectTransform.position = Vector3.Lerp(startPos, endPos, elapsed / animationDuration);
+                float t = elapsed / animationDuration;
+                t = t * t * (3f - 2f * t); // smoothstep
+                item.RectTransform.position = Vector3.Lerp(startPos, endPos, t);
                 yield return null;
             }
 
-            // Snap to final just in case
             item.RectTransform.position = endPos;
             if (targetParent != wordPoolContainer)
-            {
                 item.RectTransform.anchoredPosition = Vector2.zero;
-            }
+
+            if (poolLayout != null) poolLayout.enabled = true;
+            if (slotLayout != null) slotLayout.enabled = true;
+
             item.SetInteractable(true);
             isAnimating = false;
         }
