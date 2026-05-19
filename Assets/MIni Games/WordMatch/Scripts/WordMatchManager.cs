@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.EventSystems;
@@ -10,44 +12,55 @@ namespace CoreLoop.WordMatch
     {
         [Header("Data")]
         [SerializeField] private WordMatchLevelSO currentLevel;
-        
+
         [Header("Prefabs")]
-        [SerializeField] private WordMatchItem itemPrefab;
+        [SerializeField] private WordMatchItem imageCardPrefab;
+        [SerializeField] private WordMatchItem textCardPrefab;
         [SerializeField] private UILineConnector linePrefab;
 
         [Header("Layout")]
         [SerializeField] private Transform leftColumn;
         [SerializeField] private Transform rightColumn;
         [SerializeField] private Transform lineContainer;
+        [SerializeField] private CanvasGroup columnsCanvasGroup;
+
+        [Header("UI")]
+        [SerializeField] private TextMeshProUGUI roundText;
 
         [Header("Settings")]
         [SerializeField] private Color lineColor = Color.white;
         [SerializeField] private Color correctColor = Color.green;
         [SerializeField] private Color incorrectColor = Color.red;
+        [SerializeField] private float fadeDuration = 0.4f;
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioClip successSound;
         [SerializeField] private AudioClip errorSound;
 
         private List<WordMatchItem> leftItems = new List<WordMatchItem>();
         private List<WordMatchItem> rightItems = new List<WordMatchItem>();
-        
+
         private UILineConnector currentDrawingLine;
         private MatchPoint currentStartPoint;
 
         private Dictionary<MatchPoint, MatchPoint> matches = new Dictionary<MatchPoint, MatchPoint>();
-        // Using a dictionary to easily track which line belongs to which points
         private Dictionary<MatchPoint, UILineConnector> pointLines = new Dictionary<MatchPoint, UILineConnector>();
+
+        private int currentRoundIndex = 0;
+        private bool isTransitioning = false;
 
         private void Start()
         {
-            InitializeLevel();
+            if (columnsCanvasGroup != null) columnsCanvasGroup.alpha = 0f;
+            StartCoroutine(LoadRoundRoutine(0));
         }
 
-        private void InitializeLevel()
+        private IEnumerator LoadRoundRoutine(int roundIndex)
         {
-            if (currentLevel == null) return;
+            if (currentLevel == null || roundIndex >= currentLevel.rounds.Count) yield break;
 
-            // Clear existing
+            currentRoundIndex = roundIndex;
+            var round = currentLevel.rounds[roundIndex];
+
             foreach (Transform child in leftColumn) Destroy(child.gameObject);
             foreach (Transform child in rightColumn) Destroy(child.gameObject);
             foreach (Transform child in lineContainer) Destroy(child.gameObject);
@@ -55,32 +68,92 @@ namespace CoreLoop.WordMatch
             rightItems.Clear();
             matches.Clear();
             pointLines.Clear();
+            currentDrawingLine = null;
+            currentStartPoint = null;
 
-            // Spawn left column (Images)
-            foreach (var entry in currentLevel.entries)
+            foreach (var entry in round.entries)
             {
-                var item = Instantiate(itemPrefab, leftColumn);
-                item.Setup(entry, WordMatchItem.ItemType.Image, audioSource);
+                var item = Instantiate(imageCardPrefab, leftColumn);
+                item.Setup(entry, audioSource);
                 leftItems.Add(item);
             }
 
-            // Spawn right column (Words) - Shuffled
-            var shuffledEntries = currentLevel.entries.OrderBy(a => System.Guid.NewGuid()).ToList();
+            var shuffledEntries = round.entries.OrderBy(_ => System.Guid.NewGuid()).ToList();
             foreach (var entry in shuffledEntries)
             {
-                var item = Instantiate(itemPrefab, rightColumn);
-                item.Setup(entry, WordMatchItem.ItemType.Word, audioSource);
+                var item = Instantiate(textCardPrefab, rightColumn);
+                item.Setup(entry, audioSource);
                 rightItems.Add(item);
             }
+
+            UpdateRoundText();
+            yield return StartCoroutine(FadeColumns(0f, 1f));
+        }
+
+        public void Submit()
+        {
+            if (isTransitioning) return;
+            if (!AllMatchedCorrectly()) return;
+
+            int nextRound = currentRoundIndex + 1;
+            if (nextRound < currentLevel.rounds.Count)
+                StartCoroutine(TransitionToRoundRoutine(nextRound));
+            else
+                StartCoroutine(LevelCompleteRoutine());
+        }
+
+        private bool AllMatchedCorrectly()
+        {
+            foreach (var item in leftItems)
+            {
+                if (!matches.TryGetValue(item.MatchPoint, out MatchPoint other)) return false;
+                if (item.Entry != other.OwnerItem.Entry) return false;
+            }
+            return true;
+        }
+
+        private void UpdateRoundText()
+        {
+            if (roundText != null)
+                roundText.text = $"Round {currentRoundIndex + 1}/{currentLevel.rounds.Count}";
+        }
+
+        private IEnumerator TransitionToRoundRoutine(int nextRoundIndex)
+        {
+            isTransitioning = true;
+            yield return StartCoroutine(FadeColumns(1f, 0f));
+            yield return StartCoroutine(LoadRoundRoutine(nextRoundIndex));
+            isTransitioning = false;
+        }
+
+        private IEnumerator LevelCompleteRoutine()
+        {
+            isTransitioning = true;
+            yield return StartCoroutine(FadeColumns(1f, 0f));
+            Debug.Log("Word Match Level Complete!");
+        }
+
+        private IEnumerator FadeColumns(float from, float to)
+        {
+            if (columnsCanvasGroup == null) yield break;
+
+            columnsCanvasGroup.alpha = from;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                columnsCanvasGroup.alpha = Mathf.Lerp(from, to, elapsed / fadeDuration);
+                yield return null;
+            }
+            columnsCanvasGroup.alpha = to;
         }
 
         public void OnMatchPointDown(MatchPoint point, Vector2 position)
         {
-            // If point already has a match, remove it so we can draw a new one
+            if (isTransitioning) return;
+
             if (matches.ContainsKey(point))
-            {
                 RemoveMatch(point);
-            }
 
             currentStartPoint = point;
             currentDrawingLine = Instantiate(linePrefab, lineContainer);
@@ -91,54 +164,37 @@ namespace CoreLoop.WordMatch
         public void OnMatchPointDrag(Vector2 position)
         {
             if (currentDrawingLine != null)
-            {
                 UpdateDrawingLine(position);
-            }
         }
 
         public void OnMatchPointUp(MatchPoint endPoint, PointerEventData eventData)
         {
             if (currentDrawingLine == null) return;
 
-            // Find if we released over a valid match point
             MatchPoint hitPoint = GetMatchPointUnderPointer(eventData);
 
             if (hitPoint != null && hitPoint != currentStartPoint && hitPoint.OwnerItem.Type != currentStartPoint.OwnerItem.Type)
             {
-                // Remove existing match from hitPoint if any
                 if (matches.ContainsKey(hitPoint))
-                {
                     RemoveMatch(hitPoint);
-                }
 
-                // Check if match is correct
                 bool isCorrect = currentStartPoint.OwnerItem.Entry == hitPoint.OwnerItem.Entry;
-                Color feedbackColor = isCorrect ? correctColor : incorrectColor;
-                
-                // Finalize line with color feedback
                 currentDrawingLine.UpdateLine(currentStartPoint.RectTransform.position, hitPoint.RectTransform.position);
-                currentDrawingLine.SetColor(feedbackColor);
-                
-                // Play feedback sound
+                currentDrawingLine.SetColor(isCorrect ? correctColor : incorrectColor);
+
                 if (audioSource != null)
-                {
                     audioSource.PlayOneShot(isCorrect ? successSound : errorSound);
-                }
-                
-                // Store match
+
                 matches[currentStartPoint] = hitPoint;
                 matches[hitPoint] = currentStartPoint;
-                
-                // Store line reference to make removal robust
                 pointLines[currentStartPoint] = currentDrawingLine;
                 pointLines[hitPoint] = currentDrawingLine;
-                
+
                 currentStartPoint.SetConnected(true);
                 hitPoint.SetConnected(true);
             }
             else
             {
-                // Invalid match, destroy line
                 Destroy(currentDrawingLine.gameObject);
             }
 
@@ -149,14 +205,11 @@ namespace CoreLoop.WordMatch
         private void UpdateDrawingLine(Vector2 screenPos)
         {
             Canvas canvas = lineContainer.GetComponentInParent<Canvas>();
-            
-            // Correctly convert screen position to a world position compatible with the UI
             RectTransformUtility.ScreenPointToWorldPointInRectangle(
-                lineContainer as RectTransform, 
-                screenPos, 
-                canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, 
+                lineContainer as RectTransform,
+                screenPos,
+                canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
                 out Vector3 worldPos);
-            
             currentDrawingLine.UpdateLine(currentStartPoint.RectTransform.position, worldPos);
         }
 
@@ -164,22 +217,17 @@ namespace CoreLoop.WordMatch
         {
             var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, results);
-            
+
             foreach (var result in results)
             {
-                // Ignore the line we are currently drawing so it doesn't block the raycast
-                if (currentDrawingLine != null && (result.gameObject == currentDrawingLine.gameObject || result.gameObject.transform.IsChildOf(currentDrawingLine.transform)))
-                {
+                if (currentDrawingLine != null &&
+                    (result.gameObject == currentDrawingLine.gameObject ||
+                     result.gameObject.transform.IsChildOf(currentDrawingLine.transform)))
                     continue;
-                }
 
                 MatchPoint point = result.gameObject.GetComponent<MatchPoint>();
                 if (point == null) point = result.gameObject.GetComponentInParent<MatchPoint>();
-
-                if (point != null)
-                {
-                    return point;
-                }
+                if (point != null) return point;
             }
             return null;
         }
@@ -188,43 +236,18 @@ namespace CoreLoop.WordMatch
         {
             if (matches.TryGetValue(point, out MatchPoint otherPoint))
             {
-                // Accurately find and destroy the specific line object for these points
                 if (pointLines.TryGetValue(point, out UILineConnector lineToRemove))
                 {
-                    if (lineToRemove != null)
-                    {
-                        Destroy(lineToRemove.gameObject);
-                    }
+                    if (lineToRemove != null) Destroy(lineToRemove.gameObject);
                     pointLines.Remove(point);
                     pointLines.Remove(otherPoint);
                 }
 
                 matches.Remove(point);
                 matches.Remove(otherPoint);
-                
                 point.SetConnected(false);
                 otherPoint.SetConnected(false);
             }
-        }
-
-        public void Submit()
-        {
-            int correctCount = 0;
-            HashSet<WordMatchEntry> processed = new HashSet<WordMatchEntry>();
-
-            foreach (var pair in matches)
-            {
-                if (processed.Contains(pair.Key.OwnerItem.Entry)) continue;
-
-                if (pair.Key.OwnerItem.Entry == pair.Value.OwnerItem.Entry)
-                {
-                    correctCount++;
-                }
-                processed.Add(pair.Key.OwnerItem.Entry);
-                processed.Add(pair.Value.OwnerItem.Entry);
-            }
-
-            Debug.Log($"Results: {correctCount} / {currentLevel.entries.Count} correct!");
         }
     }
 }

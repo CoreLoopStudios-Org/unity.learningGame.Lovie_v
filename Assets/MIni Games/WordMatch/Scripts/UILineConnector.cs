@@ -17,6 +17,10 @@ namespace CoreLoop.WordMatch
             {
                 lineImage.rectTransform.pivot = new Vector2(0, 0.5f);
             }
+
+            Canvas overrideCanvas = gameObject.AddComponent<Canvas>();
+            overrideCanvas.overrideSorting = true;
+            overrideCanvas.sortingOrder = 100;
         }
 
         public void SetColor(Color color)
