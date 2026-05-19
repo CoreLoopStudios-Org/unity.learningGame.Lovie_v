@@ -38,8 +38,8 @@ namespace CoreLoop.WordMatch
         
         public void SetConnected(bool connected)
         {
-            // Optional: change visual state when connected
-            dotImage.color = connected ? Color.green : Color.white;
+            if (dotImage != null)
+                dotImage.color = connected ? Color.green : Color.white;
         }
     }
 }

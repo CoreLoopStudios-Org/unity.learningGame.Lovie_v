@@ -32,6 +32,7 @@ namespace CoreLoop.WordMatch
             if (cardType == CardType.ImageCard)
             {
                 contentImage.sprite = entry.image;
+                contentImage.preserveAspect = true;
             }
             else
             {

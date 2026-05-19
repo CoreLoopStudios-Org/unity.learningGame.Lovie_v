@@ -152,6 +152,13 @@ namespace CoreLoop.WordMatch
         {
             if (isTransitioning) return;
 
+            // Destroy any line left over from an interrupted drag
+            if (currentDrawingLine != null)
+            {
+                Destroy(currentDrawingLine.gameObject);
+                currentDrawingLine = null;
+            }
+
             if (matches.ContainsKey(point))
                 RemoveMatch(point);
 
