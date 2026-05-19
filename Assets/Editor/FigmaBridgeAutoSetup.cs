@@ -3,15 +3,9 @@ using UnityEngine;
 using UnityFigmaBridge.Editor.Settings;
 using System.Threading.Tasks;
 
-[InitializeOnLoad]
 public class FigmaBridgeAutoSetup
 {
     private static bool isTriggered = false;
-
-    static FigmaBridgeAutoSetup()
-    {
-        EditorApplication.delayCall += RunSetup;
-    }
 
     [MenuItem("Figma Bridge/Run Auto Setup")]
     public static void RunSetup()
@@ -61,15 +55,5 @@ public class FigmaBridgeAutoSetup
         }
 
         Debug.Log("[FigmaBridgeAutoSetup] Setup complete. You can now run 'Figma Bridge > Sync Document' or 'Figma Bridge > Run Auto Setup' manually.");
-        
-        // Let's try to trigger sync automatically after a small delay
-        Task.Delay(2000).ContinueWith(t => 
-        {
-            EditorApplication.delayCall += () =>
-            {
-                Debug.Log("[FigmaBridgeAutoSetup] Attempting to trigger sync...");
-                EditorApplication.ExecuteMenuItem("Figma Bridge/Sync Document");
-            };
-        });
     }
 }
