@@ -169,12 +169,6 @@ namespace CoreLoop.SentenceBuilder
         {
             if (activeSlots.Count == 0) return;
 
-            // Guarantee the slot container grows vertically when slots wrap.
-            var csf = slotContainer.GetComponent<ContentSizeFitter>();
-            if (csf == null) csf = slotContainer.gameObject.AddComponent<ContentSizeFitter>();
-            csf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
-            csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-
             foreach (var slot in activeSlots)
                 ApplySlotSize(slot, _defaultSlotW, _defaultSlotH);
 
