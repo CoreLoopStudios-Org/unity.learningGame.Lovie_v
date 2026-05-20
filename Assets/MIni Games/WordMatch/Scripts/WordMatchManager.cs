@@ -27,6 +27,14 @@ namespace CoreLoop.WordMatch
         [Header("UI")]
         [SerializeField] private TextMeshProUGUI roundText;
 
+        [Header("Timer")]
+        [SerializeField] private TextMeshProUGUI timerText;
+        [SerializeField] private float maxTime = 120f;
+        [SerializeField] private CanvasGroup timeUpPopup;
+        [SerializeField] private float timeUpDisplayDuration = 2f;
+        [SerializeField] private Button timeUpRestartButton;
+        [SerializeField] private TextMeshProUGUI timeUpCountdownText;
+
         [Header("Settings")]
         [SerializeField] private Color lineColor = Color.white;
         [SerializeField] private Color correctColor = Color.green;
@@ -45,12 +53,109 @@ namespace CoreLoop.WordMatch
         private Dictionary<MatchPoint, MatchPoint> matches = new Dictionary<MatchPoint, MatchPoint>();
         private Dictionary<MatchPoint, UILineConnector> pointLines = new Dictionary<MatchPoint, UILineConnector>();
 
-        private int currentRoundIndex = 0;
-        private bool isTransitioning = false;
+        private int  currentRoundIndex = 0;
+        private bool isTransitioning   = false;
+
+        private float _timeRemaining;
+        private bool  _timerRunning;
+        private TextMeshProUGUI _timeUpText;
+        private float _timeUpTextOriginalSize;
 
         private void Start()
         {
             if (columnsCanvasGroup != null) columnsCanvasGroup.alpha = 0f;
+
+            _timeRemaining = maxTime;
+            UpdateTimerDisplay();
+            if (timeUpPopup != null)
+            {
+                _timeUpText = timeUpPopup.GetComponentInChildren<TextMeshProUGUI>();
+                if (_timeUpText != null) _timeUpTextOriginalSize = _timeUpText.fontSize;
+                timeUpPopup.alpha = 0f;
+                timeUpPopup.gameObject.SetActive(false);
+            }
+            if (timeUpRestartButton != null)
+                timeUpRestartButton.onClick.AddListener(OnTimeUpRestart);
+
+            StartCoroutine(LoadRoundRoutine(0));
+        }
+
+        private void Update()
+        {
+            if (!_timerRunning) return;
+            _timeRemaining -= Time.deltaTime;
+            UpdateTimerDisplay();
+            if (_timeRemaining <= 0f)
+            {
+                _timeRemaining = 0f;
+                _timerRunning  = false;
+                UpdateTimerDisplay();
+                StartCoroutine(TimeUpRoutine());
+            }
+        }
+
+        private void UpdateTimerDisplay()
+        {
+            if (timerText == null) return;
+            int t = Mathf.Max(0, Mathf.FloorToInt(_timeRemaining));
+            timerText.text = $"{t / 60:00}:{t % 60:00}";
+        }
+
+        private IEnumerator TimeUpRoutine()
+        {
+            isTransitioning = true;
+
+            if (timeUpPopup != null)
+            {
+                timeUpPopup.gameObject.SetActive(true);
+                timeUpPopup.alpha = 0f;
+                if (_timeUpText != null) _timeUpText.fontSize = 0f;
+                float e = 0f;
+                while (e < 0.4f)
+                {
+                    e += Time.deltaTime;
+                    float progress = Mathf.Clamp01(e / 0.4f);
+                    timeUpPopup.alpha = progress;
+                    if (_timeUpText != null)
+                        _timeUpText.fontSize = _timeUpTextOriginalSize * progress;
+                    yield return null;
+                }
+                timeUpPopup.alpha = 1f;
+                if (_timeUpText != null) _timeUpText.fontSize = _timeUpTextOriginalSize;
+            }
+
+            float remaining = timeUpDisplayDuration;
+            while (remaining > 0f)
+            {
+                if (timeUpCountdownText != null)
+                    timeUpCountdownText.text = Mathf.CeilToInt(remaining).ToString();
+                remaining -= Time.deltaTime;
+                yield return null;
+            }
+            if (timeUpCountdownText != null) timeUpCountdownText.text = string.Empty;
+
+            if (timeUpPopup != null)
+            {
+                timeUpPopup.alpha = 0f;
+                timeUpPopup.gameObject.SetActive(false);
+                if (_timeUpText != null) _timeUpText.fontSize = _timeUpTextOriginalSize;
+            }
+
+            isTransitioning = false;
+            yield return StartCoroutine(LoadRoundRoutine(0));
+        }
+
+        private void OnTimeUpRestart()
+        {
+            StopAllCoroutines();
+            if (timeUpPopup != null)
+            {
+                timeUpPopup.alpha = 0f;
+                timeUpPopup.gameObject.SetActive(false);
+            }
+            if (_timeUpText != null) _timeUpText.fontSize = _timeUpTextOriginalSize;
+            if (timeUpCountdownText != null) timeUpCountdownText.text = string.Empty;
+            isTransitioning = false;
             StartCoroutine(LoadRoundRoutine(0));
         }
 
@@ -88,6 +193,13 @@ namespace CoreLoop.WordMatch
 
             UpdateRoundText();
             yield return StartCoroutine(FadeColumns(0f, 1f));
+
+            if (roundIndex == 0)
+            {
+                _timeRemaining = maxTime;
+                UpdateTimerDisplay();
+                _timerRunning = true;
+            }
         }
 
         public void Submit()
@@ -129,6 +241,7 @@ namespace CoreLoop.WordMatch
         private IEnumerator LevelCompleteRoutine()
         {
             isTransitioning = true;
+            _timerRunning   = false;
             yield return StartCoroutine(FadeColumns(1f, 0f));
             Debug.Log("Word Match Level Complete!");
         }

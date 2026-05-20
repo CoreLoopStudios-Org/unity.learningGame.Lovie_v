@@ -37,6 +37,14 @@ namespace CoreLoop.ListenWord
         [SerializeField] private AudioClip errorSound;
         [SerializeField] private AudioClip letterClickSound;
 
+        [Header("Timer")]
+        [SerializeField] private TextMeshProUGUI timerText;
+        [SerializeField] private float maxTime = 120f;
+        [SerializeField] private CanvasGroup timeUpPopup;
+        [SerializeField] private float timeUpDisplayDuration = 2f;
+        [SerializeField] private Button timeUpRestartButton;
+        [SerializeField] private TextMeshProUGUI timeUpCountdownText;
+
         private int currentWordIndex = 0;
         private int remainingHints;
 
@@ -46,12 +54,29 @@ namespace CoreLoop.ListenWord
         private bool isAnimating = false;
         private ListenWordData currentWordData;
 
+        private float _timeRemaining;
+        private bool  _timerRunning;
+        private TextMeshProUGUI _timeUpText;
+        private float _timeUpTextOriginalSize;
+
         // Created automatically at runtime — not an Inspector field.
         private Transform placedLettersContainer;
 
         private void Start()
         {
             placedLettersContainer = CreatePlacedLettersOverlay();
+
+            _timeRemaining = maxTime;
+            UpdateTimerDisplay();
+            if (timeUpPopup != null)
+            {
+                _timeUpText = timeUpPopup.GetComponentInChildren<TextMeshProUGUI>();
+                if (_timeUpText != null) _timeUpTextOriginalSize = _timeUpText.fontSize;
+                timeUpPopup.alpha = 0f;
+                timeUpPopup.gameObject.SetActive(false);
+            }
+            if (timeUpRestartButton != null)
+                timeUpRestartButton.onClick.AddListener(OnTimeUpRestart);
 
             remainingHints = initialHints;
             UpdateHintUI();
@@ -65,6 +90,84 @@ namespace CoreLoop.ListenWord
                 StartCoroutine(LoadWordRoutine(0));
             else
                 Debug.LogWarning("Listen Word: No Level Data assigned or it is empty!");
+        }
+
+        private void Update()
+        {
+            if (!_timerRunning) return;
+            _timeRemaining -= Time.deltaTime;
+            UpdateTimerDisplay();
+            if (_timeRemaining <= 0f)
+            {
+                _timeRemaining = 0f;
+                _timerRunning  = false;
+                UpdateTimerDisplay();
+                StartCoroutine(TimeUpRoutine());
+            }
+        }
+
+        private void UpdateTimerDisplay()
+        {
+            if (timerText == null) return;
+            int t = Mathf.Max(0, Mathf.FloorToInt(_timeRemaining));
+            timerText.text = $"{t / 60:00}:{t % 60:00}";
+        }
+
+        private IEnumerator TimeUpRoutine()
+        {
+            isAnimating = true;
+
+            if (timeUpPopup != null)
+            {
+                timeUpPopup.gameObject.SetActive(true);
+                timeUpPopup.alpha = 0f;
+                if (_timeUpText != null) _timeUpText.fontSize = 0f;
+                float e = 0f;
+                while (e < 0.4f)
+                {
+                    e += Time.deltaTime;
+                    float progress = Mathf.Clamp01(e / 0.4f);
+                    timeUpPopup.alpha = progress;
+                    if (_timeUpText != null)
+                        _timeUpText.fontSize = _timeUpTextOriginalSize * progress;
+                    yield return null;
+                }
+                timeUpPopup.alpha = 1f;
+                if (_timeUpText != null) _timeUpText.fontSize = _timeUpTextOriginalSize;
+            }
+
+            float remaining = timeUpDisplayDuration;
+            while (remaining > 0f)
+            {
+                if (timeUpCountdownText != null)
+                    timeUpCountdownText.text = Mathf.CeilToInt(remaining).ToString();
+                remaining -= Time.deltaTime;
+                yield return null;
+            }
+            if (timeUpCountdownText != null) timeUpCountdownText.text = string.Empty;
+
+            if (timeUpPopup != null)
+            {
+                timeUpPopup.alpha = 0f;
+                timeUpPopup.gameObject.SetActive(false);
+                if (_timeUpText != null) _timeUpText.fontSize = _timeUpTextOriginalSize;
+            }
+
+            yield return StartCoroutine(LoadWordRoutine(0));
+        }
+
+        private void OnTimeUpRestart()
+        {
+            StopAllCoroutines();
+            if (timeUpPopup != null)
+            {
+                timeUpPopup.alpha = 0f;
+                timeUpPopup.gameObject.SetActive(false);
+            }
+            if (_timeUpText != null) _timeUpText.fontSize = _timeUpTextOriginalSize;
+            if (timeUpCountdownText != null) timeUpCountdownText.text = string.Empty;
+            isAnimating = false;
+            StartCoroutine(LoadWordRoutine(0));
         }
 
         // Sibling overlay that sits above the slot container so placed letters
@@ -147,6 +250,13 @@ namespace CoreLoop.ListenWord
 
             if (gameAreaCanvasGroup != null)
                 yield return FadeCanvasGroup(gameAreaCanvasGroup, 0f, 1f, 0.5f);
+
+            if (index == 0)
+            {
+                _timeRemaining = maxTime;
+                UpdateTimerDisplay();
+                _timerRunning = true;
+            }
 
             isAnimating = false;
         }
@@ -340,7 +450,10 @@ namespace CoreLoop.ListenWord
                 if (next < levelData.wordsToSpell.Count)
                     StartCoroutine(LoadWordRoutine(next));
                 else
+                {
+                    _timerRunning = false;
                     Debug.Log("Listen Word Mini-Game Complete!");
+                }
             }
             else
             {
