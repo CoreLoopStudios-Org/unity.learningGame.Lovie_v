@@ -40,6 +40,7 @@ namespace CoreLoop.WordMatch
         [SerializeField] private Color correctColor = Color.green;
         [SerializeField] private Color incorrectColor = Color.red;
         [SerializeField] private float fadeDuration = 0.4f;
+        [SerializeField] private float lineDisplayDuration = 1.5f;
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioClip successSound;
         [SerializeField] private AudioClip errorSound;
@@ -52,6 +53,7 @@ namespace CoreLoop.WordMatch
 
         private Dictionary<MatchPoint, MatchPoint> matches = new Dictionary<MatchPoint, MatchPoint>();
         private Dictionary<MatchPoint, UILineConnector> pointLines = new Dictionary<MatchPoint, UILineConnector>();
+        private Dictionary<UILineConnector, Coroutine> activeLineCoroutines = new Dictionary<UILineConnector, Coroutine>();
 
         private int  currentRoundIndex = 0;
         private bool isTransitioning   = false;
@@ -312,6 +314,14 @@ namespace CoreLoop.WordMatch
 
                 currentStartPoint.SetConnected(true);
                 hitPoint.SetConnected(true);
+
+                if (isCorrect)
+                {
+                    currentStartPoint.OwnerItem.SetMatched(true);
+                    hitPoint.OwnerItem.SetMatched(true);
+                }
+
+                activeLineCoroutines[currentDrawingLine] = StartCoroutine(TemporaryLineRoutine(currentDrawingLine, currentStartPoint, hitPoint));
             }
             else
             {
@@ -320,6 +330,34 @@ namespace CoreLoop.WordMatch
 
             currentDrawingLine = null;
             currentStartPoint = null;
+        }
+
+        private IEnumerator TemporaryLineRoutine(UILineConnector line, MatchPoint p1, MatchPoint p2)
+        {
+            yield return new WaitForSeconds(lineDisplayDuration);
+
+            if (line != null)
+            {
+                CanvasGroup cg = line.GetComponent<CanvasGroup>();
+                if (cg == null) cg = line.gameObject.AddComponent<CanvasGroup>();
+
+                float elapsed = 0f;
+                while (elapsed < 0.5f)
+                {
+                    if (line == null) yield break;
+                    elapsed += Time.deltaTime;
+                    cg.alpha = 1f - (elapsed / 0.5f);
+                    yield return null;
+                }
+                
+                if (line != null)
+                {
+                    activeLineCoroutines.Remove(line);
+                    if (pointLines.ContainsKey(p1) && pointLines[p1] == line) pointLines.Remove(p1);
+                    if (pointLines.ContainsKey(p2) && pointLines[p2] == line) pointLines.Remove(p2);
+                    Destroy(line.gameObject);
+                }
+            }
         }
 
         private void UpdateDrawingLine(Vector2 screenPos)
@@ -358,7 +396,15 @@ namespace CoreLoop.WordMatch
             {
                 if (pointLines.TryGetValue(point, out UILineConnector lineToRemove))
                 {
-                    if (lineToRemove != null) Destroy(lineToRemove.gameObject);
+                    if (lineToRemove != null)
+                    {
+                        if (activeLineCoroutines.TryGetValue(lineToRemove, out Coroutine routine))
+                        {
+                            StopCoroutine(routine);
+                            activeLineCoroutines.Remove(lineToRemove);
+                        }
+                        Destroy(lineToRemove.gameObject);
+                    }
                     pointLines.Remove(point);
                     pointLines.Remove(otherPoint);
                 }
@@ -367,6 +413,8 @@ namespace CoreLoop.WordMatch
                 matches.Remove(otherPoint);
                 point.SetConnected(false);
                 otherPoint.SetConnected(false);
+                point.OwnerItem.SetMatched(false);
+                otherPoint.OwnerItem.SetMatched(false);
             }
         }
     }

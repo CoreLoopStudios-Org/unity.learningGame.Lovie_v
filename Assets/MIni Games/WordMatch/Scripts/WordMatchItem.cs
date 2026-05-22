@@ -16,6 +16,7 @@ namespace CoreLoop.WordMatch
         [SerializeField] private TextMeshProUGUI contentText;
         [SerializeField] private Button audioButton;
         [SerializeField] private MatchPoint matchPoint;
+        [SerializeField] private GameObject matchedHighlight;
 
         private WordMatchEntry entry;
         private AudioSource audioSource;
@@ -28,6 +29,8 @@ namespace CoreLoop.WordMatch
         {
             this.entry = entry;
             this.audioSource = audioSource;
+
+            if (matchedHighlight != null) matchedHighlight.SetActive(false);
 
             if (cardType == CardType.ImageCard)
             {
@@ -42,6 +45,12 @@ namespace CoreLoop.WordMatch
             }
 
             matchPoint.Setup(this);
+        }
+
+        public void SetMatched(bool isMatched)
+        {
+            if (matchedHighlight != null)
+                matchedHighlight.SetActive(isMatched);
         }
 
         private void PlayAudio()
