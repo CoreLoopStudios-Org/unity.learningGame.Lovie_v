@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Admin
+namespace UI
 {
     /// <summary>
     /// Handles hover and click animations for navigation buttons.

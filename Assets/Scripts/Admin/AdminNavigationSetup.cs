@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Admin
+namespace UI
 {
     /// <summary>
     /// Helper component that auto-finds navigation elements based on common naming conventions.
@@ -11,7 +11,7 @@ namespace Admin
     public class AdminNavigationSetup : MonoBehaviour
     {
         [Header("Auto-Setup References")]
-        [SerializeField] private AdminNavigationController navigationController;
+        [SerializeField] private AdminNavigationController navigationController;  // Reference to UI.AdminNavigationController
 
         [Header("Navigation Paths (Optional)")]
         [SerializeField] private bool autoFindElements = true;

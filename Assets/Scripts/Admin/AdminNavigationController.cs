@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
-namespace Admin
+namespace UI
 {
     public class AdminNavigationController : MonoBehaviour
     {
