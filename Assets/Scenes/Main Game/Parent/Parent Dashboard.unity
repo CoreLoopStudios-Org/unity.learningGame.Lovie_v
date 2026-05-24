@@ -935,7 +935,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 44662280}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 44662283}
+        m_TargetAssemblyTypeName: UI.DropdownToggle, Assembly-CSharp
+        m_MethodName: Toggle
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &44662280
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -949,7 +961,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityFigmaBridgeRuntime::UnityFigmaBridge.Runtime.UI.FigmaImage
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.3137255}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1049,17 +1061,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 44662277}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94660245b3512a348b6a60d23cb5bb86, type: 3}
+  m_Script: {fileID: 11500000, guid: 5c27d0c69dc7c2b42b3a3569763085ce, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI.PanelSpawner
-  panelPrefab: {fileID: 4953306007699133237, guid: 3f2cafcd97ac0a94ca090100e4b3bc6f, type: 3}
-  animationDuration: 0.3
-  startScale: 0
-  endScale: 1
-  useUnscaledTime: 0
-  spawnAtMousePosition: 0
-  parentTransform: {fileID: 0}
-  destroyExisting: 1
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DropdownToggle
+  buttonImage: {fileID: 1867889437}
+  offSprite: {fileID: 21300000, guid: 6b66b97a4dd95894881fc48862a7cb78, type: 3}
+  onSprite: {fileID: 21300000, guid: 0693cef56d876c54693586d1d5e19b56, type: 3}
+  spawnPrefab: 1
+  prefabToSpawn: {fileID: 4953306007699133237, guid: 3f2cafcd97ac0a94ca090100e4b3bc6f, type: 3}
+  spawnParent: {fileID: 0}
+  closeOnOutsideClick: 1
+  spawnAnimationDuration: 0.3
+  despawnAnimationDuration: 0.2
+  onTurnOn:
+    m_PersistentCalls:
+      m_Calls: []
+  onTurnOff:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &48219800
 GameObject:
   m_ObjectHideFlags: 0
