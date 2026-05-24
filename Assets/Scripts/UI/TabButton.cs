@@ -12,7 +12,7 @@ namespace UI
         [SerializeField] private TabNavigationController.ContentType contentType;
 
         [Header("Visual Elements")]
-        [SerializeField] private Image buttonImage; // Figma image with Stroke Width
+        [SerializeField] private Image buttonImage;
         [SerializeField] private TextMeshProUGUI buttonText;
         [SerializeField] private Image buttonIcon;
 
@@ -23,7 +23,8 @@ namespace UI
         [SerializeField] private float defaultStrokeWidth = 0f;
 
         [Header("Animation")]
-        [SerializeField] private float animationDuration = 0.15f;
+        [SerializeField] private float animationDuration = 0.2f;
+        [SerializeField] private AnimationCurve colorCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         [SerializeField] private bool animateChanges = true;
 
         private bool isSelected = false;
@@ -67,17 +68,18 @@ namespace UI
 
             while (elapsed < animationDuration)
             {
-                elapsed += Time.deltaTime;
-                float progress = elapsed / animationDuration;
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / animationDuration);
+                float curvedT = colorCurve.Evaluate(t);
 
                 if (buttonIcon != null)
                 {
-                    buttonIcon.color = Color.Lerp(startIconColor, targetColor, progress);
+                    buttonIcon.color = Color.Lerp(startIconColor, targetColor, curvedT);
                 }
 
                 if (buttonText != null)
                 {
-                    buttonText.color = Color.Lerp(startTextColor, targetColor, progress);
+                    buttonText.color = Color.Lerp(startTextColor, targetColor, curvedT);
                 }
 
                 yield return null;
@@ -130,7 +132,7 @@ namespace UI
         public bool IsSelected()
         {
             return isSelected;
-    }
+        }
 
         public void SetContentType(TabNavigationController.ContentType type)
         {

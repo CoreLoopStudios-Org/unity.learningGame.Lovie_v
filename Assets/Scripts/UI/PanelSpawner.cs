@@ -13,7 +13,8 @@ namespace UI
         [SerializeField] private GameObject panelPrefab;
 
         [Header("Animation Settings")]
-        [SerializeField] private float animationDuration = 0.3f;
+        [SerializeField] private float animationDuration = 0.4f;
+        [SerializeField] private AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         [SerializeField] private float startScale = 0f;
         [SerializeField] private float endScale = 1f;
         [SerializeField] private bool useUnscaledTime = false;
@@ -27,7 +28,6 @@ namespace UI
 
         private void Awake()
         {
-            // If no parent assigned, use Canvas
             if (parentTransform == null)
             {
                 var canvas = FindObjectOfType<Canvas>();
@@ -43,9 +43,6 @@ namespace UI
             SpawnPanel();
         }
 
-        /// <summary>
-        /// Public method to spawn the panel (can be called from Button onClick).
-        /// </summary>
         public void SpawnPanel()
         {
             if (panelPrefab == null)
@@ -54,16 +51,13 @@ namespace UI
                 return;
             }
 
-            // Destroy existing panel if option is enabled
             if (destroyExisting && currentPanel != null)
             {
                 Destroy(currentPanel);
             }
 
-            // Spawn the panel
             currentPanel = Instantiate(panelPrefab, parentTransform);
 
-            // Set position
             if (spawnAtMousePosition && parentTransform != null)
             {
                 Vector2 localPoint;
@@ -75,7 +69,6 @@ namespace UI
                 }
             }
 
-            // Start pop-up animation
             StartCoroutine(AnimatePopup(currentPanel));
         }
 
@@ -87,7 +80,6 @@ namespace UI
                 rectTransform = panel.AddComponent<RectTransform>();
             }
 
-            // Ensure CanvasGroup exists for fade effect
             CanvasGroup canvasGroup = panel.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
             {
@@ -99,14 +91,11 @@ namespace UI
             while (elapsed < animationDuration)
             {
                 elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
-                float progress = elapsed / animationDuration;
-                float easedProgress = EaseOutBack(progress);
+                float t = Mathf.Clamp01(elapsed / animationDuration);
+                float curvedT = animationCurve.Evaluate(t);
 
-                // Scale animation
-                rectTransform.localScale = Vector3.one * Mathf.Lerp(startScale, endScale, easedProgress);
-
-                // Fade animation
-                canvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
+                rectTransform.localScale = Vector3.one * Mathf.Lerp(startScale, endScale, curvedT);
+                canvasGroup.alpha = curvedT;
 
                 yield return null;
             }
@@ -115,24 +104,11 @@ namespace UI
             canvasGroup.alpha = 1f;
         }
 
-        private float EaseOutBack(float t)
-        {
-            const float c1 = 1.70158f;
-            const float c3 = c1 + 1f;
-            return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
-        }
-
-        /// <summary>
-        /// Set the panel prefab programmatically.
-        /// </summary>
         public void SetPanelPrefab(GameObject prefab)
         {
             panelPrefab = prefab;
         }
 
-        /// <summary>
-        /// Get the currently spawned panel (null if none).
-        /// </summary>
         public GameObject GetCurrentPanel()
         {
             return currentPanel;

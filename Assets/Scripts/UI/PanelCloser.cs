@@ -17,7 +17,8 @@ namespace UI
         [SerializeField] private GameObject panelToClose;
 
         [Header("Animation Settings")]
-        [SerializeField] private float animationDuration = 0.25f;
+        [SerializeField] private float animationDuration = 0.3f;
+        [SerializeField] private AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         [SerializeField] private float endScale = 0f;
         [SerializeField] private bool useUnscaledTime = false;
 
@@ -29,7 +30,6 @@ namespace UI
 
         private void Awake()
         {
-            // Auto-find parent panel if not assigned
             if (panelToClose == null && findParentPanel)
             {
                 Transform parent = transform.parent;
@@ -38,7 +38,6 @@ namespace UI
                     RectTransform parentRect = parent.GetComponent<RectTransform>();
                     if (parentRect != null && parent.gameObject != transform.root.gameObject)
                     {
-                        // Found a potential panel - use it
                         panelToClose = parent.gameObject;
                         break;
                     }
@@ -49,8 +48,7 @@ namespace UI
 
         private void Update()
         {
-            if (!closeOnEscape || isClosing)
-                return;
+            if (!closeOnEscape || isClosing) return;
 
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -70,14 +68,9 @@ namespace UI
             ClosePanel();
         }
 
-        /// <summary>
-        /// Public method to close the panel (can be called from Button onClick).
-        /// </summary>
         public void ClosePanel()
         {
-            if (isClosing)
-                return;
-
+            if (isClosing) return;
             if (panelToClose == null)
             {
                 Debug.LogWarning("PanelCloser: No panel assigned to close!", this);
@@ -91,7 +84,6 @@ namespace UI
         {
             isClosing = true;
 
-            // Get or add RectTransform
             RectTransform rectTransform = panel.GetComponent<RectTransform>();
             if (rectTransform == null)
             {
@@ -100,67 +92,42 @@ namespace UI
                 yield break;
             }
 
-            // Get or add CanvasGroup for fade effect
             CanvasGroup canvasGroup = panel.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
             {
                 canvasGroup = panel.AddComponent<CanvasGroup>();
             }
 
+            canvasGroup.blocksRaycasts = false;
+
             float elapsed = 0f;
             float startScaleValue = rectTransform.localScale.x;
-
-            // Disable raycast during close animation to prevent further clicks
-            CanvasGroup tempCanvasGroup = panel.GetComponent<CanvasGroup>();
-            if (tempCanvasGroup == null)
-            {
-                tempCanvasGroup = panel.AddComponent<CanvasGroup>();
-            }
-            tempCanvasGroup.blocksRaycasts = false;
 
             while (elapsed < animationDuration)
             {
                 elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
-                float progress = Mathf.Clamp01(elapsed / animationDuration);
-                float easedProgress = EaseInBack(progress);
+                float t = Mathf.Clamp01(elapsed / animationDuration);
+                float curvedT = animationCurve.Evaluate(t);
 
-                // Scale animation: 1 -> 0
-                float currentScale = Mathf.Lerp(startScaleValue, endScale, easedProgress);
+                float currentScale = Mathf.Lerp(startScaleValue, endScale, curvedT);
                 rectTransform.localScale = Vector3.one * currentScale;
-
-                // Fade animation: 1 -> 0
-                canvasGroup.alpha = Mathf.Lerp(1f, 0f, progress);
+                canvasGroup.alpha = Mathf.Lerp(1f, 0f, t);
 
                 yield return null;
             }
 
-            // Final values
             rectTransform.localScale = Vector3.one * endScale;
             canvasGroup.alpha = 0f;
 
-            // Destroy the panel
             Destroy(panel);
             isClosing = false;
         }
 
-        private float EaseInBack(float t)
-        {
-            const float c1 = 1.70158f;
-            const float c3 = c1 + 1f;
-            return c3 * t * t * t - c1 * t * t;
-        }
-
-        /// <summary>
-        /// Set the panel to close programmatically.
-        /// </summary>
         public void SetPanelToClose(GameObject panel)
         {
             panelToClose = panel;
         }
 
-        /// <summary>
-        /// Set whether the panel closes on Escape key press.
-        /// </summary>
         public void SetCloseOnEscape(bool value)
         {
             closeOnEscape = value;

@@ -21,9 +21,11 @@ namespace UI
         [SerializeField] private Transform spawnParent;
         [SerializeField] private bool closeOnOutsideClick = true;
 
-        [Header("Animation")]
-        [SerializeField] private float spawnAnimationDuration = 0.3f;
-        [SerializeField] private float despawnAnimationDuration = 0.2f;
+        [Header("Animation Settings")]
+        [SerializeField] private float spawnAnimationDuration = 0.4f;
+        [SerializeField] private float despawnAnimationDuration = 0.25f;
+        [SerializeField] private AnimationCurve spawnCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        [SerializeField] private AnimationCurve despawnCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
         [Header("Events")]
         [SerializeField] private UnityEvent onTurnOn;
@@ -34,29 +36,17 @@ namespace UI
 
         private void Awake()
         {
-            // Get Image component if not assigned
             if (buttonImage == null)
             {
                 buttonImage = GetComponent<Image>();
             }
-
-            // Set initial sprite
             UpdateSprite();
         }
 
-        /// <summary>
-        /// Call this from Button onClick event or directly.
-        /// </summary>
         public void Toggle()
         {
-            if (isOn)
-            {
-                TurnOff();
-            }
-            else
-            {
-                TurnOn();
-            }
+            if (isOn) TurnOff();
+            else TurnOn();
         }
 
         public void TurnOn()
@@ -89,27 +79,21 @@ namespace UI
 
         private void SpawnPrefab()
         {
-            // Find spawn parent if not assigned
             Transform parent = spawnParent;
             if (parent == null)
             {
                 Canvas canvas = FindObjectOfType<Canvas>();
-                if (canvas != null)
-                {
-                    parent = canvas.transform;
-                }
+                if (canvas != null) parent = canvas.transform;
             }
 
             spawnedInstance = Instantiate(prefabToSpawn, parent);
 
-            // Add despawn callback for outside clicks
             if (closeOnOutsideClick)
             {
                 PanelClickHandler clickHandler = spawnedInstance.AddComponent<PanelClickHandler>();
                 clickHandler.Initialize(this);
             }
 
-            // Play spawn animation
             StartCoroutine(SpawnAnimation());
         }
 
@@ -134,11 +118,11 @@ namespace UI
             while (elapsed < spawnAnimationDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / spawnAnimationDuration;
-                float eased = EaseOutBack(t);
+                float t = Mathf.Clamp01(elapsed / spawnAnimationDuration);
+                float curvedT = spawnCurve.Evaluate(t);
 
-                rect.localScale = Vector3.one * eased;
-                canvasGroup.alpha = t;
+                rect.localScale = Vector3.one * curvedT;
+                canvasGroup.alpha = curvedT;
 
                 yield return null;
             }
@@ -169,10 +153,11 @@ namespace UI
             while (elapsed < despawnAnimationDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / despawnAnimationDuration;
+                float t = Mathf.Clamp01(elapsed / despawnAnimationDuration);
+                float curvedT = despawnCurve.Evaluate(t);
 
-                rect.localScale = startScale * (1f - t);
-                canvasGroup.alpha = 1f - t;
+                rect.localScale = startScale * (1f - curvedT);
+                canvasGroup.alpha = 1f - curvedT;
 
                 yield return null;
             }
@@ -189,16 +174,6 @@ namespace UI
             }
         }
 
-        private float EaseOutBack(float t)
-        {
-            const float c1 = 1.70158f;
-            const float c3 = c1 + 1f;
-            return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
-        }
-
-        /// <summary>
-        /// Internal handler for outside clicks.
-        /// </summary>
         internal void HandleOutsideClick()
         {
             if (isOn && spawnPrefab && closeOnOutsideClick)
@@ -215,15 +190,9 @@ namespace UI
             }
         }
 
-        /// <summary>
-        /// Get current toggle state.
-        /// </summary>
         public bool IsOn => isOn;
     }
 
-    /// <summary>
-    /// Attached to spawned prefab to detect outside clicks.
-    /// </summary>
     internal class PanelClickHandler : MonoBehaviour
     {
         private DropdownToggle dropdown;

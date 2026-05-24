@@ -13,13 +13,15 @@ namespace UI
         [Header("Animation Settings")]
         [SerializeField] private float hoverScale = 1.05f;
         [SerializeField] private float clickScale = 0.95f;
-        [SerializeField] private float animationDuration = 0.15f;
+        [SerializeField] private float animationDuration = 0.2f;
+        [SerializeField] private AnimationCurve scaleCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        [SerializeField] private AnimationCurve colorCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
         [Header("Color Settings")]
         [SerializeField] private bool useColorTransition = true;
-        [SerializeField] private Color hoverColor = new Color(0.708f, 0.5f, 0.9f); // Lighter purple
-        [SerializeField] private Color normalColor = new Color(0.459f, 0.459f, 0.51f); // Default gray
-        [SerializeField] private Color selectedColor = new Color(0.608f, 0.364f, 0.835f); // #9B5DE5
+        [SerializeField] private Color hoverColor = new Color(0.708f, 0.5f, 0.9f);
+        [SerializeField] private Color normalColor = new Color(0.459f, 0.459f, 0.51f);
+        [SerializeField] private Color selectedColor = new Color(0.608f, 0.364f, 0.835f);
 
         [Header("References")]
         [SerializeField] private Image targetImage;
@@ -126,10 +128,10 @@ namespace UI
 
             while (elapsed < animationDuration)
             {
-                elapsed += Time.deltaTime;
-                float t = elapsed / animationDuration;
-                float easedT = EaseOutQuad(t);
-                rectTransform.localScale = Vector3.Lerp(startScale, endScale, easedT);
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / animationDuration);
+                float curvedT = scaleCurve.Evaluate(t);
+                rectTransform.localScale = Vector3.Lerp(startScale, endScale, curvedT);
                 yield return null;
             }
 
@@ -158,18 +160,14 @@ namespace UI
 
             while (elapsed < animationDuration)
             {
-                elapsed += Time.deltaTime;
-                float t = elapsed / animationDuration;
-                targetImage.color = Color.Lerp(startColor, targetColor, t);
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / animationDuration);
+                float curvedT = colorCurve.Evaluate(t);
+                targetImage.color = Color.Lerp(startColor, targetColor, curvedT);
                 yield return null;
             }
 
             targetImage.color = targetColor;
-        }
-
-        private float EaseOutQuad(float t)
-        {
-            return 1f - (1f - t) * (1f - t);
         }
     }
 }

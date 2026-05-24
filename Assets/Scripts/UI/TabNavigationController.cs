@@ -14,7 +14,7 @@ namespace UI
         {
             public string tabName;
             public UnityEngine.UI.Button button;
-            public Image buttonImage; // Figma image with Stroke Width property
+            public Image buttonImage;
             public TextMeshProUGUI buttonText;
             public Image buttonIcon;
             public ContentType contentType;
@@ -45,14 +45,16 @@ namespace UI
         [SerializeField] private TabContent[] tabContents;
 
         [Header("Appearance Settings")]
-        [SerializeField] private Color selectedColor = new Color(0.608f, 0.364f, 0.835f); // #9B5DE5
-        [SerializeField] private Color defaultColor = new Color(0.459f, 0.459f, 0.51f); // Default gray
+        [SerializeField] private Color selectedColor = new Color(0.608f, 0.364f, 0.835f);
+        [SerializeField] private Color defaultColor = new Color(0.459f, 0.459f, 0.51f);
         [SerializeField] private float selectedStrokeWidth = 4f;
         [SerializeField] private float defaultStrokeWidth = 0f;
 
         [Header("Animation Settings")]
-        [SerializeField] private float fadeDuration = 0.25f;
-        [SerializeField] private float colorChangeDuration = 0.15f;
+        [SerializeField] private float fadeDuration = 0.3f;
+        [SerializeField] private float colorChangeDuration = 0.2f;
+        [SerializeField] private AnimationCurve fadeCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        [SerializeField] private AnimationCurve colorCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
         private ContentType currentTab = ContentType.Stories;
         private bool isTransitioning = false;
@@ -95,7 +97,6 @@ namespace UI
         {
             isTransitioning = true;
 
-            // Hide current content
             TabContent currentContent = GetTabContent(currentTab);
             TabContent newContent = GetTabContent(contentType);
 
@@ -141,9 +142,10 @@ namespace UI
 
             while (elapsed < fadeDuration)
             {
-                elapsed += Time.deltaTime;
-                float progress = elapsed / fadeDuration;
-                content.canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, progress);
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / fadeDuration);
+                float curvedT = fadeCurve.Evaluate(t);
+                content.canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, curvedT);
                 yield return null;
             }
 
@@ -165,9 +167,10 @@ namespace UI
 
             while (elapsed < fadeDuration)
             {
-                elapsed += Time.deltaTime;
-                float progress = elapsed / fadeDuration;
-                content.canvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / fadeDuration);
+                float curvedT = fadeCurve.Evaluate(t);
+                content.canvasGroup.alpha = Mathf.Lerp(0f, 1f, curvedT);
                 yield return null;
             }
 
@@ -212,7 +215,6 @@ namespace UI
             if (figmaImage == null)
                 return;
 
-            // Use FigmaImageHelper to set stroke width
             FigmaImageHelper.SetStrokeWidth(figmaImage, strokeWidth);
         }
 
@@ -226,9 +228,10 @@ namespace UI
 
             while (elapsed < colorChangeDuration)
             {
-                elapsed += Time.deltaTime;
-                float progress = elapsed / colorChangeDuration;
-                image.color = Color.Lerp(startColor, targetColor, progress);
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / colorChangeDuration);
+                float curvedT = colorCurve.Evaluate(t);
+                image.color = Color.Lerp(startColor, targetColor, curvedT);
                 yield return null;
             }
 
@@ -245,9 +248,10 @@ namespace UI
 
             while (elapsed < colorChangeDuration)
             {
-                elapsed += Time.deltaTime;
-                float progress = elapsed / colorChangeDuration;
-                text.color = Color.Lerp(startColor, targetColor, progress);
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / colorChangeDuration);
+                float curvedT = colorCurve.Evaluate(t);
+                text.color = Color.Lerp(startColor, targetColor, curvedT);
                 yield return null;
             }
 
@@ -272,11 +276,6 @@ namespace UI
                     return content;
             }
             return null;
-        }
-
-        public void ShowTab(ContentType contentType)
-        {
-            ShowTab(contentType, true);
         }
 
         public ContentType GetCurrentTab()
