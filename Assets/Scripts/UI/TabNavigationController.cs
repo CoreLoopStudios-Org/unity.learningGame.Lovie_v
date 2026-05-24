@@ -33,7 +33,9 @@ namespace UI
         {
             Stories,
             AvatarItems,
-            Coins
+            Coins,
+            Kids_User,
+            Parent_User
         }
 
         [Header("Tab Buttons")]

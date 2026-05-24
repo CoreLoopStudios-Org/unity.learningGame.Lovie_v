@@ -864,6 +864,7 @@ GameObject:
   - component: {fileID: 44662281}
   - component: {fileID: 44662280}
   - component: {fileID: 44662279}
+  - component: {fileID: 44662283}
   m_Layer: 0
   m_Name: Chnage Children
   m_TagString: Untagged
@@ -1039,6 +1040,26 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &44662283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 44662277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94660245b3512a348b6a60d23cb5bb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.PanelSpawner
+  panelPrefab: {fileID: 4953306007699133237, guid: 3f2cafcd97ac0a94ca090100e4b3bc6f, type: 3}
+  animationDuration: 0.3
+  startScale: 0
+  endScale: 1
+  useUnscaledTime: 0
+  spawnAtMousePosition: 0
+  parentTransform: {fileID: 0}
+  destroyExisting: 1
 --- !u!1 &48219800
 GameObject:
   m_ObjectHideFlags: 0

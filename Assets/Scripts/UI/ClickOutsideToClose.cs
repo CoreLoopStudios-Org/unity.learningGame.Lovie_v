@@ -3,56 +3,103 @@ using UnityEngine.EventSystems;
 
 namespace UI
 {
-    public class ClickOutsideToClose : MonoBehaviour, IPointerClickHandler
+    public class ClickOutsideToClose : MonoBehaviour
     {
-        [Header("References")]
-        [SerializeField] private GameObject panelToClose;
+        [Header("Animation")]
+        [SerializeField] private float closeDuration = 0.2f;
 
-        [Header("Settings")]
-        [SerializeField] private bool closeOnBackgroundClick = true;
+        private RectTransform rectTransform;
+        private CanvasGroup canvasGroup;
+        private bool isClosing = false;
 
-        private void Awake()
+        private void Start()
         {
-            // If not assigned, use this GameObject
-            if (panelToClose == null)
+            rectTransform = GetComponent<RectTransform>();
+            canvasGroup = GetComponent<CanvasGroup>();
+
+            if (canvasGroup == null)
             {
-                panelToClose = gameObject;
+                canvasGroup = gameObject.AddComponent<CanvasGroup>();
             }
         }
 
-        public void OnPointerClick(PointerEventData eventData)
+        private void Update()
         {
-            if (!closeOnBackgroundClick)
-                return;
+            if (isClosing) return;
 
-            // Check if click was outside the panel content
-            RectTransform panelRect = panelToClose.transform as RectTransform;
-            if (panelRect != null)
+            // Check for left click (Input System)
+            if (UnityEngine.InputSystem.Mouse.current != null &&
+                UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
             {
-                Vector2 localPoint;
-                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    panelRect, eventData.pressPosition, eventData.pressEventCamera, out localPoint))
+                Vector2 mousePos = UnityEngine.InputSystem.Mouse.current.position.ReadValue();
+
+                // Check if click is outside this panel
+                if (!IsClickOverPanel(mousePos))
                 {
-                    // If click is outside the rect, close the panel
-                    if (!panelRect.rect.Contains(localPoint))
-                    {
-                        ClosePanel();
-                    }
+                    Close();
                 }
             }
         }
 
-        public void ClosePanel()
+        private bool IsClickOverPanel(Vector2 screenPos)
         {
-            PanelCloser closer = GetComponent<PanelCloser>();
-            if (closer != null)
+            if (rectTransform == null) return false;
+
+            // Get the canvas
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Camera camera = canvas?.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main;
+
+            // Convert screen point to local point
+            Vector2 localPoint;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rectTransform,
+                screenPos,
+                camera,
+                out localPoint))
             {
-                closer.ClosePanel();
+                return rectTransform.rect.Contains(localPoint);
             }
-            else
+
+            return false;
+        }
+
+        public void Close()
+        {
+            if (isClosing) return;
+            StartCoroutine(CloseAnimation());
+        }
+
+        private System.Collections.IEnumerator CloseAnimation()
+        {
+            isClosing = true;
+
+            // Disable interaction
+            if (canvasGroup != null)
             {
-                Destroy(panelToClose);
+                canvasGroup.interactable = false;
+                canvasGroup.blocksRaycasts = false;
             }
+
+            float elapsed = 0f;
+            Vector3 startScale = rectTransform.localScale;
+            float startAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
+
+            while (elapsed < closeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / closeDuration;
+
+                // Fade and scale
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, t);
+                }
+                rectTransform.localScale = startScale * (1f - t);
+
+                yield return null;
+            }
+
+            Destroy(gameObject);
         }
     }
 }
