@@ -8033,6 +8033,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UI.PanelCloser
   panelToClose: {fileID: 2745021128181483662}
   animationDuration: 0.25
+  animationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   endScale: 0
   useUnscaledTime: 0
   closeOnEscape: 1
@@ -24137,7 +24161,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Rewords
+  m_text: Rewards
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3e1e4c18c21e8fa43a68cb3fe2b6829f, type: 2}
   m_sharedMaterial: {fileID: 1608979947722608652, guid: 3e1e4c18c21e8fa43a68cb3fe2b6829f, type: 2}
