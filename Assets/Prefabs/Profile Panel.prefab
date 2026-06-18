@@ -1744,6 +1744,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2307510133283490308}
   - component: {fileID: 5210740417797423894}
+  - component: {fileID: 235784541214346561}
   m_Layer: 0
   m_Name: Slider
   m_TagString: Untagged
@@ -1820,10 +1821,27 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 0.7
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &235784541214346561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353726795931853794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddd48da5c1b2a93449fd0565ceb8c277, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.UI.AudioVolumeSlider
+  audioType: 0
+  slider: {fileID: 5210740417797423894}
+  updateOnStart: 1
+  isPercentage: 0
+  volumeText: {fileID: 0}
 --- !u!1 &1415053885024191806
 GameObject:
   m_ObjectHideFlags: 0
@@ -5203,7 +5221,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 948696047595513199}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999917
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -9200,6 +9218,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5777801616306104390}
   - component: {fileID: 3146693133648401672}
+  - component: {fileID: 3839464808418363406}
   m_Layer: 0
   m_Name: Slider
   m_TagString: Untagged
@@ -9276,10 +9295,27 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 0.7
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3839464808418363406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6843759688096766588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddd48da5c1b2a93449fd0565ceb8c277, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.UI.AudioVolumeSlider
+  audioType: 1
+  slider: {fileID: 3146693133648401672}
+  updateOnStart: 1
+  isPercentage: 0
+  volumeText: {fileID: 0}
 --- !u!1 &7322289984784376490
 GameObject:
   m_ObjectHideFlags: 0
@@ -10219,7 +10255,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00025449862}
+  m_AnchoredPosition: {x: 0, y: 0.00052750687}
   m_SizeDelta: {x: 0, y: 1862.6355}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &7993923600831168287
