@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5321817905865082978}
   - component: {fileID: 2093686937016876330}
   - component: {fileID: 4119016330195391768}
+  - component: {fileID: 8364729324652215810}
   m_Layer: 0
   m_Name: Quiz page
   m_TagString: Untagged
@@ -148,6 +149,20 @@ MonoBehaviour:
   - {x: 0, y: 0}
   - {x: 1, y: 0}
   - {x: 1, y: 0}
+--- !u!114 &8364729324652215810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 59566144169779014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50033ef59afd144892acab309c2519d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.AutoPauseBGM
+  pauseOnEnable: 1
+  resumeOnDisable: 1
 --- !u!1 &1052807889405018790
 GameObject:
   m_ObjectHideFlags: 0
@@ -1611,6 +1626,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UI.PanelCloser
   panelToClose: {fileID: 59566144169779014}
   animationDuration: 0.25
+  animationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   endScale: 0
   useUnscaledTime: 0
   closeOnEscape: 1

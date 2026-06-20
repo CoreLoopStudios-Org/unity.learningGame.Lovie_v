@@ -311,8 +311,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.BookAnimationController
   bookAnimator: {fileID: 7048939707857539737}
-  nextPageTrigger: Next Page
-  triggerOnStart: 0
+  animationStateName: Page swapping anim
 --- !u!1 &658306045054183588
 GameObject:
   m_ObjectHideFlags: 0
@@ -556,6 +555,7 @@ GameObject:
   - component: {fileID: 7229518313403553133}
   - component: {fileID: 3352683165394162808}
   - component: {fileID: 1880243921127090992}
+  - component: {fileID: 8911147046883019465}
   m_Layer: 0
   m_Name: Book reading Panel
   m_TagString: Untagged
@@ -689,6 +689,20 @@ MonoBehaviour:
   - {x: 0, y: 0}
   - {x: 1, y: 0}
   - {x: 1, y: 0}
+--- !u!114 &8911147046883019465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1843023635798228754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50033ef59afd144892acab309c2519d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.AutoPauseBGM
+  pauseOnEnable: 1
+  resumeOnDisable: 1
 --- !u!1 &1926482805689495856
 GameObject:
   m_ObjectHideFlags: 0
@@ -1736,6 +1750,7 @@ GameObject:
   - component: {fileID: 4252985620832329020}
   - component: {fileID: 4946307157440688471}
   - component: {fileID: 3648320728161785995}
+  - component: {fileID: 2872876260902426927}
   m_Layer: 0
   m_Name: Back Button
   m_TagString: Untagged
@@ -1862,6 +1877,50 @@ MonoBehaviour:
   useUnscaledTime: 0
   closeOnEscape: 1
   findParentPanel: 1
+--- !u!114 &2872876260902426927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8589449843335705109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 4946307157440688471}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &8630758091361991403
 GameObject:
   m_ObjectHideFlags: 0
