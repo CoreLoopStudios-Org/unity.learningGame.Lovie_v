@@ -47,6 +47,7 @@ namespace Avatar
 
         private void Start()
         {
+            ValidateSetup();
             SetupCategoryButtons();
             SubscribeToEvents();
 
@@ -57,6 +58,48 @@ namespace Avatar
                 {
                     ShowCategoryItems(firstCategory.Value);
                 }
+            }
+        }
+
+        private void ValidateSetup()
+        {
+            Debug.Log($"[AvatarUIController] Validating setup...");
+
+            if (customizationManager == null)
+            {
+                Debug.LogError("[AvatarUIController] Customization Manager is NOT assigned!");
+            }
+            else if (customizationManager.Database == null)
+            {
+                Debug.LogError("[AvatarUIController] Customization Manager's Database is NOT assigned!");
+            }
+            else
+            {
+                var categories = customizationManager.GetAvailableCategories();
+                Debug.Log($"[AvatarUIController] Found {categories.Count} categories");
+            }
+
+            if (categoryButtonsContainer == null)
+            {
+                Debug.LogError("[AvatarUIController] Category Buttons Container is NOT assigned!");
+            }
+            else
+            {
+                Debug.Log($"[AvatarUIController] Category container has {categoryButtonsContainer.childCount} children");
+            }
+
+            if (itemContainer == null)
+            {
+                Debug.LogError("[AvatarUIController] Item Container is NOT assigned!");
+            }
+
+            if (itemButtonPrefab == null)
+            {
+                Debug.LogError("[AvatarUIController] Item Button Prefab is NOT assigned!");
+            }
+            else
+            {
+                Debug.Log($"[AvatarUIController] Item Button Prefab: {itemButtonPrefab.name}");
             }
         }
 
@@ -73,14 +116,10 @@ namespace Avatar
         {
             if (categoryButtonsContainer == null) return;
 
-            // Clear existing buttons
-            foreach (Transform child in categoryButtonsContainer)
-            {
-                Destroy(child.gameObject);
-            }
+            // Clear the dictionary (not the actual buttons!)
             categoryButtons.Clear();
 
-            // Create category buttons
+            // Wire up existing buttons from the prefab
             var categories = customizationManager?.GetAvailableCategories();
             if (categories == null) return;
 
@@ -88,19 +127,47 @@ namespace Avatar
             {
                 CreateCategoryButton(category);
             }
+
+            Debug.Log($"[AvatarUIController] Wired up {categoryButtons.Count} category buttons");
         }
 
         private void CreateCategoryButton(AvatarPartCategory category)
         {
-            // Find or create button from container
-            // Assumes buttons are already set up in the prefab
             Button button = null;
 
-            // Try to find existing button by name
+            // Try to find existing button by name matching
+            // Matches: "Hair", "Hair Button", "Dress", "Dress Button", etc.
             foreach (Transform child in categoryButtonsContainer)
             {
-                if (child.name.Contains(category.GetDisplayName()) ||
-                    child.name.Contains(category.ToString()))
+                string childName = child.name.ToLower();
+                string catName = category.ToString().ToLower();
+                string displayName = category.GetDisplayName().ToLower();
+
+                // Check for direct match
+                if (childName.Contains(catName) ||
+                    childName.Contains(displayName))
+                {
+                    button = child.GetComponent<Button>();
+                    break;
+                }
+
+                // Special handling for categories with different names
+                // "BodyColor" enum → "Body" button
+                if (category == AvatarPartCategory.BodyColor && childName.Contains("body"))
+                {
+                    button = child.GetComponent<Button>();
+                    break;
+                }
+
+                // "Shoes" enum → "Shoe" or "Shoes" button
+                if (catName.Contains("shoe") && childName.Contains("shoe"))
+                {
+                    button = child.GetComponent<Button>();
+                    break;
+                }
+
+                // "Cosmetics" enum → "Cosmetic" or "Cosmetics" button
+                if (catName.Contains("cosmetic") && childName.Contains("cosmetic"))
                 {
                     button = child.GetComponent<Button>();
                     break;
@@ -110,8 +177,12 @@ namespace Avatar
             if (button != null)
             {
                 categoryButtons[category] = button;
-                int categoryIndex = (int)category;
                 button.onClick.AddListener(() => OnCategoryButtonClicked(category));
+                Debug.Log($"[AvatarUIController] Found button for {category.GetDisplayName()}: {button.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"[AvatarUIController] No button found for category: {category.GetDisplayName()} (searched in {categoryButtonsContainer.name})");
             }
         }
 
@@ -167,7 +238,13 @@ namespace Avatar
         private void SpawnItemButtons(AvatarPartCategory category)
         {
             var parts = customizationManager?.GetPartsForCategory(category);
-            if (parts == null || parts.Count == 0) return;
+            if (parts == null || parts.Count == 0)
+            {
+                Debug.LogWarning($"[AvatarUIController] No parts found for category: {category.GetDisplayName()}");
+                return;
+            }
+
+            Debug.Log($"[AvatarUIController] Spawning {parts.Count} buttons for {category.GetDisplayName()}");
 
             foreach (var part in parts)
             {
@@ -177,10 +254,23 @@ namespace Avatar
 
         private void CreateItemButton(AvatarPartItem part)
         {
-            if (itemButtonPrefab == null || itemContainer == null) return;
+            if (itemButtonPrefab == null)
+            {
+                Debug.LogError("[AvatarUIController] Item Button Prefab is not assigned!");
+                return;
+            }
+
+            if (itemContainer == null)
+            {
+                Debug.LogError("[AvatarUIController] Item Container is not assigned!");
+                return;
+            }
 
             GameObject itemButton = Instantiate(itemButtonPrefab, itemContainer);
             spawnedItemButtons.Add(itemButton);
+
+            // Set name for debugging
+            itemButton.name = $"Item_{part.DisplayName}";
 
             // Try to use AvatarItemButton component if available
             AvatarItemButton avatarButton = itemButton.GetComponent<AvatarItemButton>();
@@ -195,6 +285,8 @@ namespace Avatar
                 {
                     button.onClick.AddListener(() => OnItemButtonClicked(part));
                 }
+
+                Debug.Log($"[AvatarUIController] Created AvatarItemButton for {part.DisplayName}");
             }
             else
             {
@@ -205,11 +297,36 @@ namespace Avatar
                     button.onClick.AddListener(() => OnItemButtonClicked(part));
                 }
 
-                // Setup icon
-                Image iconImage = itemButton.GetComponentInChildren<Image>();
+                // Find Image component for icon
+                Image[] images = itemButton.GetComponentsInChildren<Image>();
+                Image iconImage = null;
+                Image backgroundImage = null;
+
+                foreach (var img in images)
+                {
+                    // Skip the button's own background image
+                    if (img.gameObject == itemButton)
+                    {
+                        backgroundImage = img;
+                        continue;
+                    }
+                    // Use the first child Image as icon
+                    if (iconImage == null)
+                    {
+                        iconImage = img;
+                    }
+                }
+
+                // Setup icon sprite
                 if (iconImage != null && part.IconSprite != null)
                 {
                     iconImage.sprite = part.IconSprite;
+                    iconImage.enabled = true;
+                    Debug.Log($"[AvatarUIController] Set icon for {part.DisplayName}: {part.IconSprite.name}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[AvatarUIController] No icon sprite for {part.DisplayName} (IconSprite: {part.IconSprite != null}, iconImage: {iconImage != null})");
                 }
 
                 // Check if currently selected
