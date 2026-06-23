@@ -18145,6 +18145,7 @@ GameObject:
   - component: {fileID: 698015570789378489}
   - component: {fileID: 9076303689182324075}
   - component: {fileID: 9076303689182324076}
+  - component: {fileID: 9076303689182324077}
   m_Layer: 0
   m_Name: Manage Quiz Button
   m_TagString: Untagged
@@ -33920,6 +33921,50 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &9076303689182324077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3329124811633173708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94660245b3512a348b6a60d23cb5bb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.PanelSpawner
+  panelPrefab: {fileID: 2948327066102274991, guid: 0d2edd6d30bd3e94eb13e90d37ec2bfd, type: 3}
+  animationDuration: 0.2
+  animationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  startScale: 0
+  endScale: 1
+  useUnscaledTime: 0
+  spawnAtMousePosition: 0
+  parentTransform: {fileID: 0}
+  destroyExisting: 1
 --- !u!1 &9077875303555510074
 GameObject:
   m_ObjectHideFlags: 0
