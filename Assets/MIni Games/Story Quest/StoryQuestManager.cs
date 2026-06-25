@@ -1,158 +1,221 @@
+using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using Modules.GameFramework.Content;
-using Modules.GameFramework.UI;
 
-namespace Modules.Games.StoryQuest
+public class SpawnManager : MonoBehaviour
 {
-    /// <summary>
-    /// Top-level controller for the Story Quest mini-game. Loads the level
-    /// content, populates the story text, spawns one question card per
-    /// question into the scrollable quiz content, tracks how many were
-    /// answered correctly, and enables the Complete button only once every
-    /// question has been answered.
-    /// </summary>
-    public class StoryQuestManager : MonoBehaviour
+    public static SpawnManager Instance { get; private set; }
+
+    [Header("Config")]
+    [SerializeField] private List<FloatingObjectConfigSO> _typeConfigs;
+    [SerializeField] private RectTransform _spawnArea;
+    [SerializeField] private Transform _poolRoot;
+
+    [Header("Batch Spawn Settings")]
+    [SerializeField] private int _batchSize = 3;
+    [SerializeField] private float _delayBetweenBatches = 4f;
+
+    [Header("Formation")]
+    [SerializeField] private float _horizontalSpacing = 280f;
+    [SerializeField] private float _verticalSpacing = 120f;
+
+    private readonly Dictionary<FloatingObjectType, ObjectPool> _pools
+        = new Dictionary<FloatingObjectType, ObjectPool>();
+
+    private readonly Dictionary<FloatingObjectType, FloatingObjectConfigSO> _configMap
+        = new Dictionary<FloatingObjectType, FloatingObjectConfigSO>();
+
+    private readonly List<FloatingObject> _activeObjects = new List<FloatingObject>();
+
+    private List<string> _wordQueue = new List<string>();
+    private int _wordQueueIndex;
+    private Coroutine _spawnRoutine;
+    private System.Action<FloatingObject, bool> _tapCallback;
+    private LevelDataSO _levelData;
+
+    // ─────────────────────────────────────────────
+    // Boundaries
+    // ─────────────────────────────────────────────
+    private float SpawnBelowScreenY => -(_spawnArea.rect.height * 0.5f) - 200f;
+    private float TopBoundaryY => (_spawnArea.rect.height * 0.5f) + 200f;
+
+    // ─────────────────────────────────────────────
+    // Lifecycle
+    // ─────────────────────────────────────────────
+    private void Awake()
     {
-        #region Fields
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        BuildPools();
+    }
 
-        [Header("Content")]
-        [SerializeField] private string _storyId = "story_001";
-
-        [Header("Reading Panel")]
-        [SerializeField] private TMP_Text _storyText;
-
-        [Header("Quiz")]
-        [SerializeField] private Transform _questionContentParent;
-        [SerializeField] private QuestionCardController _questionCardPrefab;
-        [SerializeField] private Button _completeButton;
-
-        private IStoryQuestContentRepository _contentRepository;
-        private StoryQuestLevel _level;
-        private readonly List<QuestionCardController> _spawnedCards = new List<QuestionCardController>();
-
-        private int _answeredCount;
-        private int _correctCount;
-
-        #endregion
-
-        #region Unity Lifecycle
-
-        private void Awake()
+    private void BuildPools()
+    {
+        foreach (var cfg in _typeConfigs)
         {
-            _contentRepository = new JsonStoryQuestContentRepository();
+            var pool = new ObjectPool(cfg.prefab, cfg.poolSize, _poolRoot);
+            _pools[cfg.objectType] = pool;
+            _configMap[cfg.objectType] = cfg;
         }
+    }
 
-        private void Start()
+    // ─────────────────────────────────────────────
+    // Public API
+    // ─────────────────────────────────────────────
+    public void StartSpawning(
+        List<string> words,
+        LevelDataSO levelData,
+        System.Action<FloatingObject, bool> tapCallback)
+    {
+        _wordQueue = new List<string>(words);
+        _wordQueueIndex = 0;
+        _tapCallback = tapCallback;
+        _levelData = levelData;
+
+        StopSpawning();
+        _spawnRoutine = StartCoroutine(BatchSpawnRoutine());
+    }
+
+    public void StopSpawning()
+    {
+        if (_spawnRoutine != null)
         {
-            LoadAndDisplayLevel();
+            StopCoroutine(_spawnRoutine);
+            _spawnRoutine = null;
         }
+    }
 
-        private void OnDestroy()
+    public void ReturnToPool(FloatingObject obj)
+    {
+        _activeObjects.Remove(obj);
+        _pools[obj.ObjectType].Return(obj.gameObject);
+    }
+
+    public void NotifyWordAudioStarted(string word)
+    {
+        foreach (var obj in _activeObjects)
+            if (string.Equals(obj.Word, word, System.StringComparison.OrdinalIgnoreCase))
+                obj.StartShake();
+    }
+
+    public void NotifyWordAudioStopped(string word)
+    {
+        foreach (var obj in _activeObjects)
+            if (string.Equals(obj.Word, word, System.StringComparison.OrdinalIgnoreCase))
+                obj.StopShake();
+    }
+
+    public IReadOnlyList<FloatingObject> ActiveObjects => _activeObjects;
+
+    // ─────────────────────────────────────────────
+    // Batch Spawn Routine
+    // Spawns a full formation, waits, spawns next
+    // ─────────────────────────────────────────────
+    private IEnumerator BatchSpawnRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        while (_wordQueueIndex < _wordQueue.Count)
         {
-            UnsubscribeFromSpawnedCards();
+            SpawnBatch();
+
+            if (_wordQueueIndex < _wordQueue.Count)
+                yield return new WaitForSeconds(_delayBetweenBatches);
         }
+    }
 
-        #endregion
+    private void SpawnBatch()
+    {
+        int remainingWords = _wordQueue.Count - _wordQueueIndex;
+        int count = Mathf.Min(_batchSize, remainingWords);
+        if (count <= 0) return;
 
-        #region Public Methods
+        // All objects in a batch share the same speed
+        // so formation spacing never changes as they rise
+        float batchSpeed = Random.Range(_levelData.floatSpeedMin, _levelData.floatSpeedMax);
 
-        /// <summary>
-        /// Total number of questions answered correctly so far. Used by the
-        /// completion flow to calculate score and coins earned.
-        /// </summary>
-        public int CorrectAnswerCount => _correctCount;
+        Vector2[] formation = GetFormation(count);
 
-        /// <summary>
-        /// Total number of questions in the current level.
-        /// </summary>
-        public int TotalQuestionCount => _level?.questions?.Count ?? 0;
+        for (int i = 0; i < count; i++)
+            SpawnOne(_wordQueue[_wordQueueIndex++], formation[i], batchSpeed);
+    }
 
-        #endregion
+    private void SpawnOne(string word, Vector2 formationOffset, float speed)
+    {
+        var type = PickWeightedType();
+        var cfg = _configMap[type];
+        var pool = _pools[type];
 
-        #region Private Methods
+        Vector2 spawnPosition = new Vector2(
+            formationOffset.x,
+            SpawnBelowScreenY + formationOffset.y);
 
-        private void LoadAndDisplayLevel()
+        Vector3 worldPos = _spawnArea.TransformPoint(
+            new Vector3(spawnPosition.x, spawnPosition.y, 0f));
+
+        var go = pool.Get(worldPos, _spawnArea);
+        var floatingObj = go.GetComponent<FloatingObject>();
+
+        floatingObj.Init(word, cfg, speed, TopBoundaryY, _tapCallback);
+        _activeObjects.Add(floatingObj);
+    }
+
+    // ─────────────────────────────────────────────
+    // Formation layouts — guaranteed no overlap
+    // ─────────────────────────────────────────────
+    private Vector2[] GetFormation(int count)
+    {
+        switch (count)
         {
-            _level = _contentRepository.LoadLevel(_storyId);
-
-            if (_level == null)
-            {
-                Debug.LogError("[StoryQuestManager] Failed to load level, aborting setup.");
-                return;
-            }
-
-            if (_storyText != null)
-            {
-                _storyText.text = _level.content;
-            }
-
-            SpawnQuestionCards();
-            SetCompleteButtonInteractable(false);
-        }
-
-        private void SpawnQuestionCards()
-        {
-            if (_questionCardPrefab == null || _questionContentParent == null)
-            {
-                Debug.LogError("[StoryQuestManager] Question card prefab or content parent not assigned.");
-                return;
-            }
-
-            int totalQuestions = _level.questions.Count;
-
-            for (int i = 0; i < totalQuestions; i++)
-            {
-                QuestionData questionData = _level.questions[i];
-
-                QuestionCardController card = Instantiate(_questionCardPrefab, _questionContentParent);
-                card.Setup(i + 1, totalQuestions, questionData.questionText, questionData.options, questionData.correctOptionIndex);
-                card.OnAnswered += HandleQuestionAnswered;
-
-                _spawnedCards.Add(card);
-            }
-        }
-
-        private void UnsubscribeFromSpawnedCards()
-        {
-            foreach (QuestionCardController card in _spawnedCards)
-            {
-                if (card != null)
+            case 1:
+                return new Vector2[]
                 {
-                    card.OnAnswered -= HandleQuestionAnswered;
-                }
-            }
-        }
+                    new Vector2(0f, 0f)
+                };
 
-        private void SetCompleteButtonInteractable(bool isInteractable)
+            case 2:
+                return new Vector2[]
+                {
+                    new Vector2(-_horizontalSpacing * 0.5f, 0f),
+                    new Vector2( _horizontalSpacing * 0.5f, 0f)
+                };
+
+            case 3:
+                return new Vector2[]
+                {
+                    new Vector2(-_horizontalSpacing, 0f),
+                    new Vector2(0f,                  _verticalSpacing),
+                    new Vector2( _horizontalSpacing,  0f)
+                };
+
+            default:
+                return new Vector2[]
+                {
+                    new Vector2(-_horizontalSpacing * 1.5f, 0f),
+                    new Vector2(-_horizontalSpacing * 0.5f, _verticalSpacing),
+                    new Vector2( _horizontalSpacing * 0.5f, _verticalSpacing),
+                    new Vector2( _horizontalSpacing * 1.5f, 0f)
+                };
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Weighted random type picker
+    // ─────────────────────────────────────────────
+    private FloatingObjectType PickWeightedType()
+    {
+        int totalWeight = 0;
+        foreach (var cfg in _typeConfigs) totalWeight += cfg.spawnWeight;
+
+        int roll = Random.Range(0, totalWeight);
+        int cumulative = 0;
+
+        foreach (var cfg in _typeConfigs)
         {
-            if (_completeButton != null)
-            {
-                _completeButton.interactable = isInteractable;
-            }
+            cumulative += cfg.spawnWeight;
+            if (roll < cumulative) return cfg.objectType;
         }
 
-        #endregion
-
-        #region Events / Callbacks
-
-        private void HandleQuestionAnswered(bool wasCorrect)
-        {
-            _answeredCount++;
-
-            if (wasCorrect)
-            {
-                _correctCount++;
-            }
-
-            if (_answeredCount >= TotalQuestionCount)
-            {
-                SetCompleteButtonInteractable(true);
-            }
-        }
-
-        #endregion
+        return _typeConfigs[0].objectType;
     }
 }

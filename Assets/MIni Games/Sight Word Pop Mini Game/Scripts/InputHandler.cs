@@ -11,6 +11,7 @@ using UnityEngine.EventSystems;
 public class InputHandler : MonoBehaviour
 {
     public static InputHandler Instance { get; private set; }
+    public string CurrentTargetWord => _currentTargetWord; 
 
     private string _currentTargetWord;
     private bool _isAcceptingInput;
@@ -61,7 +62,6 @@ public class InputHandler : MonoBehaviour
 
     private void ProcessTap(Vector2 screenPosition)
     {
-        // Build a pointer event for UI raycasting
         var pointerData = new PointerEventData(EventSystem.current)
         {
             position = screenPosition
@@ -70,14 +70,18 @@ public class InputHandler : MonoBehaviour
         var results = new System.Collections.Generic.List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerData, results);
 
-        // Walk up the hierarchy from each hit until we find a FloatingObject
+        Debug.Log($"[InputHandler] Tap at {screenPosition}, hit {results.Count} objects");
+        
         foreach (var result in results)
         {
+            Debug.Log($"[InputHandler] Hit: {result.gameObject.name}");
+            
             var floatingObj = result.gameObject.GetComponentInParent<FloatingObject>();
             if (floatingObj != null)
             {
+                Debug.Log($"[InputHandler] Found FloatingObject: {floatingObj.Word}");
                 floatingObj.OnTapped(_currentTargetWord);
-                return; // Only handle one tap per frame
+                return;
             }
         }
     }

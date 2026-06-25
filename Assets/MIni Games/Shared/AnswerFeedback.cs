@@ -97,13 +97,17 @@ namespace Modules.GameFramework.UI
 
         /// <summary>
         /// Plays the wrong-answer feedback: shake, red color tween, and a
-        /// light haptic vibration so the player feels the mistake.
+        /// light haptic vibration so the player feels the mistake. The shake
+        /// always returns to whatever position the layout system had the
+        /// card in immediately before this call — never a cached value from
+        /// component initialization, since layout groups settle child
+        /// positions after Awake/OnEnable, not before.
         /// </summary>
         public void PlayWrong(Action onComplete = null)
         {
             KillActiveSequence();
 
-            _targetTransform.localPosition = Vector3.zero;
+            Vector3 restingPosition = _targetTransform.localPosition;
             TriggerHapticFeedback();
 
             _activeSequence = DOTween.Sequence();
@@ -122,21 +126,22 @@ namespace Modules.GameFramework.UI
                     _colorTarget.color = _originalColor;
                 }
 
-                _targetTransform.localPosition = Vector3.zero;
+                _targetTransform.localPosition = restingPosition;
                 onComplete?.Invoke();
             });
         }
 
         /// <summary>
-        /// Immediately resets scale, position, and color to their original
-        /// state. Call when a question card is reused/repooled.
+        /// Immediately resets scale and color to their original state.
+        /// Does not touch position — resting position is owned entirely by
+        /// the parent layout group, never by this component. Call when a
+        /// question card is reused/repooled.
         /// </summary>
         public void ResetVisualState()
         {
             KillActiveSequence();
 
             _targetTransform.localScale = _originalScale;
-            _targetTransform.localPosition = Vector3.zero;
 
             if (_colorTarget != null)
             {
