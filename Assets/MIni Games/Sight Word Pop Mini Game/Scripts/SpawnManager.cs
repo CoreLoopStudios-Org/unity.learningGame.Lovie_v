@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Manages object pooling and batch spawning for Sight Word Pop.
-/// Spawns floating word objects in staggered batches from below the
-/// screen. Enforces a minimum 2D distance between every spawned object
-/// at spawn time so objects never visually overlap as they float up.
+/// Manages object pooling and spawning for Sight Word Pop. Spawns one
+/// object at a time on a short continuous tick, at a fully random
+/// position along the spawn width, rejected and skipped for that tick
+/// if too close to any currently active object. All objects in a round
+/// share one speed — this is what keeps spacing constant after spawn;
+/// without it, faster objects drift into slower ones mid-flight even
+/// when spawn positions were correctly separated.
 /// </summary>
 public class SpawnManager : MonoBehaviour
 {
@@ -19,14 +22,13 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private RectTransform _spawnArea;
     [SerializeField] private Transform _poolRoot;
 
-    [Header("Batch Spawn Settings")]
-    [SerializeField] private int _batchSize = 3;
-    [SerializeField] private float _delayBetweenBatches = 4f;
-    [SerializeField] private float _delayInsideBatch = 2f;
+    [Header("Spawn Pacing")]
+    [Tooltip("How often a new spawn attempt is made.")]
+    [SerializeField] private float _spawnTickInterval = 0.6f;
 
-    [Header("Spawn Spacing")]
-    [SerializeField] private float _minSpawnDistance = 280f;
-    [SerializeField] private int _maxSpawnPushAttempts = 20;
+    [Header("Spacing")]
+    [Tooltip("Minimum distance between any two objects at spawn time.")]
+    [SerializeField] private float _minSpawnDistance = 350f;
 
     private readonly Dictionary<FloatingObjectType, ObjectPool> _pools
         = new Dictionary<FloatingObjectType, ObjectPool>();
@@ -48,16 +50,7 @@ public class SpawnManager : MonoBehaviour
 
     public IReadOnlyList<FloatingObject> ActiveObjects => _activeObjects;
 
-    /// <summary>
-    /// Y position just below the visible screen boundary in local space.
-    /// Read at spawn time — never cached — so layout is always settled first.
-    /// </summary>
     private float SpawnBelowScreenY => -(_spawnArea.rect.height * 0.5f) - 200f;
-
-    /// <summary>
-    /// Y position just above the visible screen boundary in local space.
-    /// Read at spawn time — never cached — so layout is always settled first.
-    /// </summary>
     private float TopBoundaryY => (_spawnArea.rect.height * 0.5f) + 200f;
 
     #endregion
@@ -81,7 +74,7 @@ public class SpawnManager : MonoBehaviour
     #region Public Methods
 
     /// <summary>
-    /// Begins the batch spawn loop for the given word list.
+    /// Begins the spawn loop for the given word list.
     /// Safe to call mid-round — stops any running routine first.
     /// </summary>
     public void StartSpawning(
@@ -95,8 +88,7 @@ public class SpawnManager : MonoBehaviour
         _levelData = levelData;
 
         StopSpawning();
-
-        _spawnRoutine = StartCoroutine(BatchSpawnRoutine());
+        _spawnRoutine = StartCoroutine(SpawnRoutine());
     }
 
     /// <summary>
@@ -128,31 +120,25 @@ public class SpawnManager : MonoBehaviour
 
     /// <summary>
     /// Triggers the shake animation on any active object matching the word.
-    /// Called when word audio starts playing.
     /// </summary>
     public void NotifyWordAudioStarted(string word)
     {
         foreach (var obj in _activeObjects)
         {
             if (string.Equals(obj.Word, word, System.StringComparison.OrdinalIgnoreCase))
-            {
                 obj.StartShake();
-            }
         }
     }
 
     /// <summary>
     /// Stops the shake animation on any active object matching the word.
-    /// Called when word audio finishes.
     /// </summary>
     public void NotifyWordAudioStopped(string word)
     {
         foreach (var obj in _activeObjects)
         {
             if (string.Equals(obj.Word, word, System.StringComparison.OrdinalIgnoreCase))
-            {
                 obj.StopShake();
-            }
         }
     }
 
@@ -170,33 +156,34 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    private IEnumerator BatchSpawnRoutine()
+    private IEnumerator SpawnRoutine()
     {
-        while (_spawnArea.rect.height <= 0f) yield return null;
+        while (_spawnArea.rect.height <= 0f)
+            yield return null;
+
         yield return new WaitForSeconds(0.5f);
+
+        // One speed for the entire round — not per-object. If objects
+        // moved at different speeds, spacing established at spawn time
+        // would drift as faster objects caught up to slower ones,
+        // causing mid-flight overlap even when spawn positions were
+        // correctly separated.
+        float roundSpeed = Random.Range(_levelData.floatSpeedMin, _levelData.floatSpeedMax);
 
         while (_wordQueueIndex < _wordQueue.Count)
         {
-            int spawned = 0;
-            // One speed for the whole batch — objects in the same batch
-            // must travel at identical speed or they converge and overlap.
-            float batchSpeed = Random.Range(_levelData.floatSpeedMin, _levelData.floatSpeedMax);
-
-            while (spawned < _batchSize && _wordQueueIndex < _wordQueue.Count)
+            if (TryFindFreePosition(out Vector2 position))
             {
-                SpawnOne(batchSpeed);
-                spawned++;
-
-                if (spawned < _batchSize && _wordQueueIndex < _wordQueue.Count)
-                    yield return new WaitForSeconds(_delayInsideBatch);
+                SpawnOne(position, roundSpeed);
             }
+            // If no free position this tick, simply skip — the next
+            // tick will try again once something has risen clear.
 
-            if (_wordQueueIndex < _wordQueue.Count)
-                yield return new WaitForSeconds(_delayBetweenBatches);
+            yield return new WaitForSeconds(_spawnTickInterval);
         }
     }
 
-    private void SpawnOne(float speed)
+    private void SpawnOne(Vector2 localPos, float speed)
     {
         if (_wordQueueIndex >= _wordQueue.Count) return;
 
@@ -206,87 +193,47 @@ public class SpawnManager : MonoBehaviour
         var cfg = _configMap[type];
         var pool = _pools[type];
 
-        Vector2 spawnLocalPos = FindClearSpawnPosition();
-
-        GameObject go = pool.Get(_spawnArea.TransformPoint(spawnLocalPos), _spawnArea);
+        GameObject go = pool.Get(_spawnArea.TransformPoint(
+            new Vector3(localPos.x, localPos.y, 0f)), _spawnArea);
 
         RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchoredPosition = spawnLocalPos;
+        rt.anchoredPosition = localPos;
 
         FloatingObject floatingObj = go.GetComponent<FloatingObject>();
-        floatingObj.Init(word, cfg, speed, TopBoundaryY, _tapCallback);
-        _activeObjects.Add(floatingObj);
-    }
-
-    private void SpawnOne()
-    {
-        if (_wordQueueIndex >= _wordQueue.Count)
-            return;
-
-        string word = _wordQueue[_wordQueueIndex++];
-
-        var type = PickWeightedType();
-        var cfg = _configMap[type];
-        var pool = _pools[type];
-
-        Vector2 spawnLocalPos = FindClearSpawnPosition();
-
-        GameObject go = pool.Get(_spawnArea.TransformPoint(spawnLocalPos), _spawnArea);
-
-        // anchoredPosition must be set explicitly AFTER reparenting.
-        // ObjectPool.Get() sets transform.position (world space), but
-        // FloatingObject.Update() moves and reads anchoredPosition (local space).
-        // If anchors are not centered, these two coordinate systems diverge —
-        // the object appears correct for one frame then jumps to the wrong spot.
-        // Setting anchoredPosition directly here guarantees both systems agree.
-        RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchoredPosition = spawnLocalPos;
-
-        FloatingObject floatingObj = go.GetComponent<FloatingObject>();
-
-        float speed = Random.Range(_levelData.floatSpeedMin, _levelData.floatSpeedMax);
-
         floatingObj.Init(word, cfg, speed, TopBoundaryY, _tapCallback);
         _activeObjects.Add(floatingObj);
     }
 
     /// <summary>
-    /// Finds a spawn position in local space below the screen that is at
-    /// least _minSpawnDistance away from every currently active object.
-    /// Pushes the candidate further down on each failed attempt.
-    /// Falls back to the last candidate if max attempts are exceeded
-    /// to guarantee the loop always terminates.
+    /// Attempts to find a single random X position along the spawn
+    /// width that is at least _minSpawnDistance away from every
+    /// active object currently on screen.
     /// </summary>
-    private Vector2 FindClearSpawnPosition()
+    private bool TryFindFreePosition(out Vector2 result)
     {
-        float spawnX = GetRandomLaneX();
-        float spawnY = SpawnBelowScreenY - Random.Range(0f, _minSpawnDistance);
+        float halfWidth = _spawnArea.rect.width * 0.5f;
+        float usableHalfWidth = halfWidth * 0.8f; // keep off the hard edges
 
-        for (int attempt = 0; attempt < _maxSpawnPushAttempts; attempt++)
+        const int maxAttempts = 8;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            Vector2 candidate = new Vector2(spawnX, spawnY);
+            float candidateX = Random.Range(-usableHalfWidth, usableHalfWidth);
+            float candidateY = SpawnBelowScreenY;
+            Vector2 candidate = new Vector2(candidateX, candidateY);
 
-            if (IsClearOfAllActiveObjects(candidate))
+            if (IsFarEnoughFromActive(candidate))
             {
-                return candidate;
+                result = candidate;
+                return true;
             }
-
-            spawnY -= _minSpawnDistance;
-            spawnX = GetRandomLaneX();
         }
 
-        Debug.LogWarning("[SpawnManager] Could not find clear spawn position " +
-                         "after max attempts. Spawning at fallback position.");
-
-        return new Vector2(spawnX, spawnY);
+        result = Vector2.zero;
+        return false;
     }
 
-    /// <summary>
-    /// Returns true if the candidate local-space position is at least
-    /// _minSpawnDistance away from every active object's current
-    /// anchoredPosition.
-    /// </summary>
-    private bool IsClearOfAllActiveObjects(Vector2 candidateLocalPos)
+    private bool IsFarEnoughFromActive(Vector2 candidate)
     {
         foreach (FloatingObject obj in _activeObjects)
         {
@@ -295,29 +242,11 @@ public class SpawnManager : MonoBehaviour
             RectTransform rt = obj.GetComponent<RectTransform>();
             if (rt == null) continue;
 
-            float distance = Vector2.Distance(candidateLocalPos, rt.anchoredPosition);
-
-            if (distance < _minSpawnDistance)
-            {
+            if (Vector2.Distance(candidate, rt.anchoredPosition) < _minSpawnDistance)
                 return false;
-            }
         }
 
         return true;
-    }
-
-    private float GetRandomLaneX()
-    {
-        float width = _spawnArea.rect.width;
-
-        float[] lanes = new float[]
-        {
-            -width * 0.35f,
-            0f,
-            width * 0.35f
-        };
-
-        return lanes[Random.Range(0, lanes.Length)];
     }
 
     private FloatingObjectType PickWeightedType()

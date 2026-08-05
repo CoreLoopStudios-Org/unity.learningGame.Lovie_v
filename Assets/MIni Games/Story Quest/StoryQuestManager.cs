@@ -31,6 +31,9 @@ namespace Modules.Games.StoryQuest
         [SerializeField] private QuestionCardController _questionCardPrefab;
         [SerializeField] private Button _completeButton;
 
+        [Header("Completion")]
+        [SerializeField] private GameObject _completionPanel;
+
         private IStoryQuestContentRepository _contentRepository;
         private StoryQuestLevel _level;
         private readonly List<QuestionCardController> _spawnedCards = new List<QuestionCardController>();
@@ -86,6 +89,32 @@ namespace Modules.Games.StoryQuest
             if (_quizPanel != null)
             {
                 _quizPanel.SetActive(true);
+            }
+        }
+
+        /// <summary>
+        /// Bound to the Complete button's OnClick(), shown only once every
+        /// question has been answered. Locks the quiz panel against further
+        /// input, logs the final result, and shows the completion panel.
+        /// No-ops if called before every question has been answered.
+        /// </summary>
+        public void CompleteGame()
+        {
+            if (_answeredCount < TotalQuestionCount)
+            {
+                return;
+            }
+
+            if (_quizPanel != null)
+            {
+                _quizPanel.SetActive(false);
+            }
+
+            Debug.Log($"Story Quest Complete: {CorrectAnswerCount}/{TotalQuestionCount} correct");
+
+            if (_completionPanel != null)
+            {
+                _completionPanel.SetActive(true);
             }
         }
 
