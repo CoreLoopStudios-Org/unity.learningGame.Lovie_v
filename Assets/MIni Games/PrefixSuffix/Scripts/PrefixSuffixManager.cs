@@ -25,6 +25,8 @@ namespace Modules.Games.PrefixSuffix
         [Tooltip("Displays the current entry's root word, live-updated to preview " +
                  "the combined word as the player selects an option and a mode.")]
         [SerializeField] private TextMeshProUGUI _rootWordText;
+        [Tooltip("Displays \"Round X/Y\" for the current entry. Updated on every LoadEntry() call.")]
+        [SerializeField] private TextMeshProUGUI _roundCounterText;
 
         [Header("Mode Toggle")]
         // Both Toggle components must have the same ToggleGroup assigned to their
@@ -70,6 +72,9 @@ namespace Modules.Games.PrefixSuffix
         [Header("Round Timer")]
         [Tooltip("Shared countdown component. Timer expiry is treated the same as an incorrect answer.")]
         [SerializeField] private RoundTimer _roundTimer;
+
+        [Header("Completion")]
+        [SerializeField] private GameObject _completionPanel;
 
         private const int NoSelection = -1;
 
@@ -186,6 +191,11 @@ namespace Modules.Games.PrefixSuffix
             if (_feedbackText != null)
             {
                 _feedbackText.text = string.Empty;
+            }
+
+            if (_roundCounterText != null)
+            {
+                _roundCounterText.text = $"Round {index + 1}/{_roundEntries.Count}";
             }
 
             PopulateOptionButtons(entry);
@@ -495,7 +505,17 @@ namespace Modules.Games.PrefixSuffix
             }
             else
             {
+                // Interaction is already disabled here — EvaluateAnswer() always
+                // calls SetInteractionEnabled(false) before this coroutine is
+                // started, and nothing re-enables it since LoadEntry() (the only
+                // caller of SetInteractionEnabled(true)) does not run again once
+                // the session is complete. No further call needed.
                 Debug.Log($"[PrefixSuffixManager] Prefix & Suffix Complete: {CorrectAnswerCount}/{TotalQuestionCount} correct");
+
+                if (_completionPanel != null)
+                {
+                    _completionPanel.SetActive(true);
+                }
             }
         }
 
