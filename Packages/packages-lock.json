@@ -1,14 +1,23 @@
 {
   "dependencies": {
-    "com.simonoliver.unityfigma": {
-      "version": "https://github.com/simonoliver/UnityFigmaBridge.git",
+    "com.besty.unity-skills": {
+      "version": "https://github.com/Besty0728/Unity-Skills.git?path=/SkillsForUnity",
       "depth": 0,
       "source": "git",
       "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2",
+        "com.unity.timeline": "1.7.7"
+      },
+      "hash": "6889ead64cfa2af7a04272e6d76ae01b592dda88"
+    },
+    "com.simonoliver.unityfigma": {
+      "version": "file:com.simonoliver.unityfigma",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
         "com.unity.nuget.newtonsoft-json": "2.0.1-preview.1",
         "com.unity.textmeshpro": "2.0.1"
-      },
-      "hash": "0e2fd2f8114209ddc0fd6af3676d3da0bebf2021"
+      }
     },
     "com.unity.2d.animation": {
       "version": "15.1.0",
@@ -136,6 +145,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.bindings.openimageio": {
+      "version": "1.0.2",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.collections": "1.2.4"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.burst": {
       "version": "1.8.29",
       "depth": 1,
@@ -176,6 +194,13 @@
         "com.unity.test-framework": "1.4.6",
         "com.unity.test-framework.performance": "3.2.0"
       }
+    },
+    "com.unity.device-simulator.devices": {
+      "version": "1.0.1",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
     },
     "com.unity.dt.app-ui": {
       "version": "2.1.7",
@@ -248,6 +273,17 @@
       "depth": 1,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.recorder": {
+      "version": "5.1.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.timeline": "1.8.7",
+        "com.unity.collections": "1.2.4",
+        "com.unity.bindings.openimageio": "1.0.2"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {

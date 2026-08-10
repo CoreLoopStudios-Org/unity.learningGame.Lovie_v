@@ -198,8 +198,8 @@ MonoBehaviour:
   m_Interactable: 1
   m_TargetGraphic: {fileID: 0}
   toggleTransition: 1
-  graphic: {fileID: 0}
-  m_Group: {fileID: 0}
+  graphic: {fileID: 2106112670}
+  m_Group: {fileID: 688241579}
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -838,6 +838,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7761440604876971986, guid: 1e2ad46df3e322c43ae973844a8554b0, type: 3}
   m_PrefabInstance: {fileID: 139510192}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &139510196 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5458275993380703894, guid: 1e2ad46df3e322c43ae973844a8554b0, type: 3}
+  m_PrefabInstance: {fileID: 139510192}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &567997075
 GameObject:
   m_ObjectHideFlags: 0
@@ -1509,7 +1520,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fafe2cfe61f6974895a912c3755e8f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ToggleGroup
-  m_AllowSwitchOff: 0
+  m_AllowSwitchOff: 1
 --- !u!1 &696202023
 GameObject:
   m_ObjectHideFlags: 0
@@ -2103,11 +2114,11 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 0}
   toggleTransition: 1
   graphic: {fileID: 680633300}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 688241579}
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 1
+  m_IsOn: 0
 --- !u!1 &1193980844
 GameObject:
   m_ObjectHideFlags: 0
@@ -3931,10 +3942,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7c480153bf8a7b4ca0a48e2f392805b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Modules.Games.PrefixSuffix.PrefixSuffixManager
-  _entriesPerBatch: 10
+  _entriesPerBatch: 3
   _rootWordText: {fileID: 937598898}
-  _prefixToggle: {fileID: 1164205577}
-  _suffixToggle: {fileID: 33733998}
+  _roundCounterText: {fileID: 139510196}
+  _prefixToggle: {fileID: 33733998}
+  _suffixToggle: {fileID: 1164205577}
   _optionButtons:
   - {fileID: 1661167166}
   - {fileID: 696202027}
@@ -3960,6 +3972,7 @@ MonoBehaviour:
   _feedbackDisplayDuration: 1.5
   _initialHints: 3
   _roundTimer: {fileID: 2021419830}
+  _completionPanel: {fileID: 0}
 --- !u!114 &2021419830
 MonoBehaviour:
   m_ObjectHideFlags: 0
