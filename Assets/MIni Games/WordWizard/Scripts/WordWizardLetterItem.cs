@@ -86,6 +86,8 @@ namespace Modules.Games.WordWizard
 
         private void HandleClicked()
         {
+            Debug.Log($"[DIAG] Button clicked - letter={LetterChar} interactable={_button.interactable}");
+
             _onClicked?.Invoke(this);
         }
 
