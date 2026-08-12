@@ -18,6 +18,10 @@ namespace Modules.Games.StorySequencing
         #region Fields
 
         [SerializeField] private TextMeshProUGUI _eventText;
+        [Tooltip("The number badge shown on the card (e.g. \"1\", \"2\"), displaying " +
+                 "its current position in the list. This component does not track " +
+                 "its own position — it must be refreshed externally after any reorder.")]
+        [SerializeField] private TextMeshProUGUI _positionNumberText;
 
         private RectTransform _rectTransform;
         private Canvas _parentCanvas;
@@ -61,6 +65,20 @@ namespace Modules.Games.StorySequencing
             if (_eventText != null)
             {
                 _eventText.text = eventText;
+            }
+        }
+
+        /// <summary>
+        /// Updates the position number badge shown on this card. Called by
+        /// StorySequencingManager after every reorder, since this component
+        /// has no way to know its own list position on its own.
+        /// </summary>
+        /// <param name="displayNumber">The 1-indexed position to display.</param>
+        public void SetPositionNumber(int displayNumber)
+        {
+            if (_positionNumberText != null)
+            {
+                _positionNumberText.text = displayNumber.ToString();
             }
         }
 

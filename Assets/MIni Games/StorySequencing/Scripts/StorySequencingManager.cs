@@ -145,6 +145,7 @@ namespace Modules.Games.StorySequencing
             }
 
             SpawnEventCards();
+            RefreshAllCardPositionNumbers();
         }
 
         private void SpawnEventCards()
@@ -265,6 +266,24 @@ namespace Modules.Games.StorySequencing
             _feedbackText.text = string.Format(_resultMessageFormat, CorrectPositionCount, TotalEventCount);
         }
 
+        private void RefreshAllCardPositionNumbers()
+        {
+            if (_cardListContainer == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _cardListContainer.childCount; i++)
+            {
+                DraggableEventCard childCard = _cardListContainer.GetChild(i).GetComponent<DraggableEventCard>();
+
+                if (childCard != null)
+                {
+                    childCard.SetPositionNumber(i + 1);
+                }
+            }
+        }
+
         #endregion
 
         #region Events / Callbacks
@@ -273,6 +292,7 @@ namespace Modules.Games.StorySequencing
         {
             int targetIndex = ResolveDropSiblingIndex(card, screenPosition);
             card.transform.SetSiblingIndex(targetIndex);
+            RefreshAllCardPositionNumbers();
         }
 
         #endregion

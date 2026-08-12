@@ -468,6 +468,8 @@ namespace Modules.Games.WordWizard
 
         private void HandleLetterItemClicked(WordWizardLetterItem item)
         {
+            Debug.Log($"[DIAG] HandleLetterItemClicked - letter={item.LetterChar} isPlaced={_placedLetterStack.Contains(item)} isTopOfStack={(_placedLetterStack.Count > 0 && _placedLetterStack[_placedLetterStack.Count - 1] == item)} stackCount={_placedLetterStack.Count}");
+
             if (_isTransitioning || _hasAnsweredCurrentEntry)
             {
                 return;
