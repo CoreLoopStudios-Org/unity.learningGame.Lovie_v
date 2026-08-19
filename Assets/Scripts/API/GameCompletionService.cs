@@ -277,11 +277,25 @@ namespace Api
             catch (ApiException ex)
             {
                 Debug.LogWarning($"[GameCompletionService] API warning: {ex.Message}");
+                OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
+                    gameId = result.GameId,
+                    score = result.Score,
+                    correctCount = result.CorrectCount,
+                    totalCount = result.TotalCount,
+                    durationSeconds = result.DurationSeconds
+                }));
                 ShowCompletionPanel(result, null);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GameCompletionService] Error reporting completion: {ex.Message}");
+                OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
+                    gameId = result.GameId,
+                    score = result.Score,
+                    correctCount = result.CorrectCount,
+                    totalCount = result.TotalCount,
+                    durationSeconds = result.DurationSeconds
+                }));
                 ShowCompletionPanel(result, null);
             }
         }

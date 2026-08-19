@@ -107,8 +107,30 @@ namespace Api
         {
             if (IsAuthenticated && !IsValidToken())
             {
-                OnSessionExpired?.Invoke();
+                HandleSessionExpired();
             }
+        }
+
+        public void HandleSessionExpired()
+        {
+            string previousRole = role;
+            ClearSession();
+            OnSessionExpired?.Invoke();
+            RedirectToLogin(previousRole);
+        }
+
+        public void RedirectToLogin(string userRole = null)
+        {
+            string targetRole = userRole ?? role ?? "Child";
+            string sceneName = targetRole switch
+            {
+                "Admin" => "Main Game/Admin/Admin Login",
+                "Parent" => "Main Game/Parent/Parent Login",
+                _ => "Main Game/Children/Login"
+            };
+
+            Debug.Log($"[SessionManager] Session expired or invalid. Redirecting to {sceneName}");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
 
         private string ExtractChildIdFromToken(string jwtToken)
