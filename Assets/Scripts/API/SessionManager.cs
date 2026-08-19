@@ -22,6 +22,29 @@ namespace Api
         public bool IsAuthenticated => !string.IsNullOrEmpty(token) && IsValidToken();
         public bool IsChildSession => role == "Child";
 
+        public static string ExtractRoleFromTokenStatic(string jwtToken)
+        {
+            if (string.IsNullOrEmpty(jwtToken))
+                return null;
+
+            try
+            {
+                string[] parts = jwtToken.Split('.');
+                if (parts.Length < 2)
+                    return null;
+
+                string payload = parts[1];
+                string decoded = Base64Decode(payload);
+
+                TokenPayload tokenData = JsonUtility.FromJson<TokenPayload>(decoded);
+                return tokenData?.role;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         void Awake()
         {
             if (instance != null && instance != this)
@@ -47,7 +70,7 @@ namespace Api
         {
             token = newToken;
             expiresAt = newExpiresAt;
-            role = newRole ?? ExtractRoleFromToken(newToken);
+            role = newRole ?? ExtractRoleFromTokenStatic(newToken);
             childId = newChildId ?? ExtractChildIdFromToken(newToken);
 
             TokenStore.SaveToken(token, expiresAt, role, childId);
@@ -85,29 +108,6 @@ namespace Api
             if (IsAuthenticated && !IsValidToken())
             {
                 OnSessionExpired?.Invoke();
-            }
-        }
-
-        private string ExtractRoleFromToken(string jwtToken)
-        {
-            if (string.IsNullOrEmpty(jwtToken))
-                return null;
-
-            try
-            {
-                string[] parts = jwtToken.Split('.');
-                if (parts.Length < 2)
-                    return null;
-
-                string payload = parts[1];
-                string decoded = Base64Decode(payload);
-
-                TokenPayload tokenData = JsonUtility.FromJson<TokenPayload>(decoded);
-                return tokenData?.role;
-            }
-            catch
-            {
-                return null;
             }
         }
 
