@@ -65,6 +65,7 @@ namespace UI
                         response.childId
                     );
 
+                    InitializeCoinWallet(response.coins, response.loginStreak);
                     await CheckDailyReward(response.token);
 
                     UnityEngine.SceneManagement.SceneManager.LoadScene(mainMenuScene);
@@ -98,11 +99,32 @@ namespace UI
                 {
                     var result = await childApi.ClaimDailyRewardAsync();
                     Debug.Log($"Daily reward: {(result.alreadyClaimed ? "Already claimed" : $"Awarded {result.coinsAwarded} coins")} | Streak: {result.loginStreak}");
+
+                    if (!result.alreadyClaimed && CoinWallet.Instance != null)
+                    {
+                        CoinWallet.Instance.UpdateBalance(result.totalCoins);
+                        CoinWallet.Instance.UpdateStreak(result.loginStreak);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"Daily reward check failed: {ex.Message}");
+            }
+        }
+
+        void InitializeCoinWallet(int coins, int streak)
+        {
+            if (CoinWallet.Instance == null)
+            {
+                var go = new GameObject("CoinWallet");
+                go.AddComponent<CoinWallet>();
+            }
+
+            if (CoinWallet.Instance != null)
+            {
+                CoinWallet.Instance.SetBalance(coins);
+                CoinWallet.Instance.SetStreak(streak);
             }
         }
 

@@ -60,6 +60,7 @@ namespace UI
                     {
                         ShowResult("Daily Reward!", $"+{result.coinsAwarded} Coins!");
                         UpdateCoinDisplay(result.totalCoins, result.loginStreak);
+                        RefreshCoinWallet(result.totalCoins, result.loginStreak);
                     }
                 }
 
@@ -97,6 +98,15 @@ namespace UI
 
             if (streakText != null)
                 streakText.text = $"{streak} Day Streak!";
+        }
+
+        void RefreshCoinWallet(int totalCoins, int streak)
+        {
+            if (CoinWallet.Instance != null)
+            {
+                CoinWallet.Instance.UpdateBalance(totalCoins);
+                CoinWallet.Instance.UpdateStreak(streak);
+            }
         }
 
         void ShowLoading()

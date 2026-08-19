@@ -26,6 +26,7 @@ namespace Avatar
         public event Action<AvatarPartCategory> OnCategoryChanged;
         public event Action OnAvatarLoaded;
         public event Action OnAvatarReset;
+        public event Action OnAvatarSaved;
 
         #region Initialization
 
@@ -71,6 +72,25 @@ namespace Avatar
             {
                 SaveAvatar();
             }
+        }
+
+        /// <summary>
+        /// Select part without triggering auto-save (used for batch loading)
+        /// </summary>
+        public void SelectPartWithoutSave(AvatarPartCategory category, AvatarPartItem part)
+        {
+            if (part == null)
+            {
+                return;
+            }
+
+            if (part.Category != category)
+            {
+                Debug.LogWarning($"Part category mismatch. Expected {category}, got {part.Category}");
+                return;
+            }
+
+            currentSelections[category] = part.ItemId;
         }
 
         /// <summary>
@@ -160,6 +180,7 @@ namespace Avatar
             }
 
             PlayerPrefs.Save();
+            OnAvatarSaved?.Invoke();
         }
 
         /// <summary>
