@@ -46,7 +46,14 @@ namespace CoreLoop.WordMatch
 
             if (cardType == CardType.ImageCard)
             {
-                contentImage.sprite = entry.image;
+                if (entry.image != null)
+                {
+                    contentImage.sprite = entry.image;
+                }
+                else if (!string.IsNullOrEmpty(entry.imageUrl))
+                {
+                    LoadRemoteImage(entry.imageUrl);
+                }
                 contentImage.preserveAspect = true;
             }
             else
@@ -57,6 +64,15 @@ namespace CoreLoop.WordMatch
             }
 
             matchPoint.Setup(this);
+        }
+
+        private async void LoadRemoteImage(string url)
+        {
+            var sprite = await Api.RemoteAssetCache.Instance.GetSpriteAsync(url);
+            if (sprite != null && contentImage != null)
+            {
+                contentImage.sprite = sprite;
+            }
         }
 
         public void SetMatched(bool isMatched)
@@ -101,10 +117,22 @@ namespace CoreLoop.WordMatch
             }
         }
 
-        private void PlayAudio()
+        private async void PlayAudio()
         {
-            if (audioSource != null && entry.audioClip != null)
+            if (audioSource == null || entry == null) return;
+
+            if (entry.audioClip != null)
+            {
                 audioSource.PlayOneShot(entry.audioClip);
+            }
+            else if (!string.IsNullOrEmpty(entry.audioUrl))
+            {
+                var clip = await Api.RemoteAssetCache.Instance.GetAudioAsync(entry.audioUrl);
+                if (clip != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(clip);
+                }
+            }
         }
     }
 }

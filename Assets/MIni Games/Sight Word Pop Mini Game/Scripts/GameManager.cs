@@ -52,6 +52,8 @@ public class GameManager : MonoBehaviour
 
     private Coroutine _audioLoopRoutine;
 
+    private IWordProvider _wordProvider;
+
     // ─────────────────────────────────────────────
     // Events (UIManager subscribes)
     // ─────────────────────────────────────────────
@@ -66,6 +68,10 @@ public class GameManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        _wordProvider = Api.ApiConfig.Instance.UseRemoteContent
+            ? (IWordProvider)new ApiWordProvider(_levelData)
+            : new ScriptableObjectWordProvider(_levelData);
     }
 
     private void Start()
@@ -80,8 +86,25 @@ public class GameManager : MonoBehaviour
         }
         completionReporter.SetGameId("sight_word_pop");
 
-        AudioManager.Instance.OnWordAudioStarted += HandleWordAudioStarted;
-        AudioManager.Instance.OnWordAudioFinished += HandleWordAudioFinished;
+        // Ensure AudioManager exists
+        if (AudioManager.Instance == null)
+        {
+            var audioGo = new GameObject("AudioManager");
+            audioGo.AddComponent<AudioManager>();
+        }
+
+        // Ensure UIManager HUD exists if not in scene
+        if (FindObjectOfType<UIManager>() == null)
+        {
+            var uiGo = new GameObject("UIManager");
+            uiGo.AddComponent<UIManager>();
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.OnWordAudioStarted += HandleWordAudioStarted;
+            AudioManager.Instance.OnWordAudioFinished += HandleWordAudioFinished;
+        }
     }
 
     private void OnDestroy()
@@ -105,20 +128,26 @@ public class GameManager : MonoBehaviour
         _missedWords = 0;
         _currentTargetIndex = 0;
 
-        // Get shuffled word list for this round
-        _roundWords = _levelData.GetShuffledWords(_levelData.wordsPerRound);
+        int wordsCount = _levelData != null ? _levelData.wordsPerRound : 8;
+        _roundWords = _wordProvider != null ? _wordProvider.GetWords(wordsCount) : (_levelData != null ? _levelData.GetShuffledWords(wordsCount) : new List<WordEntry>());
 
         SetState(GameState.Playing);
 
         // Tell SpawnManager to start
-        SpawnManager.Instance.StartSpawning(
-            ExtractWordStrings(_roundWords),
-            _levelData,
-            HandleObjectTapped
-        );
+        if (SpawnManager.Instance != null && _levelData != null)
+        {
+            SpawnManager.Instance.StartSpawning(
+                ExtractWordStrings(_roundWords),
+                _levelData,
+                HandleObjectTapped
+            );
+        }
 
         // Tell InputHandler to accept taps
-        InputHandler.Instance.SetInputActive(true);
+        if (InputHandler.Instance != null)
+        {
+            InputHandler.Instance.SetInputActive(true);
+        }
 
         // Start the audio loop
         _audioLoopRoutine = StartCoroutine(AudioLoop());
@@ -172,15 +201,21 @@ public class GameManager : MonoBehaviour
             if (_roundWords == null || _roundWords.Count == 0) yield break;
 
             // Announce current target to InputHandler
-            InputHandler.Instance.SetTargetWord(CurrentTarget.word);
+            if (InputHandler.Instance != null)
+            {
+                InputHandler.Instance.SetTargetWord(CurrentTarget.word);
+            }
 
             // Play the word audio
-            AudioManager.Instance.PlayWord(CurrentTarget.audioClip);
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayWord(CurrentTarget);
+            }
 
             // Wait for audio to finish (AudioManager fires OnWordAudioFinished)
             // We poll state here; the shake start/stop is event-driven
-            float waitTime = (CurrentTarget.audioClip != null ? CurrentTarget.audioClip.length : 1f)
-                             + _levelData.audioPlayInterval;
+            float waitTime = (CurrentTarget.audioClip != null ? CurrentTarget.audioClip.length : 1.5f)
+                             + (_levelData != null ? _levelData.audioPlayInterval : 3f);
             yield return new WaitForSeconds(waitTime);
 
             // Advance to next word (loop through the list)

@@ -13,7 +13,10 @@ namespace CoreLoop.SentenceBuilder
         public string sentence; 
         
         [Tooltip("Optional: Extra words to show in the pool that are not part of the correct sentence to increase difficulty.")]
-        public string[] decoyWords; 
+        public string[] decoyWords;
+
+        public string imageUrl;
+        public string audioUrl;
 
         public string[] GetParsedWords()
         {

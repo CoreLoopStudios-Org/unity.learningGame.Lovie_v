@@ -68,6 +68,14 @@ namespace CoreLoop.SentenceBuilder
         // Uniform slot size computed once per sentence and reused for reset.
         private float _defaultSlotW;
         private float _defaultSlotH;
+        private ISentenceBuilderLevelRepository _levelRepository;
+
+        private void Awake()
+        {
+            _levelRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (ISentenceBuilderLevelRepository)new ApiSentenceBuilderLevelRepository(levelData)
+                : new ScriptableObjectSentenceBuilderLevelRepository(levelData);
+        }
 
         private void Start()
         {
@@ -80,6 +88,21 @@ namespace CoreLoop.SentenceBuilder
                 }
             }
             completionReporter.SetGameId("sentence_builder");
+
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
+
+            if (_levelRepository != null)
+            {
+                var loaded = _levelRepository.LoadLevel();
+                if (loaded != null) levelData = loaded;
+            }
 
             placedWordsContainer = CreatePlacedWordsOverlay();
             CacheWordPrefabMetrics();
@@ -226,10 +249,17 @@ namespace CoreLoop.SentenceBuilder
             currentSentenceIndex = index;
             var sentenceData = levelData.sentences[index];
 
-            if (scenarioImage != null && sentenceData.image != null)
+            if (scenarioImage != null)
             {
-                scenarioImage.sprite = sentenceData.image;
-                scenarioImage.preserveAspect = true;
+                if (sentenceData.image != null)
+                {
+                    scenarioImage.sprite = sentenceData.image;
+                    scenarioImage.preserveAspect = true;
+                }
+                else if (!string.IsNullOrEmpty(sentenceData.imageUrl))
+                {
+                    LoadScenarioImage(sentenceData.imageUrl);
+                }
             }
 
             string[] parsedWords = sentenceData.GetParsedWords();
@@ -486,6 +516,16 @@ namespace CoreLoop.SentenceBuilder
 
             isAnimating = false;
             yield return StartCoroutine(MoveWordToSlot(correctWordItem, targetSlot));
+        }
+
+        private async void LoadScenarioImage(string url)
+        {
+            var sprite = await Api.RemoteAssetCache.Instance.GetSpriteAsync(url);
+            if (sprite != null && scenarioImage != null)
+            {
+                scenarioImage.sprite = sprite;
+                scenarioImage.preserveAspect = true;
+            }
         }
 
         private void CheckAnswer()

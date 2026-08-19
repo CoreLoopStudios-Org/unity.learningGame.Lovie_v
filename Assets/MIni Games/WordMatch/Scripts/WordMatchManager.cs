@@ -59,10 +59,18 @@ namespace CoreLoop.WordMatch
         private int  currentRoundIndex = 0;
         private bool isTransitioning   = false;
 
+        private IWordMatchLevelRepository _levelRepository;
         private float _timeRemaining;
         private bool  _timerRunning;
         private TextMeshProUGUI _timeUpText;
         private float _timeUpTextOriginalSize;
+
+        private void Awake()
+        {
+            _levelRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IWordMatchLevelRepository)new ApiWordMatchLevelRepository(currentLevel)
+                : new ScriptableObjectWordMatchLevelRepository(currentLevel);
+        }
 
         private void Start()
         {
@@ -75,6 +83,21 @@ namespace CoreLoop.WordMatch
                 }
             }
             completionReporter.SetGameId("word_match");
+
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
+
+            if (_levelRepository != null)
+            {
+                var loaded = _levelRepository.LoadLevel();
+                if (loaded != null) currentLevel = loaded;
+            }
 
             if (columnsCanvasGroup != null) columnsCanvasGroup.alpha = 0f;
 
@@ -322,7 +345,13 @@ namespace CoreLoop.WordMatch
                 currentDrawingLine.SetColor(isCorrect ? correctColor : incorrectColor);
 
                 if (audioSource != null)
-                    audioSource.PlayOneShot(isCorrect ? successSound : errorSound);
+                {
+                    AudioClip clipToPlay = isCorrect ? successSound : errorSound;
+                    if (clipToPlay != null)
+                    {
+                        audioSource.PlayOneShot(clipToPlay);
+                    }
+                }
 
                 matches[currentStartPoint] = hitPoint;
                 matches[hitPoint] = currentStartPoint;

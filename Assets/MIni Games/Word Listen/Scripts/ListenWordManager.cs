@@ -62,6 +62,14 @@ namespace CoreLoop.ListenWord
 
         // Created automatically at runtime — not an Inspector field.
         private Transform placedLettersContainer;
+        private IListenWordLevelRepository _levelRepository;
+
+        private void Awake()
+        {
+            _levelRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IListenWordLevelRepository)new ApiListenWordLevelRepository(levelData)
+                : new ScriptableObjectListenWordLevelRepository(levelData);
+        }
 
         private void Start()
         {
@@ -74,6 +82,21 @@ namespace CoreLoop.ListenWord
                 }
             }
             completionReporter.SetGameId("word_listen");
+
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
+
+            if (_levelRepository != null)
+            {
+                var loaded = _levelRepository.LoadLevel();
+                if (loaded != null) levelData = loaded;
+            }
 
             placedLettersContainer = CreatePlacedLettersOverlay();
 
@@ -206,10 +229,32 @@ namespace CoreLoop.ListenWord
             if (hintButton != null) hintButton.interactable = remainingHints > 0;
         }
 
-        private void PlayWordAudio()
+        private async void PlayWordAudio()
         {
-            if (audioSource != null && currentWordData?.audioClip != null)
+            if (audioSource == null || currentWordData == null) return;
+
+            if (currentWordData.audioClip != null)
+            {
                 audioSource.PlayOneShot(currentWordData.audioClip);
+            }
+            else if (!string.IsNullOrEmpty(currentWordData.audioUrl))
+            {
+                var clip = await Api.RemoteAssetCache.Instance.GetAudioAsync(currentWordData.audioUrl);
+                if (clip != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(clip);
+                }
+            }
+        }
+
+        private async void LoadReferenceImage(string url)
+        {
+            var sprite = await Api.RemoteAssetCache.Instance.GetSpriteAsync(url);
+            if (sprite != null && referenceImage != null)
+            {
+                referenceImage.sprite = sprite;
+                referenceImage.preserveAspect = true;
+            }
         }
 
         private IEnumerator LoadWordRoutine(int index)
@@ -228,10 +273,17 @@ namespace CoreLoop.ListenWord
             currentWordIndex = index;
             currentWordData  = levelData.wordsToSpell[index];
 
-            if (referenceImage != null && currentWordData.image != null)
+            if (referenceImage != null)
             {
-                referenceImage.sprite        = currentWordData.image;
-                referenceImage.preserveAspect = true;
+                if (currentWordData.image != null)
+                {
+                    referenceImage.sprite        = currentWordData.image;
+                    referenceImage.preserveAspect = true;
+                }
+                else if (!string.IsNullOrEmpty(currentWordData.imageUrl))
+                {
+                    LoadReferenceImage(currentWordData.imageUrl);
+                }
             }
 
             // Spawn one slot per letter

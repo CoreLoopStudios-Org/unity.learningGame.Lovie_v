@@ -36,6 +36,12 @@ public class AudioManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 
+        if (_wordSource == null)
+        {
+            _wordSource = gameObject.AddComponent<AudioSource>();
+            _wordSource.playOnAwake = false;
+        }
+
         BuildSFXPool();
     }
 
@@ -52,6 +58,29 @@ public class AudioManager : MonoBehaviour
     // ─────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────
+
+    public async void PlayWord(WordEntry entry)
+    {
+        if (entry == null)
+        {
+            PlayWord((AudioClip)null);
+            return;
+        }
+
+        if (entry.audioClip != null)
+        {
+            PlayWord(entry.audioClip);
+        }
+        else if (!string.IsNullOrEmpty(entry.audioUrl))
+        {
+            var clip = await Api.RemoteAssetCache.Instance.GetAudioAsync(entry.audioUrl);
+            PlayWord(clip);
+        }
+        else
+        {
+            PlayWord((AudioClip)null);
+        }
+    }
 
     /// <summary>
     /// Play a word's audio clip. Fires OnWordAudioStarted immediately

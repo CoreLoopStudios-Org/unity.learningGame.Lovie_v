@@ -16,7 +16,10 @@ namespace CoreLoop.ListenWord
         public string targetWord; 
         
         [Tooltip("Optional: Extra letters to show in the pool to increase difficulty (e.g. 'xyz').")]
-        public string decoyLetters; 
+        public string decoyLetters;
+
+        public string imageUrl;
+        public string audioUrl;
 
         public char[] GetParsedLetters()
         {

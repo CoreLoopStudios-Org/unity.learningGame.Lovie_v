@@ -10,5 +10,7 @@ namespace CoreLoop.WordMatch
         public string word;
         public Sprite image;
         public AudioClip audioClip;
+        public string imageUrl;
+        public string audioUrl;
     }
 }
