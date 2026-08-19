@@ -83,7 +83,7 @@ namespace Avatar
         {
             if (linkedItem == null) return;
 
-            isLocked = linkedItem.IsLocked;
+            isLocked = !linkedItem.CheckUnlocked();
 
             if (isLocked)
             {

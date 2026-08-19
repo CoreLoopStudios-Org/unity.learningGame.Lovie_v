@@ -48,6 +48,12 @@ namespace Avatar
 
                 var profile = await childApi.GetProfileAsync();
 
+                // Refresh store purchases to populate unlocked avatar items
+                if (StoreService.Instance != null)
+                {
+                    _ = StoreService.Instance.GetMyPurchasesAsync();
+                }
+
                 if (profile != null && !string.IsNullOrEmpty(profile.avatarState))
                 {
                     ApplyAvatarState(profile.avatarState);
@@ -116,29 +122,33 @@ namespace Avatar
                 return "{}";
 
             var selections = avatarManager.GetAllSelections();
-            var state = new AvatarStateData();
+            var state = new Dictionary<string, string>();
 
             foreach (var kvp in selections)
             {
-                string categoryKey = kvp.Key.ToString();
-                state.partIds.Add(categoryKey, kvp.Value.ItemId);
+                if (kvp.Value != null)
+                {
+                    string categoryKey = kvp.Key.ToString();
+                    state[categoryKey] = kvp.Value.ItemId;
+                }
             }
 
-            return JsonUtility.ToJson(state);
+            return Newtonsoft.Json.JsonConvert.SerializeObject(state);
         }
 
         private void ApplyAvatarState(string avatarStateJson)
         {
-            if (avatarManager == null)
+            if (avatarManager == null || string.IsNullOrEmpty(avatarStateJson))
                 return;
 
             try
             {
-                var state = JsonUtility.FromJson<AvatarStateData>(avatarStateJson);
+                var dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(avatarStateJson);
+                if (dict == null) return;
 
                 avatarManager.ClearSavedData();
 
-                foreach (var kvp in state.partIds)
+                foreach (var kvp in dict)
                 {
                     if (Enum.TryParse(kvp.Key, out AvatarPartCategory category))
                     {
@@ -167,12 +177,6 @@ namespace Avatar
         public void SetAvatarManager(AvatarCustomizationManager manager)
         {
             avatarManager = manager;
-        }
-
-        [Serializable]
-        private class AvatarStateData
-        {
-            public System.Collections.Generic.Dictionary<string, string> partIds = new();
         }
     }
 }

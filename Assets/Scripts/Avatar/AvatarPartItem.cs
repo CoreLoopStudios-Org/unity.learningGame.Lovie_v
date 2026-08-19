@@ -114,20 +114,33 @@ namespace Avatar
         #region Unlock Logic
 
         /// <summary>
-        /// Check if this item is unlocked based on game state
+        /// Check if this item is unlocked based on game state or server store ownership
         /// </summary>
         public bool CheckUnlocked(int playerLevel, int playerCoins)
         {
-            if (!isLocked) return true;
+            if (isDefault || !isLocked) return true;
+
+            if (Api.StoreService.Instance != null && Api.StoreService.Instance.IsPartUnlocked(itemId))
+            {
+                return true;
+            }
+
             return playerLevel >= requiredLevel && playerCoins >= requiredCoins;
         }
 
         /// <summary>
-        /// Check if this item is unlocked (simplified version)
+        /// Check if this item is unlocked
         /// </summary>
         public bool CheckUnlocked()
         {
-            return !isLocked;
+            if (isDefault || !isLocked) return true;
+
+            if (Api.StoreService.Instance != null && Api.StoreService.Instance.IsPartUnlocked(itemId))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
