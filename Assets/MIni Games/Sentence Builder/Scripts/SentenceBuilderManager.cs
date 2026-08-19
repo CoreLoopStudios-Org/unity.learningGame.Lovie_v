@@ -46,6 +46,7 @@ namespace CoreLoop.SentenceBuilder
         [SerializeField] private float timeUpDisplayDuration = 2f;
         [SerializeField] private Button timeUpRestartButton;
         [SerializeField] private TextMeshProUGUI timeUpCountdownText;
+        [SerializeField] private Api.GameCompletionReporter completionReporter;
 
         private int currentSentenceIndex = 0;
         private int remainingHints;
@@ -70,6 +71,16 @@ namespace CoreLoop.SentenceBuilder
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<Api.GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<Api.GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("sentence_builder");
+
             placedWordsContainer = CreatePlacedWordsOverlay();
             CacheWordPrefabMetrics();
 
@@ -508,6 +519,12 @@ namespace CoreLoop.SentenceBuilder
                 {
                     _timerRunning = false;
                     Debug.Log("Sentence Builder Mini-Game Complete!");
+
+                    if (completionReporter != null)
+                    {
+                        int total = levelData != null && levelData.sentences != null ? levelData.sentences.Count : 1;
+                        completionReporter.ReportCompletion(total, total);
+                    }
                 }
             }
             else

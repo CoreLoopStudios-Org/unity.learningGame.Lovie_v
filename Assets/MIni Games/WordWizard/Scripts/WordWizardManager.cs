@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ImagineMe.API;
 
 namespace Modules.Games.WordWizard
 {
@@ -57,6 +58,7 @@ namespace Modules.Games.WordWizard
 
         [Header("Completion")]
         [SerializeField] private GameObject _completionPanel;
+        [SerializeField] private GameCompletionReporter completionReporter;
 
         private IWordWizardContentRepository _contentRepository;
         private List<WordWizardEntry> _roundEntries;
@@ -95,6 +97,16 @@ namespace Modules.Games.WordWizard
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("word_wizard");
+
             WireButtonListeners();
 
             _remainingHints = _initialHints;
@@ -454,6 +466,11 @@ namespace Modules.Games.WordWizard
             else
             {
                 Debug.Log($"[WordWizardManager] Word Wizard Complete: {CorrectAnswerCount}/{TotalQuestionCount} correct");
+
+                if (completionReporter != null)
+                {
+                    completionReporter.ReportCompletion(CorrectAnswerCount, TotalQuestionCount);
+                }
 
                 if (_completionPanel != null)
                 {

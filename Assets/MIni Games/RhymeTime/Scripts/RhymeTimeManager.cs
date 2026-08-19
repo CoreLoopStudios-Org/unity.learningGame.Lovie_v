@@ -43,6 +43,7 @@ namespace CoreLoop.WordMatch
         [SerializeField] private float timeUpDisplayDuration = 2f;
         [SerializeField] private Button timeUpRestartButton;
         [SerializeField] private TextMeshProUGUI timeUpCountdownText;
+        [SerializeField] private Api.GameCompletionReporter completionReporter;
 
         [Header("Settings")]
         [SerializeField] private Color lineColor = Color.white;
@@ -82,6 +83,16 @@ namespace CoreLoop.WordMatch
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<Api.GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<Api.GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("rhyme_time");
+
             if (timeUpRestartButton != null)
             {
                 timeUpRestartButton.onClick.AddListener(HandleRestartButtonClicked);
@@ -195,6 +206,11 @@ namespace CoreLoop.WordMatch
             {
                 Debug.Log("[RhymeTimeManager] Pair pool exhausted for this session.");
                 _isTransitioning = false;
+                _timerRunning = false;
+                if (completionReporter != null)
+                {
+                    completionReporter.ReportCompletion(_totalRounds, _totalRounds);
+                }
                 yield break;
             }
 

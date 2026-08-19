@@ -44,6 +44,7 @@ namespace CoreLoop.ListenWord
         [SerializeField] private float timeUpDisplayDuration = 2f;
         [SerializeField] private Button timeUpRestartButton;
         [SerializeField] private TextMeshProUGUI timeUpCountdownText;
+        [SerializeField] private Api.GameCompletionReporter completionReporter;
 
         private int currentWordIndex = 0;
         private int remainingHints;
@@ -64,6 +65,16 @@ namespace CoreLoop.ListenWord
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<Api.GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<Api.GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("word_listen");
+
             placedLettersContainer = CreatePlacedLettersOverlay();
 
             _timeRemaining = maxTime;
@@ -453,6 +464,12 @@ namespace CoreLoop.ListenWord
                 {
                     _timerRunning = false;
                     Debug.Log("Listen Word Mini-Game Complete!");
+
+                    if (completionReporter != null)
+                    {
+                        int total = levelData != null && levelData.wordsToSpell != null ? levelData.wordsToSpell.Count : 1;
+                        completionReporter.ReportCompletion(total, total);
+                    }
                 }
             }
             else

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Modules.GameFramework.Content;
 using Modules.GameFramework.UI;
+using ImagineMe.API;
 
 namespace Modules.Games.StoryQuest
 {
@@ -33,6 +34,7 @@ namespace Modules.Games.StoryQuest
 
         [Header("Completion")]
         [SerializeField] private GameObject _completionPanel;
+        [SerializeField] private GameCompletionReporter completionReporter;
 
         private IStoryQuestContentRepository _contentRepository;
         private StoryQuestLevel _level;
@@ -52,6 +54,24 @@ namespace Modules.Games.StoryQuest
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<GameCompletionReporter>();
+                }
+            }
+
+            if (_storyId != null && _storyId.StartsWith("rd_"))
+            {
+                completionReporter.SetGameId("reading_detective");
+            }
+            else
+            {
+                completionReporter.SetGameId("story_quest");
+            }
+
             LoadAndDisplayLevel();
         }
 
@@ -111,6 +131,12 @@ namespace Modules.Games.StoryQuest
             }
 
             Debug.Log($"Story Quest Complete: {CorrectAnswerCount}/{TotalQuestionCount} correct");
+
+            // Report completion to backend
+            if (completionReporter != null)
+            {
+                completionReporter.ReportCompletion(CorrectAnswerCount, TotalQuestionCount);
+            }
 
             if (_completionPanel != null)
             {

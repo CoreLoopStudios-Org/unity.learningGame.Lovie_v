@@ -34,6 +34,7 @@ namespace CoreLoop.WordMatch
         [SerializeField] private float timeUpDisplayDuration = 2f;
         [SerializeField] private Button timeUpRestartButton;
         [SerializeField] private TextMeshProUGUI timeUpCountdownText;
+        [SerializeField] private Api.GameCompletionReporter completionReporter;
 
         [Header("Settings")]
         [SerializeField] private Color lineColor = Color.white;
@@ -65,6 +66,16 @@ namespace CoreLoop.WordMatch
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<Api.GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<Api.GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("word_match");
+
             if (columnsCanvasGroup != null) columnsCanvasGroup.alpha = 0f;
 
             _timeRemaining = maxTime;
@@ -246,6 +257,12 @@ namespace CoreLoop.WordMatch
             _timerRunning   = false;
             yield return StartCoroutine(FadeColumns(1f, 0f));
             Debug.Log("Word Match Level Complete!");
+
+            if (completionReporter != null)
+            {
+                int totalRounds = currentLevel != null ? currentLevel.rounds.Count : 1;
+                completionReporter.ReportCompletion(totalRounds, totalRounds);
+            }
         }
 
         private IEnumerator FadeColumns(float from, float to)

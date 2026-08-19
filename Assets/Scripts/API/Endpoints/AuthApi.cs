@@ -1,5 +1,5 @@
 using Api.Models;
-using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Api.Endpoints
 {
@@ -12,7 +12,7 @@ namespace Api.Endpoints
             client = apiClient;
         }
 
-        public async Task Awaitable<AuthResponse> RegisterAsync(string email, string password, string fullName, UserType userType)
+        public async Awaitable<AuthResponse> RegisterAsync(string email, string password, string fullName, UserType userType)
         {
             var data = new
             {
@@ -25,7 +25,7 @@ namespace Api.Endpoints
             return await client.PostAsync<AuthResponse>("/api/auth/register", data);
         }
 
-        public async Task Awaitable<AuthResponse> LoginAsync(string email, string password)
+        public async Awaitable<AuthResponse> LoginAsync(string email, string password)
         {
             var data = new
             {
@@ -36,7 +36,7 @@ namespace Api.Endpoints
             return await client.PostAsync<AuthResponse>("/api/auth/login", data);
         }
 
-        public async Task Awaitable<ChildAuthResponse> ChildLoginAsync(string username, string password, string parentId = null)
+        public async Awaitable<ChildAuthResponse> ChildLoginAsync(string username, string password, string parentId = null)
         {
             var data = new
             {
@@ -48,13 +48,13 @@ namespace Api.Endpoints
             return await client.PostAsync<ChildAuthResponse>("/api/auth/child/login", data);
         }
 
-        public async Task Awaitable<object> SendVerificationAsync(string email)
+        public async Awaitable<object> SendVerificationAsync(string email)
         {
             var data = new { email };
             return await client.PostAsync<object>("/api/auth/send-verification", data);
         }
 
-        public async Task Awaitable<object> VerifyEmailAsync(string email, string otp)
+        public async Awaitable<object> VerifyEmailAsync(string email, string otp)
         {
             var data = new
             {
@@ -65,13 +65,13 @@ namespace Api.Endpoints
             return await client.PostAsync<object>("/api/auth/verify-email", data);
         }
 
-        public async Task Awaitable<object> SendResetOtpAsync(string email)
+        public async Awaitable<object> SendResetOtpAsync(string email)
         {
             var data = new { email };
             return await client.PostAsync<object>("/api/auth/send-reset-otp", data);
         }
 
-        public async Task Awaitable<object> ResetPasswordAsync(string email, string otp, string newPassword)
+        public async Awaitable<object> ResetPasswordAsync(string email, string otp, string newPassword)
         {
             var data = new
             {

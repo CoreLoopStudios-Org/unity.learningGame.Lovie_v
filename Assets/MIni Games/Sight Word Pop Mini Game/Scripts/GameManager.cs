@@ -36,6 +36,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int _coinsPerCorrectTap = 10;
     [SerializeField] private int _coinPenaltyPerMiss = 5;
 
+    [Header("Completion")]
+    [SerializeField] private Api.GameCompletionReporter completionReporter;
+
     // ─────────────────────────────────────────────
     // Runtime
     // ─────────────────────────────────────────────
@@ -67,10 +70,18 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        if (completionReporter == null)
+        {
+            completionReporter = GetComponent<Api.GameCompletionReporter>();
+            if (completionReporter == null)
+            {
+                completionReporter = gameObject.AddComponent<Api.GameCompletionReporter>();
+            }
+        }
+        completionReporter.SetGameId("sight_word_pop");
+
         AudioManager.Instance.OnWordAudioStarted += HandleWordAudioStarted;
         AudioManager.Instance.OnWordAudioFinished += HandleWordAudioFinished;
-
-        StartRound(); // ← ADD THIS LINE TEMPORARILY
     }
 
     private void OnDestroy()
@@ -136,6 +147,13 @@ public class GameManager : MonoBehaviour
         SetState(GameState.RoundComplete);
 
         Debug.Log($"[GameManager] Round complete. Correct: {_correctTaps} | Missed: {_missedWords}");
+
+        if (completionReporter != null)
+        {
+            int total = _correctTaps + _missedWords;
+            int score = Mathf.Max(0, (_correctTaps * _coinsPerCorrectTap) - (_missedWords * _coinPenaltyPerMiss));
+            completionReporter.ReportCompletionWithScore(score, _correctTaps, total > 0 ? total : 1);
+        }
     }
 
     // ─────────────────────────────────────────────

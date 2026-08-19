@@ -40,5 +40,8 @@ namespace Api.Models
         public string id;
         public int activityType;
         public string createdAt;
+        public int coinsEarned;
+        public int totalCoins;
+        public string message;
     }
 }

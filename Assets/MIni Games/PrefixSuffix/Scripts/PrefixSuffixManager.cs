@@ -75,6 +75,7 @@ namespace Modules.Games.PrefixSuffix
 
         [Header("Completion")]
         [SerializeField] private GameObject _completionPanel;
+        [SerializeField] private Api.GameCompletionReporter completionReporter;
 
         private const int NoSelection = -1;
 
@@ -117,6 +118,16 @@ namespace Modules.Games.PrefixSuffix
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<Api.GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<Api.GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("prefix_suffix");
+
             CacheOptionButtonImages();
             WireButtonListeners();
 
@@ -511,6 +522,11 @@ namespace Modules.Games.PrefixSuffix
                 // caller of SetInteractionEnabled(true)) does not run again once
                 // the session is complete. No further call needed.
                 Debug.Log($"[PrefixSuffixManager] Prefix & Suffix Complete: {CorrectAnswerCount}/{TotalQuestionCount} correct");
+
+                if (completionReporter != null)
+                {
+                    completionReporter.ReportCompletion(CorrectAnswerCount, TotalQuestionCount);
+                }
 
                 if (_completionPanel != null)
                 {

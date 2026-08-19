@@ -1,5 +1,5 @@
 using Api.Models;
-using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Api.Endpoints
 {
@@ -12,12 +12,12 @@ namespace Api.Endpoints
             client = apiClient;
         }
 
-        public async Task Awaitable<ParentDashboard> GetDashboardAsync()
+        public async Awaitable<ParentDashboard> GetDashboardAsync()
         {
             return await client.GetAsync<ParentDashboard>("/api/parent/dashboard");
         }
 
-        public async Task Awaitable<string> CreateChildAsync(string username, string password)
+        public async Awaitable<string> CreateChildAsync(string username, string password)
         {
             var data = new
             {
@@ -28,17 +28,17 @@ namespace Api.Endpoints
             return await client.PostAsync<string>("/api/parent/children", data);
         }
 
-        public async Task Awaitable<ChildSummary[]> GetChildrenAsync()
+        public async Awaitable<ChildSummary[]> GetChildrenAsync()
         {
             return await client.GetAsync<ChildSummary[]>("/api/parent/children");
         }
 
-        public async Task Awaitable<ChildDetail> GetChildAsync(string id)
+        public async Awaitable<ChildDetail> GetChildAsync(string id)
         {
             return await client.GetAsync<ChildDetail>($"/api/parent/children/{id}");
         }
 
-        public async Task Awaitable<bool> UpdateChildAsync(string id, string username = null, string password = null, string avatarState = null, string additionalData = null)
+        public async Awaitable<bool> UpdateChildAsync(string id, string username = null, string password = null, string avatarState = null, string additionalData = null)
         {
             var data = new
             {
@@ -51,12 +51,12 @@ namespace Api.Endpoints
             return await client.PutAsync<bool>($"/api/parent/children/{id}", data);
         }
 
-        public async Task Awaitable<bool> DeleteChildAsync(string id)
+        public async Awaitable<bool> DeleteChildAsync(string id)
         {
             return await client.DeleteAsync<bool>($"/api/parent/children/{id}");
         }
 
-        public async Task Awaitable<ChildActivity[]> GetChildActivitiesAsync(string id)
+        public async Awaitable<ChildActivity[]> GetChildActivitiesAsync(string id)
         {
             return await client.GetAsync<ChildActivity[]>($"/api/parent/children/{id}/activities");
         }

@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Modules.GameFramework.Content;
+using ImagineMe.API;
 
 namespace Modules.Games.StorySequencing
 {
@@ -31,6 +32,7 @@ namespace Modules.Games.StorySequencing
         [SerializeField] private Button _checkAnswerButton;
         [SerializeField] private TextMeshProUGUI _feedbackText;
         [SerializeField] private string _resultMessageFormat = "{0} out of {1} in the correct order!";
+        [SerializeField] private GameCompletionReporter completionReporter;
 
         private IStorySequencingContentRepository _contentRepository;
         private StorySequencingEntry _entry;
@@ -38,6 +40,7 @@ namespace Modules.Games.StorySequencing
         private Canvas _listCanvas;
 
         private int _correctPositionCount;
+        private bool _hasReportedCompletion;
 
         #endregion
 
@@ -55,6 +58,16 @@ namespace Modules.Games.StorySequencing
 
         private void Start()
         {
+            if (completionReporter == null)
+            {
+                completionReporter = GetComponent<GameCompletionReporter>();
+                if (completionReporter == null)
+                {
+                    completionReporter = gameObject.AddComponent<GameCompletionReporter>();
+                }
+            }
+            completionReporter.SetGameId("story_sequencing");
+
             LoadAndDisplayStory();
         }
 
@@ -123,6 +136,13 @@ namespace Modules.Games.StorySequencing
             }
 
             ShowResultFeedback();
+
+            // Report completion on first check
+            if (!_hasReportedCompletion && completionReporter != null)
+            {
+                _hasReportedCompletion = true;
+                completionReporter.ReportCompletion(_correctPositionCount, TotalEventCount);
+            }
         }
 
         #endregion
