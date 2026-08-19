@@ -48,7 +48,9 @@ namespace Modules.Games.StorySequencing
 
         private void Awake()
         {
-            _contentRepository = new JsonStorySequencingContentRepository();
+            _contentRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IStorySequencingContentRepository)new ApiStorySequencingContentRepository()
+                : new JsonStorySequencingContentRepository();
 
             if (_cardListContainer != null)
             {

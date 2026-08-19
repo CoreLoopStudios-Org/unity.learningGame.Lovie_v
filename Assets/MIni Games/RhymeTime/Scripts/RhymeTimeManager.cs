@@ -78,7 +78,9 @@ namespace CoreLoop.WordMatch
 
         private void Awake()
         {
-            _repository = new JsonRhymeTimePairRepository();
+            _repository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IRhymeTimePairRepository)new ApiRhymeTimePairRepository()
+                : new JsonRhymeTimePairRepository();
         }
 
         private void Start()

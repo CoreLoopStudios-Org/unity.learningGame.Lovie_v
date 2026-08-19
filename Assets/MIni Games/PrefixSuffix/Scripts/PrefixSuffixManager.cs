@@ -112,7 +112,9 @@ namespace Modules.Games.PrefixSuffix
 
         private void Awake()
         {
-            _contentRepository = new JsonPrefixSuffixContentRepository();
+            _contentRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IPrefixSuffixContentRepository)new ApiPrefixSuffixContentRepository()
+                : new JsonPrefixSuffixContentRepository();
             _optionButtonImages = new List<Image>();
         }
 

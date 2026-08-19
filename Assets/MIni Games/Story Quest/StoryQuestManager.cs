@@ -49,7 +49,9 @@ namespace Modules.Games.StoryQuest
 
         private void Awake()
         {
-            _contentRepository = new JsonStoryQuestContentRepository();
+            _contentRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IStoryQuestContentRepository)new ApiStoryQuestContentRepository()
+                : new JsonStoryQuestContentRepository();
         }
 
         private void Start()

@@ -92,7 +92,9 @@ namespace Modules.Games.WordWizard
 
         private void Awake()
         {
-            _contentRepository = new JsonWordWizardContentRepository();
+            _contentRepository = Api.ApiConfig.Instance.UseRemoteContent
+                ? (IWordWizardContentRepository)new ApiWordWizardContentRepository()
+                : new JsonWordWizardContentRepository();
         }
 
         private void Start()
