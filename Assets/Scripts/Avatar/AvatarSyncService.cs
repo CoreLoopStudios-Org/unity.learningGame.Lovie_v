@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 using Api;
 using Api.Endpoints;
 
@@ -43,7 +44,8 @@ namespace Avatar
 
             try
             {
-                var apiClient = new ApiClient(ApiConfig.Instance);
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
                 var childApi = new ChildApi(apiClient);
 
                 var profile = await childApi.GetProfileAsync();
@@ -96,7 +98,8 @@ namespace Avatar
             {
                 string avatarState = ExportAvatarState();
 
-                var apiClient = new ApiClient(ApiConfig.Instance);
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
                 var childApi = new ChildApi(apiClient);
 
                 bool success = await childApi.UpdateAvatarAsync(avatarState);

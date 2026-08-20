@@ -25,8 +25,9 @@ namespace UI
 
         void Start()
         {
-            var config = ApiConfig.LoadConfig();
-            apiClient = new ApiClient(config);
+            var config = ApiConfig.Instance;
+            apiClient = ApiClient.Instance;
+            apiClient.Initialize(config);
             authApi = new AuthApi(apiClient);
 
             if (loginButton != null)
@@ -90,7 +91,7 @@ namespace UI
 
         void HandleApiError(ApiException ex)
         {
-            if (ex.ResponseCode == 401)
+            if (ex.responseCode == 401)
             {
                 ShowError("Wrong email or password. Try again!");
             }

@@ -24,7 +24,7 @@ public class ApiSmokeTest : MonoBehaviour
         }
     }
 
-    public async Awaitable<void> RunTests()
+    public async Awaitable RunTests()
     {
         Debug.Log("🧪 Starting API Smoke Test...");
 
@@ -47,7 +47,7 @@ public class ApiSmokeTest : MonoBehaviour
         }
     }
 
-    private async Awaitable<void> InitializeApi()
+    private async Awaitable InitializeApi()
     {
         Debug.Log("🔧 Initializing API client...");
 
@@ -63,7 +63,7 @@ public class ApiSmokeTest : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
     }
 
-    private async Awaitable<void> TestHealthCheck()
+    private async Awaitable TestHealthCheck()
     {
         Debug.Log("🏥 Testing health check...");
 
@@ -81,7 +81,7 @@ public class ApiSmokeTest : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
     }
 
-    private async Awaitable<void> TestChildLogin()
+    private async Awaitable TestChildLogin()
     {
         Debug.Log($"👤 Testing child login ({testUsername})...");
 
@@ -119,7 +119,7 @@ public class ApiSmokeTest : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
     }
 
-    private async Awaitable<void> TestProfileEndpoint()
+    private async Awaitable TestProfileEndpoint()
     {
         Debug.Log("👤 Testing profile endpoint...");
 
@@ -142,7 +142,7 @@ public class ApiSmokeTest : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
     }
 
-    private async Awaitable<void> TestStatsEndpoint()
+    private async Awaitable TestStatsEndpoint()
     {
         Debug.Log("📊 Testing stats endpoint...");
 
@@ -164,7 +164,7 @@ public class ApiSmokeTest : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
     }
 
-    private async Awaitable<void> TestRhymeTimeContent()
+    private async Awaitable TestRhymeTimeContent()
     {
         Debug.Log("🎲 Testing RhymeTime content endpoint...");
 
@@ -189,7 +189,7 @@ public class ApiSmokeTest : MonoBehaviour
         await Awaitable.EndOfFrameAsync();
     }
 
-    private async Awaitable<void> TestGameActivityLogging()
+    private async Awaitable TestGameActivityLogging()
     {
         Debug.Log("🎮 Testing game activity logging...");
 

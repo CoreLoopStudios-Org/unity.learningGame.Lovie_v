@@ -131,7 +131,23 @@ namespace Api
 
                         if (item != null)
                         {
-                            var result = await childApi.LogGameActivityAsync(item.endpoint, item.payload);
+                            ActivityLogged result = null;
+
+                            // Route by endpoint type
+                            if (item.endpoint.Contains("story", System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                result = await childApi.LogStoryActivityAsync(item.endpoint, item.payload);
+                            }
+                            else if (item.endpoint.Contains("quiz", System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                result = await childApi.LogQuizActivityAsync(item.endpoint, item.payload);
+                            }
+                            else
+                            {
+                                // Game activities only need payload
+                                result = await childApi.LogGameActivityAsync(item.payload);
+                            }
+
                             if (result != null)
                             {
                                 File.Delete(file);

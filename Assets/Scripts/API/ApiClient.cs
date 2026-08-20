@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using System.Text;
 using Newtonsoft.Json;
 
@@ -77,7 +78,7 @@ namespace Api
 
             try
             {
-                await request.SendWebRequestAsync();
+                await request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {

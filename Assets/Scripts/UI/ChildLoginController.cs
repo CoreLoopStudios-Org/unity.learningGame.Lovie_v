@@ -26,8 +26,9 @@ namespace UI
 
         void Start()
         {
-            var config = ApiConfig.LoadConfig();
-            apiClient = new ApiClient(config);
+            var config = ApiConfig.Instance;
+            apiClient = ApiClient.Instance;
+            apiClient.Initialize(config);
             authApi = new AuthApi(apiClient);
             childApi = new ChildApi(apiClient);
 
@@ -130,7 +131,7 @@ namespace UI
 
         void HandleApiError(ApiException ex)
         {
-            if (ex.ResponseCode == 401)
+            if (ex.responseCode == 401)
             {
                 ShowError("Oops! Wrong username or password. Try again!");
             }

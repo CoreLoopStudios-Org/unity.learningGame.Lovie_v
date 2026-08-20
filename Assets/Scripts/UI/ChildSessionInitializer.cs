@@ -18,7 +18,7 @@ namespace UI
             if (!SessionManager.Instance.IsChildSession)
                 return;
 
-            await new WaitForSeconds(initializationDelay);
+            await Awaitable.WaitForSecondsAsync(initializationDelay);
 
             await InitializeAsync();
         }

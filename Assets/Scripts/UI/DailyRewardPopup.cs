@@ -23,8 +23,9 @@ namespace UI
 
         void Start()
         {
-            var config = ApiConfig.LoadConfig();
-            var apiClient = new ApiClient(config);
+            var config = ApiConfig.Instance;
+            var apiClient = ApiClient.Instance;
+            apiClient.Initialize(config);
             childApi = new ChildApi(apiClient);
 
             if (claimButton != null)

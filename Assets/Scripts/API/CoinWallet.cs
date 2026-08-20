@@ -43,7 +43,8 @@ namespace Api
 
             try
             {
-                var apiClient = new ApiClient(ApiConfig.Instance);
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
                 var childApi = new ChildApi(apiClient);
 
                 var stats = await childApi.GetStatsAsync();
