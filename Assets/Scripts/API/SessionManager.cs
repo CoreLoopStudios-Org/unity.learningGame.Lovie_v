@@ -36,8 +36,7 @@ namespace Api
                 string payload = parts[1];
                 string decoded = Base64Decode(payload);
 
-                TokenPayload tokenData = JsonUtility.FromJson<TokenPayload>(decoded);
-                return tokenData?.role;
+                return ExtractRoleWithUri(decoded);
             }
             catch
             {
@@ -94,7 +93,9 @@ namespace Api
 
             try
             {
-                DateTime expiry = DateTime.Parse(expiresAt);
+                // Parse as UTC, adjust to universal time to avoid device timezone offset bugs
+                DateTime expiry = DateTime.Parse(expiresAt, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
                 return DateTime.UtcNow < expiry;
             }
             catch
@@ -162,11 +163,49 @@ namespace Api
 
         private string Base64Decode(string input)
         {
-            string padded = input.PadRight(input.Length + (4 - input.Length % 4) % 4, '=');
+            // Convert base64url to base64
+            string base64 = input.Replace('-', '+').Replace('_', '/');
+            string padded = base64.PadRight(base64.Length + (4 - base64.Length % 4) % 4, '=');
             System.Text.Encoding encoding = System.Text.Encoding.UTF8;
 
             byte[] data = System.Convert.FromBase64String(padded);
             return encoding.GetString(data);
+        }
+
+        private string ExtractRoleWithUri(string decodedPayload)
+        {
+            // JWT uses full URI for role claim: http://schemas.microsoft.com/ws/2008/06/identity/claims/role
+            // Search JSON for the claim value
+            try
+            {
+                // First try standard "role" key
+                var tokenData = JsonUtility.FromJson<TokenPayload>(decodedPayload);
+                if (!string.IsNullOrEmpty(tokenData?.role))
+                    return tokenData.role;
+
+                // Search for full URI claim in JSON string
+                string roleKey = "\"http://schemas.microsoft.com/ws/2008/06/identity/claims/role\"";
+                int keyIndex = decodedPayload.IndexOf(roleKey);
+                if (keyIndex > 0)
+                {
+                    int valueStart = keyIndex + roleKey.Length + 1; // Skip colon
+                    // Skip whitespace
+                    while (valueStart < decodedPayload.Length && char.IsWhiteSpace(decodedPayload[valueStart]))
+                        valueStart++;
+
+                    if (valueStart < decodedPayload.Length && decodedPayload[valueStart] == '"')
+                    {
+                        int valueEnd = decodedPayload.IndexOf('"', valueStart + 1);
+                        if (valueEnd > valueStart)
+                            return decodedPayload.Substring(valueStart + 1, valueEnd - valueStart - 1);
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         void OnApplicationFocus(bool hasFocus)

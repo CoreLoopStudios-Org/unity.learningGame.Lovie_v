@@ -70,16 +70,11 @@ namespace Api
 
             var syncTasks = new List<(string gameType, string key)>
             {
-                ("RhymeTime", null),
-                ("PrefixSuffix", null),
-                ("WordWizard", null),
-                ("WordMatch", null),
-                ("SentenceBuilder", null),
-                ("WordListen", null),
-                ("SightWordPop", null),
-                ("StoryQuest", "sq_01"),
-                ("ReadingDetective", "rd_01"),
-                ("StorySequencing", "seq_01")
+                ("StoryQuest", "sq_story_001"),
+                ("StorySequencing", "ss_001"),
+                ("RhymeTime", "rt_001"),
+                ("PrefixSuffix", "ps_001"),
+                ("WordWizard", "ww_001")
             };
 
             var wait = new WaitForSeconds(ThrottleIntervalSeconds);

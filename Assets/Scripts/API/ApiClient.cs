@@ -66,6 +66,7 @@ namespace Api
         {
             string url = $"{config.BaseUrl}{endpoint}";
             using UnityWebRequest request = UnityWebRequest.Delete(url);
+            request.downloadHandler = new DownloadHandlerBuffer(); // Fix D5: DELETE needs download handler for error body
 
             return await SendRequestAsync<T>(request, retryCount);
         }

@@ -28,6 +28,9 @@ namespace UI
                 sessionGo.AddComponent<SessionManager>();
             }
 
+            // Wire API 401 errors to session expiry handling
+            ApiClient.Instance.OnSessionExpired += SessionManager.Instance.HandleSessionExpired;
+
             if (SessionManager.Instance.IsAuthenticated && SessionManager.Instance.IsValidToken())
             {
                 RouteByRole();
