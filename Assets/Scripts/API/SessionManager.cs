@@ -161,7 +161,7 @@ namespace Api
             }
         }
 
-        private string Base64Decode(string input)
+        private static string Base64Decode(string input)
         {
             // Convert base64url to base64
             string base64 = input.Replace('-', '+').Replace('_', '/');
@@ -172,7 +172,7 @@ namespace Api
             return encoding.GetString(data);
         }
 
-        private string ExtractRoleWithUri(string decodedPayload)
+        private static string ExtractRoleWithUri(string decodedPayload)
         {
             // JWT uses full URI for role claim: http://schemas.microsoft.com/ws/2008/06/identity/claims/role
             // Search JSON for the claim value

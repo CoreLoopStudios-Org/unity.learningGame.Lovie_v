@@ -91,7 +91,7 @@ namespace UI
             }
         }
 
-        async void CheckDailyReward(string token)
+        async System.Threading.Tasks.Task CheckDailyReward(string token)
         {
             try
             {
