@@ -182,6 +182,7 @@ namespace UI
         {
             if (successMessage != null)
             {
+                successMessage.color = Color.green;
                 successMessage.text = message;
                 successMessage.gameObject.SetActive(true);
             }
