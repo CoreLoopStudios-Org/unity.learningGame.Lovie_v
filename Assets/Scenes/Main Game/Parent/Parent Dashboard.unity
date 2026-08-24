@@ -22096,7 +22096,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1352364096
 RectTransform:
   m_ObjectHideFlags: 0
@@ -23744,6 +23744,7 @@ GameObject:
   - component: {fileID: 1507781966}
   - component: {fileID: 1507781965}
   - component: {fileID: 1507781964}
+  - component: {fileID: 1507781967}
   m_Layer: 0
   m_Name: Parents Dashboard (Home Page)
   m_TagString: Untagged
@@ -23877,6 +23878,31 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &1507781967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1507781962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15199a808d3749b5a028d612f2cbcdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.ParentDashboardController
+  statsText: {fileID: 0}
+  childrenListText: {fileID: 0}
+  loadDashboardButton: {fileID: 0}
+  logoutButton: {fileID: 0}
+  newChildUsernameInput: {fileID: 0}
+  newChildPasswordInput: {fileID: 0}
+  createChildButton: {fileID: 0}
+  childIdInput: {fileID: 0}
+  viewActivitiesButton: {fileID: 0}
+  activitiesListText: {fileID: 0}
+  errorMessage: {fileID: 0}
+  loadingIndicator: {fileID: 0}
+  loginScene: Main Game/Parent/Parent Login
 --- !u!1 &1516593833
 GameObject:
   m_ObjectHideFlags: 0

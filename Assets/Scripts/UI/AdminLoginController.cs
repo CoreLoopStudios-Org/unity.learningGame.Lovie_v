@@ -18,7 +18,7 @@ namespace UI
         [SerializeField] private GameObject loadingIndicator;
 
         [Header("Scene Navigation")]
-        [SerializeField] private string adminDashboardScene = "Main Game/Admin/Admin Dashbaord";
+        [SerializeField] private string adminDashboardScene = "Admin Dashbaord";
 
         private ApiClient apiClient;
         private AuthApi authApi;

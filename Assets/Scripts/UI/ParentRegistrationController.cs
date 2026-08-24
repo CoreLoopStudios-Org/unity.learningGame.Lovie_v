@@ -30,7 +30,7 @@ namespace UI
         [SerializeField] private Button backToLoginButton;
 
         [Header("Scene Navigation")]
-        [SerializeField] private string loginScene = "Main Game/Parent/Parent Login";
+        [SerializeField] private string loginScene = "Parent Dashboard";
 
         private ApiClient apiClient;
         private AuthApi authApi;
@@ -182,6 +182,7 @@ namespace UI
         {
             if (successMessage != null)
             {
+                successMessage.color = Color.green;
                 successMessage.text = message;
                 successMessage.gameObject.SetActive(true);
             }
