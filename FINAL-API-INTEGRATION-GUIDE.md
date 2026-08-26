@@ -16,7 +16,37 @@ The API SDK is fully implemented and located in `Assets/Scripts/API/`. It maps d
 
 ---
 
-## 2. Developer Guide: How to Make API Calls
+## 2. Environments & Testing (Development vs Production)
+
+The API SDK is configured to support two entirely separate environments: **Development** and **Production**. 
+
+### How the Environment is Detected
+Environment switching is handled automatically in `Assets/Scripts/API/ApiConfig.cs` using Unity's C# Preprocessor Directives.
+
+```csharp
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    return RemoteDevUrl; // Points to dev-api.imaginemebylovie.com
+#else
+    return ProductionUrl; // Points to api.imaginemebylovie.com
+#endif
+```
+
+### 🛠️ How to Test in the Development Environment
+When you test the game by clicking **Play in the Unity Editor**, or when you create a **Development Build**, the SDK automatically connects to `https://dev-api.imaginemebylovie.com/api`.
+* **The Database:** The Dev API runs on a volatile, **InMemory database**. It is wiped clean every time the server restarts.
+* **Mock Data:** It comes pre-seeded with dummy users (`dev_child`), mock store items (Dragon Hat, Magic Wand), and sample stories/quizzes.
+* **Magic Login:** You do not need real passwords in Dev mode. You can log in instantly bypassing normal authentication.
+* **Manual Override:** If you need to force the Unity Editor to test against the live Production database, you can select the `ApiConfig.asset` file in your `Resources` folder and change the **Environment** dropdown in the Inspector from `Auto` to `Production`.
+
+### 🚀 How it Implements for Production
+When you compile the final game for the App Store, Google Play, or WebGL by unchecking "Development Build" in the Build Settings, Unity automatically strips out the development URLs.
+* The game will strictly connect to `https://api.imaginemebylovie.com/api`.
+* It interacts with the real **PostgreSQL** database.
+* It requires real passwords and full JWT validation.
+
+---
+
+## 3. Developer Guide: How to Make API Calls
 
 If you are adding new features, here is how you interact with the backend.
 
@@ -60,7 +90,7 @@ catch (ApiException ex)
 
 ---
 
-## 3. Final Integration: Scene Wiring Instructions
+## 4. Final Integration: Scene Wiring Instructions
 
 While the C# API logic is complete, the final step is wiring the UI Controllers to Unity Scenes in the Editor. **AI Agents cannot do this automatically**; a human developer must open the Unity Editor to attach the scripts.
 
@@ -74,7 +104,7 @@ While the C# API logic is complete, the final step is wiring the UI Controllers 
 
 ---
 
-## 4. Final Integration: Fixing Mini-Game Score Tracking
+## 5. Final Integration: Fixing Mini-Game Score Tracking
 
 Currently, several mini-games report "fake" perfect scores to the backend regardless of child performance. **Both Developers and AI Agents** can help fix this in the code.
 
@@ -104,7 +134,7 @@ completionReporter.ReportCompletion(_correctAnswers, totalRounds);
 
 ---
 
-## 5. Offline & Caching Services
+## 6. Offline & Caching Services
 
 The API SDK includes built-in services to handle offline play for children:
 *   **`ContentCacheService`**: Automatically caches Stories, Quizzes, and Store Items to local JSON files when fetched. If the API fails due to no internet, it falls back to the cache.
