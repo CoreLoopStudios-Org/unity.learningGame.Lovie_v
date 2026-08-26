@@ -5,8 +5,15 @@ namespace Api
     [CreateAssetMenu(fileName = "ApiConfig", menuName = "API/Config")]
     public class ApiConfig : ScriptableObject
     {
-        public const string DevelopmentBaseUrl = "http://localhost:5200";
-        public const string ProductionBaseUrl = "https://imaginemebylovie.com";
+        public const string LocalDevUrl = "http://localhost:5201";
+        public const string RemoteDevUrl = "https://dev-api.imaginemebylovie.com";
+        public const string ProductionUrl = "https://api.imaginemebylovie.com";
+
+        public enum EnvironmentType { Local, RemoteDev, Production, Auto }
+
+        [Header("Environment")]
+        [Tooltip("Auto will use RemoteDev in the Unity Editor and Production in release builds.")]
+        [SerializeField] private EnvironmentType currentEnvironment = EnvironmentType.Auto;
 
         private static ApiConfig instance;
         public static ApiConfig Instance
@@ -25,23 +32,42 @@ namespace Api
             }
         }
 
-        [Header("Configuration")]
-        [SerializeField] private string baseUrl = DevelopmentBaseUrl;
-
         [Header("Remote Content")]
         [SerializeField] private bool useRemoteContent = false;
 
-        public string BaseUrl => baseUrl;
         public bool UseRemoteContent => useRemoteContent;
+
+        public string BaseUrl 
+        {
+            get 
+            {
+                if (currentEnvironment == EnvironmentType.Auto)
+                {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    return RemoteDevUrl;
+#else
+                    return ProductionUrl;
+#endif
+                }
+
+                switch (currentEnvironment)
+                {
+                    case EnvironmentType.Local: return LocalDevUrl;
+                    case EnvironmentType.RemoteDev: return RemoteDevUrl;
+                    case EnvironmentType.Production: return ProductionUrl;
+                    default: return ProductionUrl;
+                }
+            }
+        }
 
         public void SetDevelopment()
         {
-            baseUrl = DevelopmentBaseUrl;
+            currentEnvironment = EnvironmentType.RemoteDev;
         }
 
         public void SetProduction()
         {
-            baseUrl = ProductionBaseUrl;
+            currentEnvironment = EnvironmentType.Production;
         }
 
         public void SetUseRemoteContent(bool enable)
