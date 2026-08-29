@@ -52,7 +52,14 @@ Because the development database requires valid JWT tokens, it is seeded with th
 When you compile the final game for the App Store, Google Play, or WebGL by unchecking "Development Build" in the Build Settings, Unity automatically strips out the development URLs.
 * The game will strictly connect to `https://api.imaginemebylovie.com/api`.
 * It interacts with the real **PostgreSQL** database.
-* The dummy accounts **DO NOT EXIST** in production. You must create real accounts.
+* The dev dummy accounts **DO NOT EXIST** in production. 
+
+#### Temporary Production Credentials
+For initial live testing, a temporary Super Admin account has been securely injected into the production database:
+*   **Email:** `superadmin@imagineme.com`
+*   **Password:** `Temporary_Super_Admin`
+
+*(⚠️ Please delete this account via the Admin Dashboard or database once production testing is complete).*
 
 ---
 
