@@ -42,8 +42,8 @@ Because the development database requires valid JWT tokens, it is seeded with th
 
 | Role | Username / Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@imagineme.com` | `Admin123!` |
-| **Parent** | `parent@imagineme.com` | `Parent123!` |
+| **Admin** | `admin@dev.local` | `Admin123!` |
+| **Parent** | `parent@dev.local` | `Parent123!` |
 | **Child** | `dev_child` | `Child123!` |
 
 *(Note: The Parent account already has `EmailConfirmed = true` in the development database so you can log in immediately without needing an OTP).*
