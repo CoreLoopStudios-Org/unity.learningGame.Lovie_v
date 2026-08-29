@@ -47,6 +47,14 @@ namespace Api
             return await SendRequestAsync<T>(request, retryCount);
         }
 
+        public async Awaitable<T> PostFormAsync<T>(string endpoint, WWWForm form, int retryCount = 0)
+        {
+            string url = $"{config.BaseUrl}{endpoint}";
+            using UnityWebRequest request = UnityWebRequest.Post(url, form);
+            
+            return await SendRequestAsync<T>(request, retryCount);
+        }
+
         public async Awaitable<T> PutAsync<T>(string endpoint, object data, int retryCount = 0)
         {
             string url = $"{config.BaseUrl}{endpoint}";

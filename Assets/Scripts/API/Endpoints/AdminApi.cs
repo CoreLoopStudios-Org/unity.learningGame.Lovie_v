@@ -9,11 +9,23 @@ namespace Api.Models
     public class AdminStats
     {
         public int totalUsers;
-        public int totalChildren;
+        public int activeChildren;
         public int totalStories;
         public int totalQuizzes;
         public int totalStoreItems;
         public int totalActivities;
+        public string mostWatchedStory;
+        public string mostPlayedGame;
+        public int totalEarnings;
+    }
+    
+    [Serializable]
+    public class AdminProfile
+    {
+        public string id;
+        public string email;
+        public string fullName;
+        public string createdAt;
     }
     
     [Serializable]
@@ -45,9 +57,17 @@ namespace Api.Endpoints
         }
 
         // Stories CRUD
-        public async Awaitable<Story[]> GetStoriesAsync()
+        public async Awaitable<Story[]> GetStoriesAsync(string sortBy = null)
         {
-            return await client.GetAsync<Story[]>("/api/admin/stories");
+            string url = "/api/admin/stories";
+            if (!string.IsNullOrEmpty(sortBy))
+                url += $"?sortBy={sortBy}";
+            return await client.GetAsync<Story[]>(url);
+        }
+
+        public async Awaitable<Story[]> GetRecentStoriesAsync()
+        {
+            return await client.GetAsync<Story[]>("/api/admin/stories/recent");
         }
 
         public async Awaitable<Story> CreateStoryAsync(string title, string coverImageUrl, string contentPayload, int status)
@@ -113,6 +133,11 @@ namespace Api.Endpoints
             return await client.DeleteAsync<bool>($"/api/admin/store-items/{id}");
         }
 
+        public async Awaitable<StoreItem> AddStoryToStoreAsync(string storyId)
+        {
+            return await client.PostAsync<StoreItem>($"/api/admin/store-items/story/{storyId}", new { });
+        }
+
         // MiniGame Content CRUD
         public async Awaitable<MiniGameContent[]> GetMiniGameContentsAsync()
         {
@@ -169,6 +194,29 @@ namespace Api.Endpoints
         {
             var data = new { disable };
             return await client.PostAsync<bool>($"/api/admin/users/{id}/disable", data);
+        }
+
+        // Profile
+        public async Awaitable<AdminProfile> GetProfileAsync()
+        {
+            return await client.GetAsync<AdminProfile>("/api/admin/profile");
+        }
+
+        public async Awaitable<bool> UpdateCredentialsAsync(string email, string currentPassword, string newPassword)
+        {
+            var data = new { email, currentPassword, newPassword };
+            return await client.PutAsync<bool>("/api/admin/profile/credentials", data);
+        }
+
+        // Media Upload
+        public async Awaitable<string> UploadMediaAsync(byte[] fileData, string fileName)
+        {
+            var form = new WWWForm();
+            form.AddBinaryData("file", fileData, fileName);
+            
+            // The backend returns { "url": "/uploads/..." }
+            var response = await client.PostFormAsync<System.Collections.Generic.Dictionary<string, string>>("/api/admin/media/upload", form);
+            return response != null && response.ContainsKey("url") ? response["url"] : null;
         }
     }
 }

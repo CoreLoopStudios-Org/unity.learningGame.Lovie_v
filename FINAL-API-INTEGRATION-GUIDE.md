@@ -88,6 +88,14 @@ catch (ApiException ex)
 }
 ```
 
+### New Admin API Features (Added Aug 2026)
+The `AdminApi` class has been expanded to support extended dashboard features:
+*   **Sorting & Recent Stories:** Use `adminApi.GetStoriesAsync("newest")` or `"alphabetical"`. Fetch top 10 recent stories via `adminApi.GetRecentStoriesAsync()`.
+*   **Advanced Stats:** `AdminStats` now includes `mostWatchedStory`, `mostPlayedGame`, and `totalEarnings`.
+*   **Profile Management:** Admins can view their profile (`GetProfileAsync`) and update their email/password securely (`UpdateCredentialsAsync`).
+*   **Store Integration:** Convert any story into a store item instantly using `adminApi.AddStoryToStoreAsync(storyId)`.
+*   **Media Upload:** Upload a `.png` or `.jpg` directly to the server using `await adminApi.UploadMediaAsync(fileBytes, "image.png")`. It returns the URL string which can be saved to a Story or Store Item.
+
 ---
 
 ## 4. Final Integration: Scene Wiring Instructions
