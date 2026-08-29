@@ -20,6 +20,12 @@ The API SDK is fully implemented and located in `Assets/Scripts/API/`. It maps d
 
 The API SDK is configured to support two entirely separate environments: **Development** and **Production**. 
 
+### 🌐 API Base URLs
+| Environment | Base URL Domain | Purpose |
+| :--- | :--- | :--- |
+| **Development** | `https://dev-api.imaginemebylovie.com/api` | Used for Unity Editor testing and Development Builds. Uses volatile mock data. |
+| **Production** | `https://api.imaginemebylovie.com/api` | Used for final release builds. Connects to the live PostgreSQL database. |
+
 ### How the Environment is Detected
 Environment switching is handled automatically in `Assets/Scripts/API/ApiConfig.cs` using Unity's C# Preprocessor Directives.
 
