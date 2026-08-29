@@ -38,6 +38,15 @@ namespace Api.Models
         public bool isDisabled;
         public string createdAt;
     }
+    [Serializable]
+    public class PaginatedUsers
+    {
+        public UserSummary[] items;
+        public int totalCount;
+        public int page;
+        public int pageSize;
+        public int totalPages;
+    }
 }
 
 namespace Api.Endpoints
@@ -57,17 +66,23 @@ namespace Api.Endpoints
         }
 
         // Stories CRUD
-        public async Awaitable<Story[]> GetStoriesAsync(string sortBy = null)
+        public async Awaitable<Story[]> GetStoriesAsync(string sortBy = null, int? status = null, string titleSearch = null)
         {
-            string url = "/api/admin/stories";
-            if (!string.IsNullOrEmpty(sortBy))
-                url += $"?sortBy={sortBy}";
-            return await client.GetAsync<Story[]>(url);
+            string url = "/api/admin/stories?";
+            if (!string.IsNullOrEmpty(sortBy)) url += $"sortBy={sortBy}&";
+            if (status.HasValue) url += $"status={status}&";
+            if (!string.IsNullOrEmpty(titleSearch)) url += $"titleSearch={titleSearch}&";
+            return await client.GetAsync<Story[]>(url.TrimEnd('?', '&'));
         }
 
         public async Awaitable<Story[]> GetRecentStoriesAsync()
         {
             return await client.GetAsync<Story[]>("/api/admin/stories/recent");
+        }
+
+        public async Awaitable<Story> GetStoryAsync(string id)
+        {
+            return await client.GetAsync<Story>($"/api/admin/stories/{id}");
         }
 
         public async Awaitable<Story> CreateStoryAsync(string title, string coverImageUrl, string contentPayload, int status)
@@ -93,6 +108,11 @@ namespace Api.Endpoints
             return await client.GetAsync<Quiz[]>("/api/admin/quizzes");
         }
 
+        public async Awaitable<Quiz> GetQuizAsync(string id)
+        {
+            return await client.GetAsync<Quiz>($"/api/admin/quizzes/{id}");
+        }
+
         public async Awaitable<Quiz> CreateQuizAsync(string storyId, string title, string questionsPayload, int status)
         {
             var data = new { storyId, title, questionsPayload, status };
@@ -111,9 +131,18 @@ namespace Api.Endpoints
         }
 
         // Store Items CRUD
-        public async Awaitable<StoreItem[]> GetStoreItemsAsync()
+        public async Awaitable<StoreItem[]> GetStoreItemsAsync(int? minPrice = null, int? maxPrice = null, string nameSearch = null)
         {
-            return await client.GetAsync<StoreItem[]>("/api/admin/store-items");
+            string url = "/api/admin/store-items?";
+            if (minPrice.HasValue) url += $"minPrice={minPrice}&";
+            if (maxPrice.HasValue) url += $"maxPrice={maxPrice}&";
+            if (!string.IsNullOrEmpty(nameSearch)) url += $"nameSearch={nameSearch}&";
+            return await client.GetAsync<StoreItem[]>(url.TrimEnd('?', '&'));
+        }
+
+        public async Awaitable<StoreItem> GetStoreItemAsync(string id)
+        {
+            return await client.GetAsync<StoreItem>($"/api/admin/store-items/{id}");
         }
 
         public async Awaitable<StoreItem> CreateStoreItemAsync(string name, int priceInCoins, string assetUrl, string metadata)
@@ -144,6 +173,11 @@ namespace Api.Endpoints
             return await client.GetAsync<MiniGameContent[]>("/api/admin/minigames");
         }
         
+        public async Awaitable<MiniGameContent> GetMiniGameContentAsync(string id)
+        {
+            return await client.GetAsync<MiniGameContent>($"/api/admin/minigames/{id}");
+        }
+        
         public async Awaitable<MiniGameContent> CreateMiniGameContentAsync(string gameType, string title, int status)
         {
             var data = new { gameType, title, status };
@@ -167,6 +201,11 @@ namespace Api.Endpoints
             return await client.GetAsync<StoryAudio[]>("/api/admin/story-audio");
         }
         
+        public async Awaitable<StoryAudio> GetStoryAudioAsync(string id)
+        {
+            return await client.GetAsync<StoryAudio>($"/api/admin/story-audio/{id}");
+        }
+        
         public async Awaitable<StoryAudio> CreateStoryAudioAsync(string storyId, int audioType, string audioUrl)
         {
             var data = new { storyId, audioType, audioUrl };
@@ -185,9 +224,9 @@ namespace Api.Endpoints
         }
 
         // Users
-        public async Awaitable<UserSummary[]> GetUsersAsync()
+        public async Awaitable<PaginatedUsers> GetUsersAsync(int page = 1, int pageSize = 10)
         {
-            return await client.GetAsync<UserSummary[]>("/api/admin/users");
+            return await client.GetAsync<PaginatedUsers>($"/api/admin/users?page={page}&pageSize={pageSize}");
         }
 
         public async Awaitable<bool> DisableUserAsync(string id, bool disable)
