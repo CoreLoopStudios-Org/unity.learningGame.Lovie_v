@@ -32,17 +32,27 @@ Environment switching is handled automatically in `Assets/Scripts/API/ApiConfig.
 ```
 
 ### 🛠️ How to Test in the Development Environment
-When you test the game by clicking **Play in the Unity Editor**, or when you create a **Development Build**, the SDK automatically connects to `https://dev-api.imaginemebylovie.com/api`.
+When you test the game by clicking **Play in the Unity Editor**, or when you create a **Development Build**, the SDK automatically connects to `https://dev-api.imaginemebylovie.com/api` (or your local backend if configured).
 * **The Database:** The Dev API runs on a volatile, **InMemory database**. It is wiped clean every time the server restarts.
-* **Mock Data:** It comes pre-seeded with dummy users (`dev_child`), mock store items (Dragon Hat, Magic Wand), and sample stories/quizzes.
-* **Magic Login:** You do not need real passwords in Dev mode. You can log in instantly bypassing normal authentication.
+* **Mock Data:** It comes pre-seeded with dummy users, mock store items (Dragon Hat, Magic Wand), and sample stories/quizzes.
 * **Manual Override:** If you need to force the Unity Editor to test against the live Production database, you can select the `ApiConfig.asset` file in your `Resources` folder and change the **Environment** dropdown in the Inspector from `Auto` to `Production`.
+
+#### Dummy Login Credentials (Development ONLY)
+Because the development database requires valid JWT tokens, it is seeded with the following dummy accounts on startup. You MUST use these exact credentials to test the UI endpoints:
+
+| Role | Username / Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@imagineme.com` | `Admin123!` |
+| **Parent** | `parent@imagineme.com` | `Parent123!` |
+| **Child** | `dev_child` | `Child123!` |
+
+*(Note: The Parent account already has `EmailConfirmed = true` in the development database so you can log in immediately without needing an OTP).*
 
 ### 🚀 How it Implements for Production
 When you compile the final game for the App Store, Google Play, or WebGL by unchecking "Development Build" in the Build Settings, Unity automatically strips out the development URLs.
 * The game will strictly connect to `https://api.imaginemebylovie.com/api`.
 * It interacts with the real **PostgreSQL** database.
-* It requires real passwords and full JWT validation.
+* The dummy accounts **DO NOT EXIST** in production. You must create real accounts.
 
 ---
 
