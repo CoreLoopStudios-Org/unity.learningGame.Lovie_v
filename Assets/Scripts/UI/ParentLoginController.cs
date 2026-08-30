@@ -22,26 +22,16 @@ namespace UI
 
         private ApiClient apiClient;
         private AuthApi authApi;
-        private ApiConfig config;
 
         void Start()
         {
-            config = ApiConfig.Instance;
+            var config = ApiConfig.Instance;
             apiClient = ApiClient.Instance;
             apiClient.Initialize(config);
             authApi = new AuthApi(apiClient);
 
-            Debug.Log($"[ParentLogin] Controller initialized. API BaseUrl: {config.BaseUrl}");
-
-            if (SessionManager.Instance == null)
-                Debug.LogWarning("[ParentLogin] SessionManager.Instance is NULL (bootstrap scene did not run). " +
-                    "A SessionManager will be created automatically after a successful login, " +
-                    "but the session won't auto-resume on next app start until the bootstrap is wired.");
-
             if (loginButton != null)
                 loginButton.onClick.AddListener(OnLoginClicked);
-            else
-                Debug.LogError("[ParentLogin] Login button reference is not assigned in the Inspector!");
 
             ClearError();
             HideLoading();
@@ -61,22 +51,16 @@ namespace UI
             ShowLoading();
             ClearError();
 
-            Debug.Log($"[ParentLogin] Login requested. email={email}, endpoint={config.BaseUrl}/api/auth/login (POST)");
-
             try
             {
                 var response = await authApi.LoginAsync(email, password);
 
                 if (response != null && !string.IsNullOrEmpty(response.token))
                 {
-                    Debug.Log($"[ParentLogin] Server responded OK. Token received: yes, expiresAt: {response.expiresAt ?? "null"}");
-
                     string role = SessionManager.ExtractRoleFromTokenStatic(response.token);
-                    Debug.Log($"[ParentLogin] Role decoded from JWT: {role ?? "null"}");
 
                     if (role != "Parent")
                     {
-                        Debug.LogWarning($"[ParentLogin] Access denied — token role '{role}' is not Parent.");
                         ShowError("This panel is for parent accounts only!");
                         HideLoading();
                         return;
@@ -84,29 +68,25 @@ namespace UI
 
                     if (SessionManager.Instance == null)
                     {
-                        Debug.LogWarning("[ParentLogin] SessionManager missing (bootstrap scene never ran) — creating it now.");
                         var sessionGo = new GameObject("SessionManager");
                         sessionGo.AddComponent<SessionManager>();
                     }
 
                     SessionManager.Instance.SetSession(response.token, response.expiresAt, "Parent", null);
-                    Debug.Log($"[ParentLogin] Session saved. Loading scene '{dashboardScene}'...");
                     UnityEngine.SceneManagement.SceneManager.LoadScene(dashboardScene);
                 }
                 else
                 {
-                    Debug.LogWarning($"[ParentLogin] Server responded but no token in body. response null? {response == null}");
                     ShowError("Login failed. Please try again.");
                 }
             }
             catch (ApiException ex)
             {
-                Debug.LogError($"[ParentLogin] Login failed. HTTP {ex.responseCode}: {ex.errorMessage}");
                 HandleApiError(ex);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[ParentLogin] Unexpected error (likely network/DNS/timeout): {ex.GetType().Name} - {ex.Message}");
+                Debug.LogError($"Parent login error: {ex.Message}");
                 ShowError("Something went wrong. Please try again.");
             }
             finally
@@ -119,8 +99,6 @@ namespace UI
         {
             if (ex.responseCode == 401)
             {
-                Debug.LogWarning("[ParentLogin] Got 401. Note: ApiClient fires its global OnSessionExpired on ANY 401, " +
-                    "which can reload this scene via SessionManager before the error message is shown.");
                 if (ex.Message != null && ex.Message.ToLower().Contains("verify"))
                 {
                     ShowError("Please verify your email before logging in!");
@@ -136,8 +114,6 @@ namespace UI
             }
             else
             {
-                Debug.LogError($"[ParentLogin] HTTP {ex.responseCode} with empty body — usually a network failure " +
-                    $"(server unreachable, DNS failure, or server down). Could NOT reach: {config.BaseUrl}");
                 ShowError("Connection problem. Check internet!");
             }
         }

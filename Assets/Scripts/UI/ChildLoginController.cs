@@ -23,27 +23,17 @@ namespace UI
         private ApiClient apiClient;
         private AuthApi authApi;
         private ChildApi childApi;
-        private ApiConfig config;
 
         void Start()
         {
-            config = ApiConfig.Instance;
+            var config = ApiConfig.Instance;
             apiClient = ApiClient.Instance;
             apiClient.Initialize(config);
             authApi = new AuthApi(apiClient);
             childApi = new ChildApi(apiClient);
 
-            Debug.Log($"[ChildLogin] Controller initialized. API BaseUrl: {config.BaseUrl}");
-
-            if (SessionManager.Instance == null)
-                Debug.LogWarning("[ChildLogin] SessionManager.Instance is NULL (bootstrap scene did not run). " +
-                    "A SessionManager will be created automatically after a successful login, " +
-                    "but the session won't auto-resume on next app start until the bootstrap is wired.");
-
             if (loginButton != null)
                 loginButton.onClick.AddListener(OnLoginClicked);
-            else
-                Debug.LogError("[ChildLogin] Login button reference is not assigned in the Inspector!");
 
             ClearError();
             HideLoading();
@@ -63,20 +53,14 @@ namespace UI
             ShowLoading();
             ClearError();
 
-            Debug.Log($"[ChildLogin] Login requested. username={username}, endpoint={config.BaseUrl}/api/auth/child/login (POST)");
-
             try
             {
                 var response = await authApi.ChildLoginAsync(username, password);
 
                 if (response != null && !string.IsNullOrEmpty(response.token))
                 {
-                    Debug.Log($"[ChildLogin] Server responded OK. Token received: yes, expiresAt: {response.expiresAt ?? "null"}, " +
-                        $"childId: {response.childId ?? "null"}, coins: {response.coins}, streak: {response.loginStreak}");
-
                     if (SessionManager.Instance == null)
                     {
-                        Debug.LogWarning("[ChildLogin] SessionManager missing (bootstrap scene never ran) — creating it now.");
                         var sessionGo = new GameObject("SessionManager");
                         sessionGo.AddComponent<SessionManager>();
                     }
@@ -87,28 +71,24 @@ namespace UI
                         "Child",
                         response.childId
                     );
-                    Debug.Log("[ChildLogin] Session saved. Initializing coin wallet...");
 
                     InitializeCoinWallet(response.coins, response.loginStreak);
                     await CheckDailyReward(response.token);
 
-                    Debug.Log($"[ChildLogin] Loading scene '{mainMenuScene}'...");
                     UnityEngine.SceneManagement.SceneManager.LoadScene(mainMenuScene);
                 }
                 else
                 {
-                    Debug.LogWarning($"[ChildLogin] Server responded but no token in body. response null? {response == null}");
                     ShowError("Login failed. Please try again.");
                 }
             }
             catch (ApiException ex)
             {
-                Debug.LogError($"[ChildLogin] Login failed. HTTP {ex.responseCode}: {ex.errorMessage}");
                 HandleApiError(ex);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[ChildLogin] Unexpected error (likely network/DNS/timeout): {ex.GetType().Name} - {ex.Message}");
+                Debug.LogError($"Login error: {ex.Message}");
                 ShowError("Something went wrong. Please try again.");
             }
             finally
@@ -159,8 +139,6 @@ namespace UI
         {
             if (ex.responseCode == 401)
             {
-                Debug.LogWarning("[ChildLogin] Got 401. Note: ApiClient fires its global OnSessionExpired on ANY 401, " +
-                    "which can reload this scene via SessionManager before the error message is shown.");
                 ShowError("Oops! Wrong username or password. Try again!");
             }
             else if (!string.IsNullOrEmpty(ex.Message))
@@ -169,8 +147,6 @@ namespace UI
             }
             else
             {
-                Debug.LogError($"[ChildLogin] HTTP {ex.responseCode} with empty body — usually a network failure " +
-                    $"(server unreachable, DNS failure, or server down). Could NOT reach: {config.BaseUrl}");
                 ShowError("Connection problem. Check internet!");
             }
         }

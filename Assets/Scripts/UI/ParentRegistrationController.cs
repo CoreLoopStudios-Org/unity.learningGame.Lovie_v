@@ -34,21 +34,14 @@ namespace UI
 
         private ApiClient apiClient;
         private AuthApi authApi;
-        private ApiConfig config;
         private string registeredEmail = string.Empty;
 
         void Start()
         {
-            config = ApiConfig.Instance;
+            var config = ApiConfig.Instance;
             apiClient = ApiClient.Instance;
             apiClient.Initialize(config);
             authApi = new AuthApi(apiClient);
-
-            Debug.Log($"[ParentRegister] Controller initialized. API BaseUrl: {config.BaseUrl}");
-
-            if (registrationPanel == null) Debug.LogError("[ParentRegister] registrationPanel reference is not assigned!");
-            if (otpPanel == null) Debug.LogError("[ParentRegister] otpPanel reference is not assigned!");
-            if (registerButton == null) Debug.LogError("[ParentRegister] Register button reference is not assigned!");
 
             if (registerButton != null) registerButton.onClick.AddListener(OnRegisterClicked);
             if (verifyButton != null) verifyButton.onClick.AddListener(OnVerifyClicked);
@@ -75,41 +68,34 @@ namespace UI
             ShowLoading();
             ClearMessages();
 
-            Debug.Log($"[ParentRegister] Registration requested. email={email}, endpoint={config.BaseUrl}/api/auth/register (POST)");
-
             try
             {
                 // Force UserType.Parent for public registration per A1 security fix
                 var response = await authApi.RegisterAsync(email, password, fullName, UserType.Parent);
-                Debug.Log("[ParentRegister] Registration succeeded on server.");
 
                 registeredEmail = email;
                 ShowSuccess("Registration successful! Please check your email for the OTP.");
 
-                // Automatically request verification email.
-                // Wrapped separately: if this fails, the account EXISTS and is unverified,
-                // so the OTP panel must still open (user can hit Resend).
+                // Request verification email separately: if sending fails, the account
+                // still exists (unverified), so the OTP panel must open (user can Resend).
                 try
                 {
                     await authApi.SendVerificationAsync(email);
-                    Debug.Log($"[ParentRegister] OTP email requested for {email}.");
                 }
-                catch (Exception sendEx)
+                catch (Exception)
                 {
-                    Debug.LogError($"[ParentRegister] Could not send OTP email: {sendEx.Message} — showing OTP panel anyway, use Resend.");
+                    // Non-fatal — user can resend from the OTP panel.
                 }
 
-                Debug.Log("[ParentRegister] Opening OTP panel.");
                 ShowPanel(otpPanel);
             }
             catch (ApiException ex)
             {
-                Debug.LogError($"[ParentRegister] Registration failed. HTTP {ex.responseCode}: {ex.errorMessage}");
                 ShowError(ex.Message ?? "Registration failed.");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[ParentRegister] Unexpected error (likely network/DNS/timeout): {ex.GetType().Name} - {ex.Message}");
+                Debug.LogError($"Parent registration error: {ex.Message}");
                 ShowError("Something went wrong. Please try again.");
             }
             finally
@@ -133,20 +119,17 @@ namespace UI
 
             try
             {
-                Debug.Log($"[ParentRegister] Verifying OTP for {registeredEmail}, endpoint={config.BaseUrl}/api/auth/verify-email (POST)");
                 await authApi.VerifyEmailAsync(registeredEmail, otp);
-                Debug.Log($"[ParentRegister] Email verified OK. Loading '{loginScene}' in 2s...");
                 ShowSuccess("Email verified successfully! You can now log in.");
                 Invoke(nameof(OnBackToLoginClicked), 2f);
             }
             catch (ApiException ex)
             {
-                Debug.LogError($"[ParentRegister] Verification failed. HTTP {ex.responseCode}: {ex.errorMessage}");
                 ShowError(ex.Message ?? "Verification failed.");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[ParentRegister] OTP verification error: {ex.Message}");
+                Debug.LogError($"OTP verification error: {ex.Message}");
                 ShowError("Something went wrong. Please try again.");
             }
             finally
@@ -162,22 +145,18 @@ namespace UI
             ShowLoading();
             ClearMessages();
 
-            Debug.Log($"[ParentRegister] Resending OTP for {registeredEmail}...");
-
             try
             {
                 await authApi.SendVerificationAsync(registeredEmail);
-                Debug.Log("[ParentRegister] Resend OTP succeeded.");
                 ShowSuccess("A new OTP has been sent to your email.");
             }
             catch (ApiException ex)
             {
-                Debug.LogError($"[ParentRegister] Resend OTP failed. HTTP {ex.responseCode}: {ex.errorMessage}");
                 ShowError(ex.Message ?? "Failed to resend OTP.");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[ParentRegister] Resend OTP error: {ex.Message}");
+                Debug.LogError($"Resend OTP error: {ex.Message}");
                 ShowError("Something went wrong.");
             }
             finally
@@ -188,20 +167,15 @@ namespace UI
 
         void OnBackToLoginClicked()
         {
-            Debug.Log($"[ParentRegister] Loading scene '{loginScene}'...");
             UnityEngine.SceneManagement.SceneManager.LoadScene(loginScene);
         }
 
         void ShowPanel(GameObject panelToShow)
         {
-            // NOTE: otpPanel is a CHILD of registrationPanel in the scene hierarchy.
-            // Deactivating registrationPanel would hide the OTP panel with it, so the
-            // registration panel must stay active while the OTP overlay is shown
-            // (the OTP panel's full-screen image covers the form underneath).
+            // The OTP overlay's full-screen image covers the registration form while
+            // shown, so the registration panel stays active underneath either way.
             bool showRegistration = panelToShow == registrationPanel;
             bool showOtp = panelToShow == otpPanel;
-
-            Debug.Log($"[ParentRegister] ShowPanel: registration={showRegistration}, otp={showOtp}");
 
             if (registrationPanel != null)
                 registrationPanel.SetActive(showRegistration || showOtp);
