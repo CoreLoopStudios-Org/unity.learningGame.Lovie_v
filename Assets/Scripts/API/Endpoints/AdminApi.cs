@@ -14,9 +14,17 @@ namespace Api.Models
         public int totalQuizzes;
         public int totalStoreItems;
         public int totalActivities;
-        public string mostWatchedStory;
-        public string mostPlayedGame;
+        public TopContent[] mostWatchedStories;
+        public TopContent[] mostPlayedGames;
         public int totalEarnings;
+    }
+    
+    [Serializable]
+    public class TopContent
+    {
+        public string name;
+        public string category;
+        public string thumbnailUrl;
     }
     
     [Serializable]
