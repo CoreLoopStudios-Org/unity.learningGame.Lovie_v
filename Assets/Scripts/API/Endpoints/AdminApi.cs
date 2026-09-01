@@ -8,7 +8,7 @@ namespace Api.Models
     [Serializable]
     public class AdminStats
     {
-        public int totalUsers;
+        public int totalParents;
         public int activeChildren;
         public int totalStories;
         public int totalQuizzes;
