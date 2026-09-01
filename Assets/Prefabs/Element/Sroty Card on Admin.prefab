@@ -129,6 +129,7 @@ GameObject:
   - component: {fileID: 3126178753309935081}
   - component: {fileID: 1676511095894103726}
   - component: {fileID: 3802883369738638330}
+  - component: {fileID: 258426888984205141}
   m_Layer: 0
   m_Name: Sroty Card on Admin
   m_TagString: Untagged
@@ -275,6 +276,20 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &258426888984205141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1957714298921595737}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f378ec55b89e944abf470fa32adfa69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminStoryCard
+  nameText: {fileID: 4173332336936373966}
+  uploadedText: {fileID: 1186955241583491308}
 --- !u!1 &2494759592678686278
 GameObject:
   m_ObjectHideFlags: 0
@@ -729,7 +744,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
-  m_MinWidth: 109
+  m_MinWidth: 300
   m_MinHeight: 25
   m_PreferredWidth: 109
   m_PreferredHeight: 25
@@ -794,9 +809,9 @@ MonoBehaviour:
   m_fontSize: 20
   m_fontSizeBase: 20
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 15
+  m_fontSizeMax: 20
   m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
@@ -1114,7 +1129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
-  m_MinWidth: 314
+  m_MinWidth: 681.1
   m_MinHeight: 35
   m_PreferredWidth: 314
   m_PreferredHeight: 35
@@ -1179,9 +1194,9 @@ MonoBehaviour:
   m_fontSize: 28
   m_fontSizeBase: 28
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 28
   m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256

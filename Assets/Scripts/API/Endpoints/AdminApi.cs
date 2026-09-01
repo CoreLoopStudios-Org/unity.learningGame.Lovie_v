@@ -45,11 +45,12 @@ namespace Api.Models
         public int userType;
         public bool isDisabled;
         public string createdAt;
+        public string additionalData;
     }
     [Serializable]
     public class PaginatedUsers
     {
-        public UserSummary[] items;
+        public UserSummary[] users;
         public int totalCount;
         public int page;
         public int pageSize;
