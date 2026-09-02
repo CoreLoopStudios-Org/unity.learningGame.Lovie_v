@@ -324,6 +324,27 @@ Response: `true`
 { "totalUsers": 42, "totalChildren": 30, "adminCount": 2, "parentCount": 40, "recentRegistrations": 5 }
 ```
 
+### 6.2.1 Children — `/api/admin/children`
+
+Children are **not** rows in the users table (`UserType` has no Child member) — they live in a separate Child table linked to a parent. This endpoint lists them platform-wide; `/api/admin/users` never contains children.
+
+| Method | Route | Request | Response |
+|--------|-------|---------|----------|
+| GET | `/api/admin/children?page=1&pageSize=10` | — | `PaginatedChildrenDto` |
+
+`PaginatedChildrenDto`:
+```json
+{
+  "children": [{
+    "id": "guid", "username": "childuser", "parentId": "guid",
+    "parentName": "John Doe", "parentEmail": "parent@example.com",
+    "coins": 120, "loginStreak": 5,
+    "lastActivityAt": "...", "additionalData": "{\"level\":3}"
+  }],
+  "totalCount": 30, "page": 1, "pageSize": 10, "totalPages": 3
+}
+```
+
 ### 6.3 Stories — `/api/admin/stories`
 
 | Method | Route | Request | Response |
@@ -334,6 +355,8 @@ Response: `true`
 | GET | `/{id}` | — | `StoryDto` |
 | PUT | `/{id}` | all fields optional | `true` |
 | DELETE | `/{id}` | — | `true` |
+
+> ⚠️ As of 2026-09-02 the backend source implements only `GET /` (params: `status`, `titleSearch` — **no `sortBy`**), `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}`. `GET /recent` is **not implemented**; requests return 404.
 
 ### 6.4 Quizzes — `/api/admin/quizzes`
 
@@ -357,6 +380,8 @@ Response: `true`
 | GET | `/{id}` | — | `StoreItemDto` |
 | PUT | `/{id}` | all fields optional | `true` |
 | DELETE | `/{id}` | — | `true` |
+
+> ⚠️ As of 2026-09-02 `POST /story/{storyId}` is **not implemented** in the backend source; requests return 404.
 
 ### 6.6 Mini-games — `/api/admin/minigames`
 
@@ -404,6 +429,8 @@ Update request: same fields, all optional, plus `"isActive"`.
 🔧 Planned (GAP-8, optional): child read access `GET /api/child/storyaudio/story/{storyId}` for narration playback.
 
 ### 6.8 Admin Profile — `/api/admin/profile`
+
+> ⚠️ As of 2026-09-02 **no admin profile endpoints exist in the backend source** — requests return 404. Also missing from the backend: `POST /api/admin/media/upload`. Confirm with the backend team before wiring UI to these.
 
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|

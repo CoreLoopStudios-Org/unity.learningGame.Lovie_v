@@ -56,6 +56,30 @@ namespace Api.Models
         public int pageSize;
         public int totalPages;
     }
+
+    [Serializable]
+    public class AdminChild
+    {
+        public string id;
+        public string username;
+        public string parentId;
+        public string parentName;
+        public string parentEmail;
+        public int coins;
+        public int loginStreak;
+        public string lastActivityAt;
+        public string additionalData;
+    }
+
+    [Serializable]
+    public class PaginatedChildren
+    {
+        public AdminChild[] children;
+        public int totalCount;
+        public int page;
+        public int pageSize;
+        public int totalPages;
+    }
 }
 
 namespace Api.Endpoints
@@ -94,16 +118,17 @@ namespace Api.Endpoints
             return await client.GetAsync<Story>($"/api/admin/stories/{id}");
         }
 
-        public async Awaitable<Story> CreateStoryAsync(string title, string coverImageUrl, string contentPayload, int status)
+        // Backend returns the new id as a bare JSON string, not the entity.
+        public async Awaitable<string> CreateStoryAsync(string title, string coverImageUrl, string contentPayload, int status)
         {
             var data = new { title, coverImageUrl, contentPayload, status };
-            return await client.PostAsync<Story>("/api/admin/stories", data);
+            return await client.PostAsync<string>("/api/admin/stories", data);
         }
 
-        public async Awaitable<Story> UpdateStoryAsync(string id, string title, string coverImageUrl, string contentPayload, int status)
+        public async Awaitable<bool> UpdateStoryAsync(string id, string title, string coverImageUrl, string contentPayload, int status)
         {
             var data = new { title, coverImageUrl, contentPayload, status };
-            return await client.PutAsync<Story>($"/api/admin/stories/{id}", data);
+            return await client.PutAsync<bool>($"/api/admin/stories/{id}", data);
         }
 
         public async Awaitable<bool> DeleteStoryAsync(string id)
@@ -122,16 +147,16 @@ namespace Api.Endpoints
             return await client.GetAsync<Quiz>($"/api/admin/quizzes/{id}");
         }
 
-        public async Awaitable<Quiz> CreateQuizAsync(string storyId, string title, string questionsPayload, int status)
+        public async Awaitable<string> CreateQuizAsync(string storyId, string title, string questionsPayload, int status)
         {
             var data = new { storyId, title, questionsPayload, status };
-            return await client.PostAsync<Quiz>("/api/admin/quizzes", data);
+            return await client.PostAsync<string>("/api/admin/quizzes", data);
         }
 
-        public async Awaitable<Quiz> UpdateQuizAsync(string id, string storyId, string title, string questionsPayload, int status)
+        public async Awaitable<bool> UpdateQuizAsync(string id, string storyId, string title, string questionsPayload, int status)
         {
             var data = new { storyId, title, questionsPayload, status };
-            return await client.PutAsync<Quiz>($"/api/admin/quizzes/{id}", data);
+            return await client.PutAsync<bool>($"/api/admin/quizzes/{id}", data);
         }
 
         public async Awaitable<bool> DeleteQuizAsync(string id)
@@ -154,16 +179,16 @@ namespace Api.Endpoints
             return await client.GetAsync<StoreItem>($"/api/admin/store-items/{id}");
         }
 
-        public async Awaitable<StoreItem> CreateStoreItemAsync(string name, int priceInCoins, string assetUrl, string metadata)
+        public async Awaitable<string> CreateStoreItemAsync(string name, int priceInCoins, string assetUrl, string metadata)
         {
             var data = new { name, priceInCoins, assetUrl, metadata };
-            return await client.PostAsync<StoreItem>("/api/admin/store-items", data);
+            return await client.PostAsync<string>("/api/admin/store-items", data);
         }
 
-        public async Awaitable<StoreItem> UpdateStoreItemAsync(string id, string name, int priceInCoins, string assetUrl, string metadata)
+        public async Awaitable<bool> UpdateStoreItemAsync(string id, string name, int priceInCoins, string assetUrl, string metadata)
         {
             var data = new { name, priceInCoins, assetUrl, metadata };
-            return await client.PutAsync<StoreItem>($"/api/admin/store-items/{id}", data);
+            return await client.PutAsync<bool>($"/api/admin/store-items/{id}", data);
         }
 
         public async Awaitable<bool> DeleteStoreItemAsync(string id)
@@ -187,49 +212,55 @@ namespace Api.Endpoints
             return await client.GetAsync<MiniGameContent>($"/api/admin/minigames/{id}");
         }
         
-        public async Awaitable<MiniGameContent> CreateMiniGameContentAsync(string gameType, string title, int status)
+        // Backend create DTO requires contentPayload (no status at create).
+        public async Awaitable<string> CreateMiniGameContentAsync(string gameType, string title, string contentPayload)
         {
-            var data = new { gameType, title, status };
-            return await client.PostAsync<MiniGameContent>("/api/admin/minigames", data);
+            var data = new { gameType, title, contentPayload };
+            return await client.PostAsync<string>("/api/admin/minigames", data);
         }
 
-        public async Awaitable<MiniGameContent> UpdateMiniGameContentAsync(string id, string gameType, string title, int status)
+        // Backend answers { "success": true } for update and delete.
+        public async Awaitable<bool> UpdateMiniGameContentAsync(string id, string gameType, string title, int status)
         {
             var data = new { gameType, title, status };
-            return await client.PutAsync<MiniGameContent>($"/api/admin/minigames/{id}", data);
+            await client.PutAsync<object>($"/api/admin/minigames/{id}", data);
+            return true;
         }
 
         public async Awaitable<bool> DeleteMiniGameContentAsync(string id)
         {
-            return await client.DeleteAsync<bool>($"/api/admin/minigames/{id}");
+            await client.DeleteAsync<object>($"/api/admin/minigames/{id}");
+            return true;
         }
 
-        // StoryAudio CRUD
-        public async Awaitable<StoryAudio[]> GetStoryAudiosAsync()
+        // StoryAudio CRUD — route is /api/admin/storyaudio (no hyphen).
+        public async Awaitable<StoryAudio[]> GetStoryAudiosByStoryAsync(string storyId)
         {
-            return await client.GetAsync<StoryAudio[]>("/api/admin/story-audio");
+            return await client.GetAsync<StoryAudio[]>($"/api/admin/storyaudio/story/{storyId}");
         }
-        
+
         public async Awaitable<StoryAudio> GetStoryAudioAsync(string id)
         {
-            return await client.GetAsync<StoryAudio>($"/api/admin/story-audio/{id}");
-        }
-        
-        public async Awaitable<StoryAudio> CreateStoryAudioAsync(string storyId, int audioType, string audioUrl)
-        {
-            var data = new { storyId, audioType, audioUrl };
-            return await client.PostAsync<StoryAudio>("/api/admin/story-audio", data);
+            return await client.GetAsync<StoryAudio>($"/api/admin/storyaudio/{id}");
         }
 
-        public async Awaitable<StoryAudio> UpdateStoryAudioAsync(string id, string storyId, int audioType, string audioUrl)
+        public async Awaitable<StoryAudio> CreateStoryAudioAsync(string storyId, int type, string audioUrl)
         {
-            var data = new { storyId, audioType, audioUrl };
-            return await client.PutAsync<StoryAudio>($"/api/admin/story-audio/{id}", data);
+            var data = new { storyId, audioUrl, type };
+            return await client.PostAsync<StoryAudio>("/api/admin/storyaudio", data);
         }
 
+        public async Awaitable<StoryAudio> UpdateStoryAudioAsync(string id, int type, string audioUrl)
+        {
+            var data = new { audioUrl, type };
+            return await client.PutAsync<StoryAudio>($"/api/admin/storyaudio/{id}", data);
+        }
+
+        // Backend answers 200 with an empty body.
         public async Awaitable<bool> DeleteStoryAudioAsync(string id)
         {
-            return await client.DeleteAsync<bool>($"/api/admin/story-audio/{id}");
+            await client.DeleteAsync<object>($"/api/admin/storyaudio/{id}");
+            return true;
         }
 
         // Users
@@ -238,10 +269,19 @@ namespace Api.Endpoints
             return await client.GetAsync<PaginatedUsers>($"/api/admin/users?page={page}&pageSize={pageSize}");
         }
 
+        // Children are NOT users — they live in a separate table, so this
+        // endpoint (not GetUsersAsync) is the only source of kid accounts.
+        public async Awaitable<PaginatedChildren> GetChildrenAsync(int page = 1, int pageSize = 10)
+        {
+            return await client.GetAsync<PaginatedChildren>($"/api/admin/children?page={page}&pageSize={pageSize}");
+        }
+
+        // Backend route is PATCH and answers 204 No Content.
         public async Awaitable<bool> DisableUserAsync(string id, bool disable)
         {
-            var data = new { disable };
-            return await client.PostAsync<bool>($"/api/admin/users/{id}/disable", data);
+            var data = new { disabled = disable };
+            await client.PatchAsync<object>($"/api/admin/users/{id}/disable", data);
+            return true;
         }
 
         // Profile

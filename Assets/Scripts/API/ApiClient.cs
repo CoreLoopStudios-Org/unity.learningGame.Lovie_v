@@ -70,6 +70,21 @@ namespace Api
             return await SendRequestAsync<T>(request, retryCount);
         }
 
+        public async Awaitable<T> PatchAsync<T>(string endpoint, object data, int retryCount = 0)
+        {
+            string url = $"{config.BaseUrl}{endpoint}";
+            using UnityWebRequest request = new UnityWebRequest(url, "PATCH");
+
+            string json = JsonConvert.SerializeObject(data);
+            byte[] body = Encoding.UTF8.GetBytes(json);
+
+            request.uploadHandler = new UploadHandlerRaw(body);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            return await SendRequestAsync<T>(request, retryCount);
+        }
+
         public async Awaitable<T> DeleteAsync<T>(string endpoint, int retryCount = 0)
         {
             string url = $"{config.BaseUrl}{endpoint}";
@@ -92,6 +107,10 @@ namespace Api
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     string responseText = request.downloadHandler.text;
+
+                    // 204 No Content and similar empty-success bodies cannot be deserialized.
+                    if (string.IsNullOrEmpty(responseText))
+                        return default;
 
                     if (typeof(T) == typeof(string))
                         return (T)(object)responseText;

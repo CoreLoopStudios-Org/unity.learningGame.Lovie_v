@@ -8,11 +8,6 @@ using Api.Models;
 
 namespace UI
 {
-    /// <summary>
-    /// Attach to the "Admin Dashboard (All Users — Parents)" section.
-    /// Fetches the user list every time the section is enabled and spawns one
-    /// card per parent user into the container.
-    /// </summary>
     public class AdminParentUsersController : MonoBehaviour
     {
         private const int PageSize = 50;

@@ -8,16 +8,9 @@ using Api.Models;
 
 namespace UI
 {
-    /// <summary>
-    /// Attach to the "Admin Dashboard (All Users — Kids)" section.
-    /// Fetches the user list every time the section is enabled and spawns one
-    /// card per kid user into the container. Level is parsed from the user's
-    /// additionalData JSON.
-    /// </summary>
     public class AdminKidUsersController : MonoBehaviour
     {
         private const int PageSize = 50;
-        private const int KidUserType = 3;
 
         [Header("List")]
         [SerializeField] private Transform usersContainer;
@@ -55,7 +48,7 @@ namespace UI
 
             try
             {
-                List<UserSummary> kids = await FetchUsersByTypeAsync(KidUserType);
+                List<AdminChild> kids = await FetchChildrenAsync();
 
                 // A newer request started or section was disabled while awaiting.
                 if (id != requestId || !isActiveAndEnabled) return;
@@ -74,21 +67,21 @@ namespace UI
             }
         }
 
-        private async Awaitable<List<UserSummary>> FetchUsersByTypeAsync(int type)
+        private async Awaitable<List<AdminChild>> FetchChildrenAsync()
         {
-            var users = new List<UserSummary>();
+            var kids = new List<AdminChild>();
             int page = 1;
 
             while (true)
             {
-                PaginatedUsers result = await adminApi.GetUsersAsync(page, PageSize);
-                if (result?.users == null) break;
+                PaginatedChildren result = await adminApi.GetChildrenAsync(page, PageSize);
+                if (result?.children == null) break;
 
-                foreach (UserSummary user in result.users)
+                foreach (AdminChild child in result.children)
                 {
-                    if (user != null && user.userType == (int)type)
+                    if (child != null)
                     {
-                        users.Add(user);
+                        kids.Add(child);
                     }
                 }
 
@@ -96,10 +89,10 @@ namespace UI
                 page++;
             }
 
-            return users;
+            return kids;
         }
 
-        private void PopulateUsers(List<UserSummary> users)
+        private void PopulateUsers(List<AdminChild> users)
         {
             ClearSpawnedCards();
 
@@ -117,10 +110,10 @@ namespace UI
 
             ClearStatus();
 
-            foreach (UserSummary user in users)
+            foreach (AdminChild child in users)
             {
                 AdminKidUserCard card = Instantiate(userCardPrefab, usersContainer);
-                card.Setup(user);
+                card.Setup(child);
                 spawnedCards.Add(card);
             }
         }

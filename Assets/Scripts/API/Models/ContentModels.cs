@@ -42,8 +42,15 @@ namespace Api.Models
     {
         public string id;
         public string storyId;
-        public int audioType;
+        public int? pageNumber;
         public string audioUrl;
+        public string mimeType;
+        public int type;
+        public float? startTime;
+        public float? endTime;
+        public string language;
+        public int? durationSeconds;
+        public bool isActive;
         public string createdAt;
     }
 }

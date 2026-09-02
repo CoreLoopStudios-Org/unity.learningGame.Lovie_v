@@ -18,21 +18,21 @@ namespace UI
         [SerializeField] private TextMeshProUGUI idText;
         [SerializeField] private TextMeshProUGUI levelText;
 
-        public void Setup(UserSummary user)
+        public void Setup(AdminChild child)
         {
             if (nameText != null)
             {
-                nameText.text = user?.fullName ?? string.Empty;
+                nameText.text = child?.username ?? string.Empty;
             }
 
             if (idText != null)
             {
-                idText.text = user?.id ?? string.Empty;
+                idText.text = child?.id ?? string.Empty;
             }
 
             if (levelText != null)
             {
-                levelText.text = ExtractLevel(user?.additionalData);
+                levelText.text = ExtractLevel(child?.additionalData);
             }
         }
 

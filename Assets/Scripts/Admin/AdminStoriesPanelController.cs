@@ -8,12 +8,6 @@ using Api.Models;
 
 namespace UI
 {
-    /// <summary>
-    /// Attach to the "Admin Dashboard (Stories)" panel.
-    /// Fetches the story list every time the panel is enabled (navigation
-    /// switches panels via SetActive, which re-triggers OnEnable) and spawns
-    /// one card per story into the container.
-    /// </summary>
     public class AdminStoriesPanelController : MonoBehaviour
     {
         [Header("List")]
