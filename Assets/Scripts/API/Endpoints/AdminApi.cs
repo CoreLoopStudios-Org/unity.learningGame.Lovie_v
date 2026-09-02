@@ -43,7 +43,7 @@ namespace Api.Models
         public string email;
         public string fullName;
         public int userType;
-        public bool isDisabled;
+        public string disabledAt;
         public string createdAt;
         public string additionalData;
     }
@@ -68,6 +68,7 @@ namespace Api.Models
         public int coins;
         public int loginStreak;
         public string lastActivityAt;
+        public string disabledAt;
         public string additionalData;
     }
 
@@ -264,16 +265,22 @@ namespace Api.Endpoints
         }
 
         // Users
-        public async Awaitable<PaginatedUsers> GetUsersAsync(int page = 1, int pageSize = 10)
+        public async Awaitable<PaginatedUsers> GetUsersAsync(int page = 1, int pageSize = 10, string search = null, string sortBy = null, bool descending = false)
         {
-            return await client.GetAsync<PaginatedUsers>($"/api/admin/users?page={page}&pageSize={pageSize}");
+            string url = $"/api/admin/users?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(search)) url += $"&searchTerm={search}";
+            if (!string.IsNullOrEmpty(sortBy)) url += $"&sortBy={sortBy}&sortDescending={descending.ToString().ToLower()}";
+            return await client.GetAsync<PaginatedUsers>(url);
         }
 
         // Children are NOT users — they live in a separate table, so this
         // endpoint (not GetUsersAsync) is the only source of kid accounts.
-        public async Awaitable<PaginatedChildren> GetChildrenAsync(int page = 1, int pageSize = 10)
+        public async Awaitable<PaginatedChildren> GetChildrenAsync(int page = 1, int pageSize = 10, string search = null, string sortBy = null, bool descending = false)
         {
-            return await client.GetAsync<PaginatedChildren>($"/api/admin/children?page={page}&pageSize={pageSize}");
+            string url = $"/api/admin/children?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(search)) url += $"&searchTerm={search}";
+            if (!string.IsNullOrEmpty(sortBy)) url += $"&sortBy={sortBy}&sortDescending={descending.ToString().ToLower()}";
+            return await client.GetAsync<PaginatedChildren>(url);
         }
 
         // Backend route is PATCH and answers 204 No Content.
@@ -281,6 +288,25 @@ namespace Api.Endpoints
         {
             var data = new { disabled = disable };
             await client.PatchAsync<object>($"/api/admin/users/{id}/disable", data);
+            return true;
+        }
+
+        public async Awaitable<bool> DisableChildAsync(string id, bool disable)
+        {
+            var data = new { disabled = disable };
+            await client.PatchAsync<object>($"/api/admin/children/{id}/disable", data);
+            return true;
+        }
+
+        public async Awaitable<bool> DeleteUserAsync(string id)
+        {
+            await client.DeleteAsync<object>($"/api/admin/users/{id}");
+            return true;
+        }
+
+        public async Awaitable<bool> DeleteChildAsync(string id)
+        {
+            await client.DeleteAsync<object>($"/api/admin/children/{id}");
             return true;
         }
 

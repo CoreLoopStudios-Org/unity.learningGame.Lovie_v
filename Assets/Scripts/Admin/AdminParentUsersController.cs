@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using Api;
 using Api.Endpoints;
@@ -10,7 +11,12 @@ namespace UI
 {
     public class AdminParentUsersController : MonoBehaviour
     {
-        private const int PageSize = 50;
+        private const int PageSize = 10;
+
+        [Header("UI Elements")]
+        [SerializeField] private TMP_InputField searchInput;
+        [SerializeField] private TMP_Dropdown sortDropdown;
+        [SerializeField] private ScrollRect scrollRect;
 
         [Header("List")]
         [SerializeField] private Transform usersContainer;
@@ -23,88 +29,134 @@ namespace UI
         private AdminApi adminApi;
         private int requestId;
         private readonly List<AdminParentUserCard> spawnedCards = new();
+        
+        private int currentPage = 1;
+        private int totalPages = 1;
+        private bool isLoading = false;
+        private string currentSearch = "";
+        private string currentSort = "Newest";
+        private bool currentSortDescending = true;
 
         private void Awake()
         {
             apiClient = ApiClient.Instance;
             apiClient.Initialize(ApiConfig.Instance);
             adminApi = new AdminApi(apiClient);
+
+            if (searchInput != null)
+                searchInput.onEndEdit.AddListener(OnSearchChanged);
+            if (sortDropdown != null)
+                sortDropdown.onValueChanged.AddListener(OnSortChanged);
+            if (scrollRect != null)
+                scrollRect.onValueChanged.AddListener(OnScroll);
+        }
+
+        private void OnDestroy()
+        {
+            if (searchInput != null)
+                searchInput.onEndEdit.RemoveListener(OnSearchChanged);
+            if (sortDropdown != null)
+                sortDropdown.onValueChanged.RemoveListener(OnSortChanged);
+            if (scrollRect != null)
+                scrollRect.onValueChanged.RemoveListener(OnScroll);
         }
 
         private void OnEnable()
         {
-            _ = RefreshAsync();
+            ResetAndLoad();
         }
 
-        private async Awaitable RefreshAsync()
+        private void OnSearchChanged(string newValue)
+        {
+            if (currentSearch == newValue) return;
+            currentSearch = newValue;
+            ResetAndLoad();
+        }
+
+        private void OnSortChanged(int index)
+        {
+            if (sortDropdown != null)
+            {
+                string option = sortDropdown.options[index].text;
+                if (option.Contains("Alphabet", StringComparison.OrdinalIgnoreCase))
+                {
+                    currentSort = "Alphabetical";
+                    currentSortDescending = false;
+                }
+                else
+                {
+                    currentSort = "Newest";
+                    currentSortDescending = true;
+                }
+                ResetAndLoad();
+            }
+        }
+
+        private void OnScroll(Vector2 position)
+        {
+            if (isLoading || currentPage >= totalPages) return;
+
+            if (position.y < 0.05f)
+            {
+                LoadNextPage();
+            }
+        }
+
+        private void ResetAndLoad()
+        {
+            currentPage = 1;
+            totalPages = 1;
+            ClearSpawnedCards();
+            _ = LoadPageAsync(currentPage, true);
+        }
+
+        private void LoadNextPage()
+        {
+            currentPage++;
+            _ = LoadPageAsync(currentPage, false);
+        }
+
+        private async Awaitable LoadPageAsync(int page, bool clearFirst)
         {
             if (!SessionManager.Instance.IsValidToken())
             {
-                Debug.LogWarning("[AdminParentUsersController] No valid session, skipping user list load.");
+                Debug.LogWarning("[AdminParentUsersController] No valid session.");
                 return;
             }
 
             int id = ++requestId;
+            isLoading = true;
+
+            if (clearFirst) ClearStatus();
 
             try
             {
-                List<UserSummary> parents = await FetchUsersByTypeAsync(UserType.Parent);
-
-                // A newer request started or section was disabled while awaiting.
+                PaginatedUsers result = await adminApi.GetUsersAsync(page, PageSize, currentSearch, currentSort, currentSortDescending);
+                
                 if (id != requestId || !isActiveAndEnabled) return;
 
-                PopulateUsers(parents);
-            }
-            catch (ApiException ex)
-            {
-                if (id == requestId)
-                    ShowStatus($"Failed to load parents: {ex.Message}");
+                if (result != null)
+                {
+                    totalPages = result.totalPages;
+                    PopulateUsers(result.users);
+                }
             }
             catch (Exception ex)
             {
                 if (id == requestId)
                     ShowStatus($"Failed to load parents: {ex.Message}");
             }
+            finally
+            {
+                if (id == requestId) isLoading = false;
+            }
         }
 
-        private async Awaitable<List<UserSummary>> FetchUsersByTypeAsync(UserType type)
+        private void PopulateUsers(UserSummary[] users)
         {
-            var users = new List<UserSummary>();
-            int page = 1;
-
-            while (true)
+            if (users == null || users.Length == 0)
             {
-                PaginatedUsers result = await adminApi.GetUsersAsync(page, PageSize);
-                if (result?.users == null) break;
-
-                foreach (UserSummary user in result.users)
-                {
-                    if (user != null && user.userType == (int)type)
-                    {
-                        users.Add(user);
-                    }
-                }
-
-                if (page >= result.totalPages) break;
-                page++;
-            }
-
-            return users;
-        }
-
-        private void PopulateUsers(List<UserSummary> users)
-        {
-            ClearSpawnedCards();
-
-            if (users.Count == 0)
-            {
-                ShowStatus("No parents found.");
-                return;
-            }
-
-            if (usersContainer == null || userCardPrefab == null)
-            {
-                Debug.LogWarning("[AdminParentUsersController] Users container or card prefab not assigned.");
+                if (spawnedCards.Count == 0) ShowStatus("No parents found.");
                 return;
             }
 
@@ -112,9 +164,42 @@ namespace UI
 
             foreach (UserSummary user in users)
             {
-                AdminParentUserCard card = Instantiate(userCardPrefab, usersContainer);
-                card.Setup(user);
-                spawnedCards.Add(card);
+                if (user != null && user.userType == (int)UserType.Parent)
+                {
+                    AdminParentUserCard card = Instantiate(userCardPrefab, usersContainer);
+                    card.Setup(user, OnBanUser, OnDeleteUser);
+                    spawnedCards.Add(card);
+                }
+            }
+        }
+
+        private async void OnBanUser(UserSummary user)
+        {
+            if (user == null) return;
+            try
+            {
+                await adminApi.DisableUserAsync(user.id, true);
+                Debug.Log($"Banned user: {user.id}");
+                ResetAndLoad();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to ban user {user.id}: {ex.Message}");
+            }
+        }
+
+        private async void OnDeleteUser(UserSummary user)
+        {
+            if (user == null) return;
+            try
+            {
+                await adminApi.DeleteUserAsync(user.id);
+                Debug.Log($"Deleted user: {user.id}");
+                ResetAndLoad();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to delete user {user.id}: {ex.Message}");
             }
         }
 
@@ -132,6 +217,7 @@ namespace UI
             if (statusFeedbackText != null)
             {
                 statusFeedbackText.text = string.Empty;
+                statusFeedbackText.gameObject.SetActive(false);
             }
         }
 
@@ -139,10 +225,7 @@ namespace UI
         {
             foreach (AdminParentUserCard card in spawnedCards)
             {
-                if (card != null)
-                {
-                    Destroy(card.gameObject);
-                }
+                if (card != null) Destroy(card.gameObject);
             }
             spawnedCards.Clear();
         }

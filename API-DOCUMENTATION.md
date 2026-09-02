@@ -307,14 +307,15 @@ Response: `true`
 
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|
-| GET | `/api/admin/users?page=1&pageSize=10` | — | `PaginatedUsersDto` |
+| GET | `/api/admin/users?page=1&pageSize=10&searchTerm=test&sortBy=name&sortDescending=false` | — | `PaginatedUsersDto` |
 | GET | `/api/admin/users/stats` | — | `UserStatsDto` |
 | PATCH | `/api/admin/users/{id}/disable` | `{ "disabled": true }` | 204 No Content |
+| DELETE | `/api/admin/users/{id}` | — | 204 No Content |
 
 `PaginatedUsersDto`:
 ```json
 {
-  "users": [{ "id": "guid", "email": "...", "fullName": "...", "userType": 2, "createdAt": "...", "emailConfirmed": true }],
+  "users": [{ "id": "guid", "email": "...", "fullName": "...", "userType": 2, "createdAt": "...", "emailConfirmed": true, "disabledAt": null }],
   "totalCount": 42, "page": 1, "pageSize": 10, "totalPages": 5
 }
 ```
@@ -330,16 +331,17 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|
-| GET | `/api/admin/children?page=1&pageSize=10` | — | `PaginatedChildrenDto` |
+| GET | `/api/admin/children?page=1&pageSize=10&searchTerm=test&sortBy=name&sortDescending=false` | — | `PaginatedChildrenDto` |
+| PATCH | `/api/admin/children/{id}/disable` | `{ "disabled": true }` | 204 No Content |
+| DELETE | `/api/admin/children/{id}` | — | 204 No Content |
 
 `PaginatedChildrenDto`:
 ```json
 {
   "children": [{
-    "id": "guid", "username": "childuser", "parentId": "guid",
-    "parentName": "John Doe", "parentEmail": "parent@example.com",
+    "id": "guid", "username": "childuser",
     "coins": 120, "loginStreak": 5,
-    "lastActivityAt": "...", "additionalData": "{\"level\":3}"
+    "lastActivityAt": "...", "disabledAt": null, "additionalData": "{\"level\":3}"
   }],
   "totalCount": 30, "page": 1, "pageSize": 10, "totalPages": 3
 }
