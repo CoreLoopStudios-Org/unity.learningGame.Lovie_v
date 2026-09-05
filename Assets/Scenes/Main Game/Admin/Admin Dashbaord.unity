@@ -4451,6 +4451,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e23a62782b2e064b9993bfd309a52c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.AdminParentUsersController
+  searchInput: {fileID: 1423992069}
+  sortDropdown: {fileID: 0}
+  scrollRect: {fileID: 22834802}
   usersContainer: {fileID: 1404738457}
   userCardPrefab: {fileID: 375385008978985809, guid: b655ab6c12099a644bc6c9af1a9bc968, type: 3}
   statusFeedbackText: {fileID: 378888776}
@@ -13443,6 +13446,7 @@ GameObject:
   - component: {fileID: 3015741566715648471}
   - component: {fileID: 2779140358532710776}
   - component: {fileID: 4992680284664017389}
+  - component: {fileID: 4992680284664017390}
   m_Layer: 0
   m_Name: Admin Dashboard (Profile)
   m_TagString: Untagged
@@ -20897,6 +20901,24 @@ MonoBehaviour:
   - {x: 0, y: 0}
   - {x: 1, y: 0}
   - {x: 1, y: 0}
+--- !u!114 &4992680284664017390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2168420995940979952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e05d2ceb9b0ba0443a45480c278656d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminProfilePanelController
+  profileImage: {fileID: 69015599}
+  nameText: {fileID: 1093355072731925295}
+  emailText: {fileID: 5946990691429966200}
+  phoneText: {fileID: 3534274989319404628}
+  logoutButton: {fileID: 8591425946980565892}
+  adminLoginScene: Admin Login
 --- !u!114 &5006616118392970795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21306,6 +21328,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 581f6a66ca840884f9f4680674bbd3c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.AdminKidUsersController
+  searchInput: {fileID: 1423992069}
+  sortDropdown: {fileID: 0}
+  scrollRect: {fileID: 1525057992}
   usersContainer: {fileID: 2104561754}
   userCardPrefab: {fileID: 6732837743575010983, guid: e5f4d623ae578014b834a3aea6895993, type: 3}
   statusFeedbackText: {fileID: 378888776}
@@ -30325,6 +30350,7 @@ GameObject:
   - component: {fileID: 8282739136697287592}
   - component: {fileID: 4234516190457982475}
   - component: {fileID: 4243774498854497027}
+  - component: {fileID: 8591425946980565892}
   m_Layer: 0
   m_Name: Logout Button
   m_TagString: Untagged
@@ -30332,6 +30358,50 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8591425946980565892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8591425946980565891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 4243774498854497027}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &8607598092349952363
 GameObject:
   m_ObjectHideFlags: 0

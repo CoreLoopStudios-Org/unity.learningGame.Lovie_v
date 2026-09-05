@@ -27,12 +27,16 @@ namespace Api.Models
         public string thumbnailUrl;
     }
     
+    // phone/profileImageUrl are not in the backend AdminProfileDto yet —
+    // JsonUtility leaves them null until the backend adds them.
     [Serializable]
     public class AdminProfile
     {
         public string id;
         public string email;
         public string fullName;
+        public string phone;
+        public string profileImageUrl;
         public string createdAt;
     }
     
