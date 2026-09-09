@@ -77,7 +77,7 @@ namespace UI
 
             if (totalEarningsText != null) totalEarningsText.text = $"${stats.totalEarnings}";
             if (totalStoriesText != null) totalStoriesText.text = stats.totalStories.ToString();
-            if (totalKidsUsersText != null) totalKidsUsersText.text = stats.activeChildren.ToString();
+            if (totalKidsUsersText != null) totalKidsUsersText.text = stats.totalChildren.ToString();
             if (totalParentsText != null) totalParentsText.text = stats.totalParents.ToString();
 
             FillSlots(storySlots, stats.mostWatchedStories);

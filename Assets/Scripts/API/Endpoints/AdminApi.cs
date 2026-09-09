@@ -9,11 +9,9 @@ namespace Api.Models
     public class AdminStats
     {
         public int totalParents;
-        public int activeChildren;
+        // All created children (banned counted, only hard-deleted excluded)
+        public int totalChildren;
         public int totalStories;
-        public int totalQuizzes;
-        public int totalStoreItems;
-        public int totalActivities;
         public TopContent[] mostWatchedStories;
         public TopContent[] mostPlayedGames;
         public int totalEarnings;

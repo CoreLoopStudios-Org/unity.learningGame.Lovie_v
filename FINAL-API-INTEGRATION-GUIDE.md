@@ -50,7 +50,17 @@ Because the development database requires valid JWT tokens, it is seeded with th
 | :--- | :--- | :--- |
 | **Admin** | `admin@dev.local` | `Admin123!` |
 | **Parent** | `parent@dev.local` | `Parent123!` |
-| **Child** | `dev_child` | `Child123!` |
+| **Parent 2** | `parent2@dev.local` | `Parent123!` |
+| **Parent 3** | `parent3@dev.local` | `Parent123!` |
+| **Parent 4** | `parent4@dev.local` | `Parent123!` |
+| **Child** (Parent User) | `dev_child` | `Child123!` |
+| **Child** (Parent 2) | `dev_child2` | `Child123!` |
+| **Child** (Parent 2) | `dev_child3` | `Child123!` |
+| **Child** (Parent 3) | `dev_child4` | `Child123!` |
+| **Child** (Parent 3) | `dev_child5` | `Child123!` |
+| **Child** (Parent 3) | `dev_child6` | `Child123!` |
+| **Child** (Parent 4) | `dev_child7` | `Child123!` |
+| **Child** (Parent 4) | `dev_child8` | `Child123!` |
 
 *(Note: The Parent account already has `EmailConfirmed = true` in the development database so you can log in immediately without needing an OTP).*
 
@@ -115,6 +125,7 @@ catch (ApiException ex)
 The `AdminApi` class has been expanded to support extended dashboard features:
 *   **Sorting & Recent Stories:** Use `adminApi.GetStoriesAsync("newest")` or `"alphabetical"`. Fetch top 10 recent stories via `adminApi.GetRecentStoriesAsync()`.
 *   **Advanced Stats:** `AdminStats` now includes lists for `mostWatchedStories` and `mostPlayedGames` (containing name, category, and thumbnailUrl), and `totalEarnings`.
+*   **Updated Stats Contract (Sept 2026):** `AdminStats` no longer has `activeChildren` — use `totalChildren` instead (all created children: banned counted, only hard-deleted excluded). `AdminHomePanelController` binds its kids tile to `stats.totalChildren`. The `UserStatsDto` from `GET /api/admin/users/stats` renamed `parentCount`→`totalParents` and `adminCount`→`totalAdmins`.
 *   **Profile Management:** Admins can view their profile (`GetProfileAsync`) and update their email/password securely (`UpdateCredentialsAsync`).
 *   **Store Integration:** Convert any story into a store item instantly using `adminApi.AddStoryToStoreAsync(storyId)`.
 *   **Media Upload:** Upload a `.png` or `.jpg` directly to the server using `await adminApi.UploadMediaAsync(fileBytes, "image.png")`. It returns the URL string which can be saved to a Story or Store Item.

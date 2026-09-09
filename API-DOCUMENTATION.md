@@ -290,8 +290,8 @@ Response: `true`
 
 ```json
 {
-  "totalUsers": 42,
-  "activeChildren": 30,
+  "totalParents": 40,
+  "totalChildren": 42,
   "totalStories": 15,
   "mostWatchedStories": [
     { "name": "Story 1", "category": "Adventure", "thumbnailUrl": "..." }
@@ -302,6 +302,8 @@ Response: `true`
   "totalEarnings": 1500
 }
 ```
+
+Note: `totalChildren` counts **all** created children (banned counted, only hard-deleted excluded). The former `activeChildren` (30-day window) field was removed — the dashboard kids tile now shows the total.
 
 ### 6.2 Users
 
@@ -322,7 +324,7 @@ Response: `true`
 
 `UserStatsDto`:
 ```json
-{ "totalUsers": 42, "totalChildren": 30, "adminCount": 2, "parentCount": 40, "recentRegistrations": 5 }
+{ "totalUsers": 42, "totalChildren": 30, "totalAdmins": 2, "totalParents": 40, "recentRegistrations": 5 }
 ```
 
 ### 6.2.1 Children — `/api/admin/children`
