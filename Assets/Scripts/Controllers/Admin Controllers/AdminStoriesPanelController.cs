@@ -20,6 +20,7 @@ namespace UI
         private ApiClient apiClient;
         private AdminApi adminApi;
         private int requestId;
+        private bool isDeletingStory;
         private readonly List<AdminStoryCard> spawnedCards = new();
 
         private void Awake()
@@ -89,7 +90,59 @@ namespace UI
 
                 AdminStoryCard card = Instantiate(storyCardPrefab, storiesContainer);
                 card.Setup(story);
+                card.DeleteClicked += OnCardDeleteClicked;
                 spawnedCards.Add(card);
+            }
+        }
+
+        private void OnCardDeleteClicked(AdminStoryCard card)
+        {
+            if (isDeletingStory || card?.Story == null || string.IsNullOrEmpty(card.Story.id))
+                return;
+
+            _ = DeleteStoryAsync(card);
+        }
+
+        private async Awaitable DeleteStoryAsync(AdminStoryCard card)
+        {
+            if (!SessionManager.Instance.IsValidToken())
+            {
+                ShowStatus("No valid session.");
+                return;
+            }
+
+            isDeletingStory = true;
+            ShowStatus($"Deleting \"{card.Story.title}\"...");
+
+            try
+            {
+                bool success = await adminApi.DeleteStoryAsync(card.Story.id);
+
+                // The card can be destroyed (e.g. list refreshed) while awaiting.
+                if (card == null) return;
+
+                if (success)
+                {
+                    spawnedCards.Remove(card);
+                    Destroy(card.gameObject);
+                    ShowStatus("Story deleted.");
+                }
+                else
+                {
+                    ShowStatus("Failed to delete story.");
+                }
+            }
+            catch (ApiException ex)
+            {
+                ShowStatus($"Failed to delete story: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                ShowStatus($"Failed to delete story: {ex.Message}");
+            }
+            finally
+            {
+                isDeletingStory = false;
             }
         }
 
