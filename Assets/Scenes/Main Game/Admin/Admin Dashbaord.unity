@@ -5001,6 +5001,8 @@ MonoBehaviour:
   usersContainer: {fileID: 1404738457}
   userCardPrefab: {fileID: 375385008978985809, guid: b655ab6c12099a644bc6c9af1a9bc968, type: 3}
   statusFeedbackText: {fileID: 378888776}
+  banPopupPrefab: {fileID: 4829173650192837461, guid: db56a889a4a97524a987546e0cefc9ee, type: 3}
+  deletePopupPrefab: {fileID: 5930284716302948173, guid: 2df2973bc330dcd479ce4dabe7f7ede1, type: 3}
 --- !u!1 &1342175947
 GameObject:
   m_ObjectHideFlags: 0
@@ -11806,6 +11808,7 @@ GameObject:
   - component: {fileID: 5831318850866392062}
   - component: {fileID: 4073933820942799923}
   - component: {fileID: 8865553050560022926}
+  - component: {fileID: 8865553050560022927}
   m_Layer: 0
   m_Name: Total Parent User
   m_TagString: Untagged
@@ -15419,6 +15422,7 @@ GameObject:
   - component: {fileID: 5211481658299360782}
   - component: {fileID: 2765413711152780845}
   - component: {fileID: 8184326697255400803}
+  - component: {fileID: 8184326697255400804}
   m_Layer: 0
   m_Name: Total Upload stories
   m_TagString: Untagged
@@ -22162,6 +22166,8 @@ MonoBehaviour:
   usersContainer: {fileID: 2104561754}
   userCardPrefab: {fileID: 6732837743575010983, guid: e5f4d623ae578014b834a3aea6895993, type: 3}
   statusFeedbackText: {fileID: 378888776}
+  banPopupPrefab: {fileID: 4829173650192837461, guid: db56a889a4a97524a987546e0cefc9ee, type: 3}
+  deletePopupPrefab: {fileID: 5930284716302948173, guid: 2df2973bc330dcd479ce4dabe7f7ede1, type: 3}
 --- !u!222 &5211481658299360782
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -24828,6 +24834,7 @@ MonoBehaviour:
   spawnAtMousePosition: 0
   parentTransform: {fileID: 0}
   destroyExisting: 1
+  animateSelfOnEnable: 0
 --- !u!222 &6066080455455494379
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -30232,6 +30239,21 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &8184326697255400804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2871823964823573084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf8ee3104c534d428513150838aeb36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.PageNavigationButton
+  targetPage: 1
+  navigationController: {fileID: 0}
+  findNavControllerAutomatically: 1
 --- !u!114 &8185270629238813797
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31875,6 +31897,21 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &8865553050560022927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1240038973128905295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf8ee3104c534d428513150838aeb36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.PageNavigationButton
+  targetPage: 2
+  navigationController: {fileID: 0}
+  findNavControllerAutomatically: 1
 --- !u!222 &8872486518550877003
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -32300,6 +32337,7 @@ GameObject:
   - component: {fileID: 1821460169974571985}
   - component: {fileID: 7496011471807474206}
   - component: {fileID: 674628588052317564}
+  - component: {fileID: 8998878255169163588}
   m_Layer: 0
   m_Name: Total Kids user
   m_TagString: Untagged
@@ -32307,6 +32345,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8998878255169163588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8998878255169163587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf8ee3104c534d428513150838aeb36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.PageNavigationButton
+  targetPage: 2
+  navigationController: {fileID: 0}
+  findNavControllerAutomatically: 1
 --- !u!114 &9009410018170140156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32582,6 +32635,7 @@ MonoBehaviour:
   spawnAtMousePosition: 0
   parentTransform: {fileID: 0}
   destroyExisting: 1
+  animateSelfOnEnable: 0
 --- !u!1 &9077875303555510074
 GameObject:
   m_ObjectHideFlags: 0

@@ -25,10 +25,15 @@ namespace UI
         [Header("Feedback")]
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
 
+        [Header("Popups")]
+        [SerializeField] private ConfirmationPopupPanel banPopupPrefab;
+        [SerializeField] private ConfirmationPopupPanel deletePopupPrefab;
+
         private ApiClient apiClient;
         private AdminApi adminApi;
         private int requestId;
         private readonly List<AdminParentUserCard> spawnedCards = new();
+        private ConfirmationPopupPanel activePopup;
         
         private int currentPage = 1;
         private int totalPages = 1;
@@ -173,9 +178,35 @@ namespace UI
             }
         }
 
-        private async void OnBanUser(UserSummary user)
+        private void OnBanUser(UserSummary user)
         {
             if (user == null) return;
+            OpenPopup(banPopupPrefab, () => _ = BanUserAsync(user));
+        }
+
+        private void OnDeleteUser(UserSummary user)
+        {
+            if (user == null) return;
+            OpenPopup(deletePopupPrefab, () => _ = DeleteUserAsync(user));
+        }
+
+        private void OpenPopup(ConfirmationPopupPanel prefab, Action onConfirm)
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning("[AdminParentUsersController] Confirmation popup prefab not assigned.", this);
+                return;
+            }
+
+            if (activePopup != null) Destroy(activePopup.gameObject);
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            activePopup = canvas != null ? Instantiate(prefab, canvas.rootCanvas.transform) : Instantiate(prefab);
+            activePopup.Setup(onConfirm);
+        }
+
+        private async Awaitable BanUserAsync(UserSummary user)
+        {
             try
             {
                 await adminApi.DisableUserAsync(user.id, true);
@@ -188,9 +219,8 @@ namespace UI
             }
         }
 
-        private async void OnDeleteUser(UserSummary user)
+        private async Awaitable DeleteUserAsync(UserSummary user)
         {
-            if (user == null) return;
             try
             {
                 await adminApi.DeleteUserAsync(user.id);

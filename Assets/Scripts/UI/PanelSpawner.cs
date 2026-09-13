@@ -23,6 +23,7 @@ namespace UI
         [SerializeField] private bool spawnAtMousePosition = false;
         [SerializeField] private Transform parentTransform;
         [SerializeField] private bool destroyExisting = true;
+        [SerializeField] private bool animateSelfOnEnable = false;
 
         private GameObject currentPanel;
 
@@ -35,6 +36,14 @@ namespace UI
                 {
                     parentTransform = canvas.transform;
                 }
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (animateSelfOnEnable)
+            {
+                StartCoroutine(AnimatePopup(gameObject));
             }
         }
 

@@ -25,10 +25,15 @@ namespace UI
         [Header("Feedback")]
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
 
+        [Header("Popups")]
+        [SerializeField] private ConfirmationPopupPanel banPopupPrefab;
+        [SerializeField] private ConfirmationPopupPanel deletePopupPrefab;
+
         private ApiClient apiClient;
         private AdminApi adminApi;
         private int requestId;
         private readonly List<AdminKidUserCard> spawnedCards = new();
+        private ConfirmationPopupPanel activePopup;
         
         private int currentPage = 1;
         private int totalPages = 1;
@@ -173,9 +178,35 @@ namespace UI
             }
         }
 
-        private async void OnBanChild(AdminChild child)
+        private void OnBanChild(AdminChild child)
         {
             if (child == null) return;
+            OpenPopup(banPopupPrefab, () => _ = BanChildAsync(child));
+        }
+
+        private void OnDeleteChild(AdminChild child)
+        {
+            if (child == null) return;
+            OpenPopup(deletePopupPrefab, () => _ = DeleteChildAsync(child));
+        }
+
+        private void OpenPopup(ConfirmationPopupPanel prefab, Action onConfirm)
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning("[AdminKidUsersController] Confirmation popup prefab not assigned.", this);
+                return;
+            }
+
+            if (activePopup != null) Destroy(activePopup.gameObject);
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            activePopup = canvas != null ? Instantiate(prefab, canvas.rootCanvas.transform) : Instantiate(prefab);
+            activePopup.Setup(onConfirm);
+        }
+
+        private async Awaitable BanChildAsync(AdminChild child)
+        {
             try
             {
                 await adminApi.DisableChildAsync(child.id, true);
@@ -188,9 +219,8 @@ namespace UI
             }
         }
 
-        private async void OnDeleteChild(AdminChild child)
+        private async Awaitable DeleteChildAsync(AdminChild child)
         {
-            if (child == null) return;
             try
             {
                 await adminApi.DeleteChildAsync(child.id);
