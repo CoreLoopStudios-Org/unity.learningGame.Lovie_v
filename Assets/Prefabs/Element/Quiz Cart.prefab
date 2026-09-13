@@ -73,6 +73,7 @@ GameObject:
   - component: {fileID: 9153931415994160083}
   - component: {fileID: 3162688728049810267}
   - component: {fileID: 1141277270421072835}
+  - component: {fileID: 6382917405618392014}
   m_Layer: 0
   m_Name: Quiz Cart
   m_TagString: Untagged
@@ -220,6 +221,42 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &6382917405618392014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 540199470058274829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc806cc86bbc8c58f88e80cf9cf0f25f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminQuizQuestionCard
+  questionText: {fileID: 5526588970463288090}
+  answerTexts:
+  - {fileID: 5436196118733706412}
+  - {fileID: 316474731963299738}
+  - {fileID: 8137689575870763817}
+  - {fileID: 6675125410759892424}
+  letterTexts:
+  - {fileID: 6979898749180331291}
+  - {fileID: 6565066897817969524}
+  - {fileID: 8508755059365254335}
+  - {fileID: 7786816484001754783}
+  strokeImages:
+  - {fileID: 3805328164441766066}
+  - {fileID: 4689496944880825211}
+  - {fileID: 3916754190084662229}
+  - {fileID: 1216249422097377420}
+  fillImages:
+  - {fileID: 3014223172897543630}
+  - {fileID: 3669450085223567153}
+  - {fileID: 8182482365690577779}
+  - {fileID: 1738012681684483928}
+  correctLetterColor: {r: 0.29411766, g: 0.6862745, b: 0.3137255, a: 1}
+  correctStrokeColor: {r: 0.39607844, g: 0.68235296, b: 0.42352942, a: 1}
+  correctFillColor: {r: 0.88235295, g: 0.9254902, b: 0.8745098, a: 1}
 --- !u!1 &1122219905819595104
 GameObject:
   m_ObjectHideFlags: 0
@@ -1843,8 +1880,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4283769115
+  m_fontColor: {r: 0.10588236, g: 0.12941177, b: 0.33333334, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2019,8 +2056,8 @@ MonoBehaviour:
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
   m_Shape: 0
-  m_StrokeColor: {r: 0.39607844, g: 0.68235296, b: 0.42352942, a: 1}
-  m_FillColor: {r: 0.88235295, g: 0.9254902, b: 0.8745098, a: 1}
+  m_StrokeColor: {r: 0.8980392, g: 0.84313726, b: 0.9372549, a: 1}
+  m_FillColor: {r: 1, g: 1, b: 1, a: 1}
   m_StrokeWidth: 2
   m_CornerRadius: {x: 36, y: 36, z: 36, w: 36}
   m_StrokePosition: 0
@@ -2712,7 +2749,7 @@ MonoBehaviour:
   m_PixelsPerUnitMultiplier: 1
   m_Shape: 0
   m_StrokeColor: {r: 1, g: 1, b: 1, a: 1}
-  m_FillColor: {r: 0.39607844, g: 0.68235296, b: 0.42352942, a: 1}
+  m_FillColor: {r: 0.8313726, g: 0.7725491, b: 0.8941177, a: 1}
   m_StrokeWidth: 0
   m_CornerRadius: {x: 16, y: 16, z: 16, w: 16}
   m_StrokePosition: 0
