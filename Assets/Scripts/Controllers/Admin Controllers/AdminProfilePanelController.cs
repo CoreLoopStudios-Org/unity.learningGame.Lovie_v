@@ -10,11 +10,13 @@ namespace UI
 {
     public class AdminProfilePanelController : MonoBehaviour
     {
+        private const string MaskedPassword = "••••••••";
+
         [Header("Profile Fields")]
         [SerializeField] private Image profileImage;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI emailText;
-        [SerializeField] private TextMeshProUGUI phoneText;
+        [SerializeField] private TextMeshProUGUI passwordText;
 
         [Header("Logout")]
         [SerializeField] private Button logoutButton;
@@ -41,6 +43,11 @@ namespace UI
         }
 
         private void OnEnable()
+        {
+            _ = RefreshAsync();
+        }
+
+        public void Refresh()
         {
             _ = RefreshAsync();
         }
@@ -84,8 +91,9 @@ namespace UI
             if (emailText != null)
                 emailText.text = profile.email ?? string.Empty;
 
-            if (phoneText != null)
-                phoneText.text = string.IsNullOrEmpty(profile.phone) ? string.Empty : profile.phone;
+            // The API never returns the password, so it is always shown masked.
+            if (passwordText != null)
+                passwordText.text = MaskedPassword;
 
             if (profileImage != null)
             {

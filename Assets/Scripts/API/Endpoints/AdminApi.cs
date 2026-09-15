@@ -199,9 +199,9 @@ namespace Api.Endpoints
             return await client.DeleteAsync<bool>($"/api/admin/store-items/{id}");
         }
 
-        public async Awaitable<StoreItem> AddStoryToStoreAsync(string storyId)
+        public async Awaitable<StoreItem> AddStoryToStoreAsync(string storyId, int priceInCoins)
         {
-            return await client.PostAsync<StoreItem>($"/api/admin/store-items/story/{storyId}", new { });
+            return await client.PostAsync<StoreItem>($"/api/admin/store-items/story/{storyId}?priceInCoins={priceInCoins}", new { });
         }
 
         // MiniGame Content CRUD
@@ -318,10 +318,16 @@ namespace Api.Endpoints
             return await client.GetAsync<AdminProfile>("/api/admin/profile");
         }
 
-        public async Awaitable<bool> UpdateCredentialsAsync(string email, string currentPassword, string newPassword)
+        // PUT /api/admin/profile — every field is optional; nulls are omitted so
+        // only the supplied values are updated.
+        public async Awaitable<bool> UpdateProfileAsync(string email = null, string fullName = null, string currentPassword = null, string newPassword = null)
         {
-            var data = new { email, currentPassword, newPassword };
-            return await client.PutAsync<bool>("/api/admin/profile/credentials", data);
+            var data = new Dictionary<string, string>();
+            if (email != null) data["email"] = email;
+            if (fullName != null) data["fullName"] = fullName;
+            if (currentPassword != null) data["currentPassword"] = currentPassword;
+            if (newPassword != null) data["newPassword"] = newPassword;
+            return await client.PutAsync<bool>("/api/admin/profile", data);
         }
 
         // Media Upload

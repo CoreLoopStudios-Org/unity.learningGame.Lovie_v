@@ -16,6 +16,7 @@ namespace UI
         [Header("Form Fields")]
         [SerializeField] private TMP_InputField titleInput;
         [SerializeField] private TMP_InputField categoryInput;
+        [SerializeField] private TMP_InputField priceInput;
         [SerializeField] private TMP_InputField imagePathInput;
         [SerializeField] private TMP_InputField contentInput;
 
@@ -57,6 +58,7 @@ namespace UI
             string category = GetInputText(categoryInput);
             string content = GetInputText(contentInput);
             string imagePath = GetInputText(imagePathInput);
+            string priceText = GetInputText(priceInput);
 
             if (string.IsNullOrEmpty(title))
             {
@@ -67,6 +69,16 @@ namespace UI
             {
                 ShowStatus("Story content is required.");
                 return;
+            }
+            int? priceInCoins = null;
+            if (!string.IsNullOrEmpty(priceText))
+            {
+                if (!int.TryParse(priceText, out int parsedPrice) || parsedPrice < 0)
+                {
+                    ShowStatus("Price must be a whole number of 0 or more.");
+                    return;
+                }
+                priceInCoins = parsedPrice;
             }
             if (!string.IsNullOrEmpty(imagePath) && !IsUrl(imagePath) && !File.Exists(imagePath))
             {
@@ -89,7 +101,22 @@ namespace UI
                 string newStoryId = await adminApi.CreateStoryAsync(
                     title, coverImageUrl, JsonUtility.ToJson(payload), PublishedStatus);
 
-                ShowStatus($"Story uploaded successfully{(string.IsNullOrEmpty(newStoryId) ? "" : $" (id: {newStoryId})")}.");
+                string message = $"Story uploaded successfully{(string.IsNullOrEmpty(newStoryId) ? "" : $" (id: {newStoryId})")}.";
+
+                if (priceInCoins.HasValue && !string.IsNullOrEmpty(newStoryId))
+                {
+                    try
+                    {
+                        await adminApi.AddStoryToStoreAsync(newStoryId, priceInCoins.Value);
+                        message += $" Listed in the store for {priceInCoins.Value} coins.";
+                    }
+                    catch (Exception ex)
+                    {
+                        message += $" Failed to list in the store: {ex.Message}";
+                    }
+                }
+
+                ShowStatus(message);
                 ClearForm();
             }
             catch (ApiException ex)
@@ -137,6 +164,7 @@ namespace UI
         {
             if (titleInput != null) titleInput.text = string.Empty;
             if (categoryInput != null) categoryInput.text = string.Empty;
+            if (priceInput != null) priceInput.text = string.Empty;
             if (imagePathInput != null) imagePathInput.text = string.Empty;
             if (contentInput != null) contentInput.text = string.Empty;
         }
