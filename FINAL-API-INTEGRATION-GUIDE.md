@@ -183,3 +183,11 @@ The API SDK includes built-in services to handle offline play for children:
 *   **`OfflineActivityQueue`**: If `ChildApi.LogGameActivityAsync` fails due to no network, the activity is dumped into `OfflineActivityQueue`. When `ContentSyncManager` detects network restoration, it pushes the queued activities silently in the background.
 
 No extra work is required to use these; they are integrated into `GameCompletionService` and `StoreService` automatically.
+
+## 7. Economy & IAP Security Constraints (Backend Integrity)
+
+The backend has been hardened to prevent exploits, meaning the Unity Client must be prepared to handle `400 Bad Request` or `500 Internal Server Error` responses gracefully if a child triggers concurrent economy actions.
+
+*   **Negative Balance Prevention:** The PostgreSQL database strictly enforces `Coins >= 0`. If the Unity client allows a child to rapidly purchase two items simultaneously and they don't have enough coins for both, the database will forcefully abort the second transaction. The client should catch the resulting error and refresh the coin balance from the server.
+*   **Duplicate IAP Receipts:** `POST /api/child/store/iap/process` enforces a strictly unique `TransactionId`. If the Unity client retries sending the same Apple/Google receipt twice during a network hiccup, the database will block the duplicate. Unity should catch the error and treat the transaction as "Already Processed" rather than a hard failure.
+*   **Double-Purchasing Stories:** A composite primary key ensures a child cannot own the same story twice. If the user spam-clicks the "Buy Story" button, the subsequent requests will be rejected by the backend.

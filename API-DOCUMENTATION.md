@@ -153,11 +153,15 @@ Guarded per calendar day (login may have already claimed it — then `alreadyCla
 {
   "id": "guid", "title": "The Adventure", "coverImageUrl": "https://...",
   "contentPayload": "[{\"page\":1,\"text\":\"...\"}]", "status": 2,
+  "priceInCoins": 200, "isUnlocked": false,
   "createdAt": "...", "updatedAt": null
 }
 ```
 
 ### 4.6 `GET /api/child/stories/{id}` — `StoryDto`
+
+### 4.6.1 `POST /api/child/stories/{id}/purchase` — `bool`
+Deducts `priceInCoins` from the child's balance and unlocks the story. Returns `400 Bad Request` if the child does not have enough coins or if they already own the story. The database strictly enforces `Coins >= 0` and unique ownership to prevent race condition exploits.
 
 ### 4.7 `GET /api/child/quizzes?storyId={optional-guid}` — `QuizDto[]` (Published only)
 
@@ -218,6 +222,10 @@ Response — `PurchaseDto`:
 ```
 
 ### 4.14 `GET /api/child/store/my-items` — `PurchaseDto[]`
+
+### 4.14.1 `POST /api/child/store/iap/process` — `int` (New Total Coins)
+Request: `{ "tierId": "guid", "transactionId": "string" }`
+Behavior: Validates transaction ID uniqueness, retrieves tier, adds equivalent coins to child's balance, and records the IAP transaction in one database transaction. Returns the new total coins amount. Returns `400 Bad Request` if the `transactionId` has already been processed (enforced by a strict unique database index).
 
 ### 4.15 `GET /api/child/minigames?gameType={optional-string}` — `MiniGameContentDto[]` (Published only)
 
@@ -471,3 +479,8 @@ Rule for admins/agents authoring content: never reformat or re-serialize these p
 - **Web frontends (finished):** contract above is live. Any backend change must be additive (new fields/endpoints only) — see guardrails in `BACKEND-GAPS.md`.
 - **Unity (planned):** SDK will be generated against this document. See `UNITY-INTEGRATION-PLAN.md`. Items marked 🔧 require the corresponding `BACKEND-GAPS.md` task to be completed first.
 - Rate limits (nginx): `/api/` 10 r/s, `/api/auth/` 5 r/s per IP.
+
+### 6.9 IAP Tiers — `/api/admin/iap-tiers/{id}`
+`PUT /api/admin/iap-tiers/{id}`
+Request: `{ "id": "guid", "name": "Tier 1", "storeProductId": "string", "coinWeight": 100 }`
+Response: `bool`
