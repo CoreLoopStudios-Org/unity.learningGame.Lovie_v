@@ -199,9 +199,10 @@ namespace Api.Endpoints
             return await client.DeleteAsync<bool>($"/api/admin/store-items/{id}");
         }
 
-        public async Awaitable<StoreItem> AddStoryToStoreAsync(string storyId, int priceInCoins)
+        // Backend returns the new store-item id as a bare JSON string.
+        public async Awaitable<string> AddStoryToStoreAsync(string storyId, int priceInCoins)
         {
-            return await client.PostAsync<StoreItem>($"/api/admin/store-items/story/{storyId}?priceInCoins={priceInCoins}", new { });
+            return await client.PostAsync<string>($"/api/admin/store-items/story/{storyId}?priceInCoins={priceInCoins}", new { });
         }
 
         // MiniGame Content CRUD

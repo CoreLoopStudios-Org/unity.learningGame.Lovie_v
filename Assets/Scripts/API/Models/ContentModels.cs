@@ -10,6 +10,8 @@ namespace Api.Models
         public string coverImageUrl;
         public string contentPayload;
         public int status;
+        public int priceInCoins;
+        public bool isUnlocked;
         public string createdAt;
         public string updatedAt;
     }

@@ -43,6 +43,12 @@ namespace Api.Endpoints
             return await client.GetAsync<Story>($"/api/child/stories/{id}");
         }
 
+        // 400 if the child lacks coins or already owns the story.
+        public async Awaitable<bool> PurchaseStoryAsync(string storyId)
+        {
+            return await client.PostAsync<bool>($"/api/child/stories/{storyId}/purchase", new { });
+        }
+
         public async Awaitable<Quiz[]> GetQuizzesAsync(string storyId = null)
         {
             string endpoint = "/api/child/quizzes";
@@ -89,6 +95,14 @@ namespace Api.Endpoints
         public async Awaitable<Purchase[]> GetMyItemsAsync()
         {
             return await client.GetAsync<Purchase[]>("/api/child/store/my-items");
+        }
+
+        // Backend returns the child's new total coin balance.
+        // 400 means the transactionId was already processed — treat as success.
+        public async Awaitable<int> ProcessIapAsync(string tierId, string transactionId)
+        {
+            var data = new { tierId, transactionId };
+            return await client.PostAsync<int>("/api/child/store/iap/process", data);
         }
 
         public async Awaitable<MiniGameContent[]> GetMiniGamesAsync(string gameType = null)
