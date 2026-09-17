@@ -157,11 +157,12 @@ Guarded per calendar day (login may have already claimed it — then `alreadyCla
   "createdAt": "...", "updatedAt": null
 }
 ```
+Pricing contract: `priceInCoins >= 0` always (`0 = Free, >0 = Paid`). Free stories come back with `isUnlocked: true`; render Free/Paid from `priceInCoins`, ownership from `isUnlocked`.
 
 ### 4.6 `GET /api/child/stories/{id}` — `StoryDto`
 
 ### 4.6.1 `POST /api/child/stories/{id}/purchase` — `bool`
-Deducts `priceInCoins` from the child's balance and unlocks the story. Returns `400 Bad Request` if the child does not have enough coins or if they already own the story. The database strictly enforces `Coins >= 0` and unique ownership to prevent race condition exploits.
+Deducts `priceInCoins` from the child's balance and unlocks the story. Returns `400 Bad Request` if the child does not have enough coins, already owns the story, the story is free (`priceInCoins <= 0`), or the story is not `Published`. The database strictly enforces `Coins >= 0`, `PriceInCoins >= 0`, and unique ownership to prevent race condition exploits.
 
 ### 4.7 `GET /api/child/quizzes?storyId={optional-guid}` — `QuizDto[]` (Published only)
 
@@ -369,6 +370,9 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 | DELETE | `/{id}` | — | `true` |
 
 > ⚠️ As of 2026-09-02 the backend source implements only `GET /` (params: `status`, `titleSearch` — **no `sortBy`**), `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}`. `GET /recent` is **not implemented**; requests return 404.
+> **Update 2026-09-17:** all endpoints in the table above are implemented, including `GET /?sortBy=newest|alphabetical` and `GET /recent`. Admin responses always carry `isUnlocked: true` (admins bypass pricing) — drive any Free/Paid badge from `priceInCoins`, not `isUnlocked`.
+
+Pricing contract: `priceInCoins` is `0 = Free, >0 = Paid`. Negative values are rejected with `400 Bad Request`, and the database enforces `PriceInCoins >= 0` on `Stories` and `StoreItems`.
 
 ### 6.4 Quizzes — `/api/admin/quizzes`
 
@@ -394,6 +398,7 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 | DELETE | `/{id}` | — | `true` |
 
 > ⚠️ As of 2026-09-02 `POST /story/{storyId}` is **not implemented** in the backend source; requests return 404.
+> **Update 2026-09-17:** `POST /story/{storyId}?priceInCoins=100` is implemented. `priceInCoins` must be `>= 0` (0 = free item); negative values are rejected with `400 Bad Request`.
 
 ### 6.6 Mini-games — `/api/admin/minigames`
 

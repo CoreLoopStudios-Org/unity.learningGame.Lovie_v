@@ -18,8 +18,8 @@ public class StoryDto
     public int status;
     
     // NEW FIELDS:
-    public int priceInCoins; 
-    public bool isUnlocked; 
+    public int priceInCoins; // Always >= 0. 0 = Free, >0 = Paid (backend rejects negatives with 400)
+    public bool isUnlocked; // Free stories are always true. Admin API responses are always true (admins bypass pricing).
     
     public string createdAt;
     public string updatedAt;
@@ -29,7 +29,7 @@ public class StoryDto
 ---
 
 ## 2. Rendering the Story UI
-The endpoint `GET /api/child/stories` now returns **all** published stories. You must use the `isUnlocked` flag to determine how the UI looks.
+The endpoint `GET /api/child/stories` now returns **all** published stories. You must use the `isUnlocked` flag to determine how the UI looks. Use `priceInCoins == 0` to detect a free story — never infer pricing from `isUnlocked`.
 
 ```csharp
 public void PopulateStoryCard(StoryDto story)
@@ -53,6 +53,8 @@ public void PopulateStoryCard(StoryDto story)
     }
 }
 ```
+
+> **Admin panel note:** admin story endpoints (`GET /api/admin/stories`) always return `isUnlocked: true`. If your admin UI shows a Free/Paid badge, read `priceInCoins > 0` — showing every story as "Free" because `isUnlocked` is true is a client-side bug, not a backend one.
 
 ---
 
@@ -89,7 +91,8 @@ public async Task BuyStoryAsync(StoryDto story)
     {
         if (ex.StatusCode == 400)
         {
-            // Backend DB prevented the purchase (Not enough coins, or already owned)
+            // Backend rejected the purchase. Reasons: not enough coins, already owned,
+            // story is free (priceInCoins <= 0), or story is not Published.
             ShowErrorDialog("Purchase failed. Not enough coins or already unlocked.");
         }
     }
