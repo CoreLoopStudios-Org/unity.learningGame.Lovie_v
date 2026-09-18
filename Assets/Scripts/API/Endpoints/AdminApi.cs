@@ -122,9 +122,9 @@ namespace Api.Endpoints
         }
 
         // Backend returns the new id as a bare JSON string, not the entity.
-        public async Awaitable<string> CreateStoryAsync(string title, string coverImageUrl, string contentPayload, int status)
+        public async Awaitable<string> CreateStoryAsync(string title, string coverImageUrl, string contentPayload, int status, int priceInCoins = 0)
         {
-            var data = new { title, coverImageUrl, contentPayload, status };
+            var data = new { title, coverImageUrl, contentPayload, status, priceInCoins };
             return await client.PostAsync<string>("/api/admin/stories", data);
         }
 
@@ -132,6 +132,13 @@ namespace Api.Endpoints
         {
             var data = new { title, coverImageUrl, contentPayload, status };
             return await client.PutAsync<bool>($"/api/admin/stories/{id}", data);
+        }
+
+        // Story pricing lives on the Story row itself (Story.PriceInCoins), not on
+        // store items. All UpdateStoryDto fields are optional; send only the price.
+        public async Awaitable<bool> UpdateStoryPriceAsync(string id, int priceInCoins)
+        {
+            return await client.PutAsync<bool>($"/api/admin/stories/{id}", new { priceInCoins });
         }
 
         public async Awaitable<bool> DeleteStoryAsync(string id)
@@ -199,10 +206,12 @@ namespace Api.Endpoints
             return await client.DeleteAsync<bool>($"/api/admin/store-items/{id}");
         }
 
-        // Backend returns the new store-item id as a bare JSON string.
-        public async Awaitable<string> AddStoryToStoreAsync(string storyId, int priceInCoins)
+        // The backend PUT replaces the whole tier (no optional fields) and answers 400
+        // when the body id differs from the route id, so all fields are always sent.
+        public async Awaitable<bool> UpdateIapTierAsync(string id, string name, string storeProductId, int coinWeight)
         {
-            return await client.PostAsync<string>($"/api/admin/store-items/story/{storyId}?priceInCoins={priceInCoins}", new { });
+            var data = new { id, name, storeProductId, coinWeight };
+            return await client.PutAsync<bool>($"/api/admin/iap-tiers/{id}", data);
         }
 
         // MiniGame Content CRUD

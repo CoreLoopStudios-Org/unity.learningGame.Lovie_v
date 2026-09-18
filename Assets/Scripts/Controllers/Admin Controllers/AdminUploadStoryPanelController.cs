@@ -99,21 +99,13 @@ namespace UI
             {
                 string coverImageUrl = await ResolveCoverImageUrlAsync(imagePath);
                 string newStoryId = await adminApi.CreateStoryAsync(
-                    title, coverImageUrl, JsonUtility.ToJson(payload), PublishedStatus);
+                    title, coverImageUrl, JsonUtility.ToJson(payload), PublishedStatus, priceInCoins ?? 0);
 
                 string message = $"Story uploaded successfully{(string.IsNullOrEmpty(newStoryId) ? "" : $" (id: {newStoryId})")}.";
 
-                if (priceInCoins.HasValue && !string.IsNullOrEmpty(newStoryId))
+                if (priceInCoins.HasValue)
                 {
-                    try
-                    {
-                        await adminApi.AddStoryToStoreAsync(newStoryId, priceInCoins.Value);
-                        message += $" Listed in the store for {priceInCoins.Value} coins.";
-                    }
-                    catch (Exception ex)
-                    {
-                        message += $" Failed to list in the store: {ex.Message}";
-                    }
+                    message += $" Listed for {priceInCoins.Value} coins.";
                 }
 
                 ShowStatus(message);

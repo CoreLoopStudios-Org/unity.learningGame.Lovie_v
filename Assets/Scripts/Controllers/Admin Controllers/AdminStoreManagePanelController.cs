@@ -148,8 +148,8 @@ namespace UI
             popup.Dismissed += p => Destroy(p.gameObject);
         }
 
-        // The backend ties a price to a story through its store item; listing
-        // again with the new price is the documented way to change it.
+        // Story price lives on the Story row; the store-items endpoints are for
+        // generic storefront items and have no link to stories.
         private async Awaitable UpdateStoryPriceAsync(AdminEditStoryPricePopup popup, AdminStoreStoryCard card, int newPrice)
         {
             if (isUpdatingPrice) return;
@@ -160,25 +160,24 @@ namespace UI
                 return;
             }
 
+            // The card can be destroyed while awaiting, so grab what we need up front.
+            string storyId = card.Story.id;
+            string storyTitle = card.Story.title;
+
             isUpdatingPrice = true;
             popup.SetInteractable(false);
 
             try
             {
-                await adminApi.AddStoryToStoreAsync(card.Story.id, newPrice);
+                await adminApi.UpdateStoryPriceAsync(storyId, newPrice);
 
-                // The card can be destroyed (e.g. list refreshed) while awaiting.
-                if (card == null)
-                {
-                    if (popup != null) Destroy(popup.gameObject);
-                    return;
-                }
-
-                card.SetPrice(newPrice);
-                Destroy(popup.gameObject);
+                if (popup != null) Destroy(popup.gameObject);
                 ShowStatus(newPrice == 0
-                    ? $"\"{card.Story.title}\" is now FREE."
+                    ? $"\"{storyTitle}\" is now FREE."
                     : $"Price updated to {newPrice} coins.");
+
+                // Re-fetch so the UI reflects server truth instead of an assumed price.
+                await RefreshAsync();
             }
             catch (ApiException ex)
             {

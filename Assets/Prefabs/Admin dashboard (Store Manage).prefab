@@ -171,7 +171,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 68, y: -43}
-  m_SizeDelta: {x: 45, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1480190683822323018
 MonoBehaviour:
@@ -780,6 +780,7 @@ GameObject:
   - component: {fileID: 6982378044154401122}
   - component: {fileID: 620243773116837265}
   - component: {fileID: 1918583877726558259}
+  - component: {fileID: 8250141562456171633}
   m_Layer: 0
   m_Name: 2500 Coins
   m_TagString: Untagged
@@ -926,6 +927,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &8250141562456171633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1514896237322680712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d52e2e63b8b5cc499930e26b857a4f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTierCard
+  tierId: 
+  tierName: 
+  storeProductId: 
+  currentCoinAmount: 2500
+  amountText: {fileID: 8245217762550989876}
+  editButton: {fileID: 5321217221254757964}
 --- !u!1 &1579001095761887438
 GameObject:
   m_ObjectHideFlags: 0
@@ -1324,7 +1343,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -6}
-  m_SizeDelta: {x: 85, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8703740085952004204
 MonoBehaviour:
@@ -1473,6 +1492,7 @@ GameObject:
   - component: {fileID: 3095359795734405259}
   - component: {fileID: 4734534247678693724}
   - component: {fileID: 7426846344788439212}
+  - component: {fileID: 6198895486119203140}
   m_Layer: 0
   m_Name: 500 Coins
   m_TagString: Untagged
@@ -1619,6 +1639,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &6198895486119203140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1960017421925688906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d52e2e63b8b5cc499930e26b857a4f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTierCard
+  tierId: 
+  tierName: 
+  storeProductId: 
+  currentCoinAmount: 500
+  amountText: {fileID: 4461188997450985872}
+  editButton: {fileID: 3798717825998445720}
 --- !u!1 &2378485454398014643
 GameObject:
   m_ObjectHideFlags: 0
@@ -1993,7 +2031,6 @@ GameObject:
   - component: {fileID: 6772372314820584068}
   - component: {fileID: 8417899566596872357}
   - component: {fileID: 2132968024478940515}
-  - component: {fileID: 2448465373620644378}
   m_Layer: 0
   m_Name: Edit item button
   m_TagString: Untagged
@@ -2086,51 +2123,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &2448465373620644378
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2724010483756562699}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94660245b3512a348b6a60d23cb5bb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI.PanelSpawner
-  panelPrefab: {fileID: 4702837961284380109, guid: 83bf80b1c25a7804f90c0f01cf3226f5, type: 3}
-  animationDuration: 0.2
-  animationCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  startScale: 0
-  endScale: 1
-  useUnscaledTime: 0
-  spawnAtMousePosition: 0
-  parentTransform: {fileID: 0}
-  destroyExisting: 1
-  animateSelfOnEnable: 0
 --- !u!1 &2817307586663988551
 GameObject:
   m_ObjectHideFlags: 0
@@ -2588,13 +2580,14 @@ GameObject:
   m_Component:
   - component: {fileID: 2828717668325105273}
   - component: {fileID: 1740000837697904968}
+  - component: {fileID: 9216913941600753496}
   m_Layer: 0
   m_Name: All Coins List
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2828717668325105273
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2637,6 +2630,24 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &9216913941600753496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3337011391648921677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b431ce8a30d00f544a562fd81a39f449, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTiersPanelController
+  cards:
+  - {fileID: 8250141562456171633}
+  - {fileID: 7751310066058892876}
+  - {fileID: 6198895486119203140}
+  editPopupPrefab: {fileID: 4748380693608949440, guid: 83bf80b1c25a7804f90c0f01cf3226f5, type: 3}
+  popupParent: {fileID: 3541169242450799975}
 --- !u!1 &3622713902420669217
 GameObject:
   m_ObjectHideFlags: 0
@@ -2674,7 +2685,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -0}
-  m_SizeDelta: {x: 76, y: 40}
+  m_SizeDelta: {x: 76, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &7061273725171451316
 MonoBehaviour:
@@ -2847,7 +2858,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -6}
-  m_SizeDelta: {x: 94, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8246928496356794896
 MonoBehaviour:
@@ -3308,7 +3319,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -0}
-  m_SizeDelta: {x: 76, y: 40}
+  m_SizeDelta: {x: 76, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8258870746356828925
 MonoBehaviour:
@@ -3455,7 +3466,6 @@ GameObject:
   - component: {fileID: 6003758292985936059}
   - component: {fileID: 8520161824438099165}
   - component: {fileID: 3798717825998445720}
-  - component: {fileID: 8985770790594800547}
   m_Layer: 0
   m_Name: Edit item button
   m_TagString: Untagged
@@ -3548,51 +3558,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &8985770790594800547
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4259146241897698051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94660245b3512a348b6a60d23cb5bb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI.PanelSpawner
-  panelPrefab: {fileID: 4702837961284380109, guid: 83bf80b1c25a7804f90c0f01cf3226f5, type: 3}
-  animationDuration: 0.2
-  animationCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  startScale: 0
-  endScale: 1
-  useUnscaledTime: 0
-  spawnAtMousePosition: 0
-  parentTransform: {fileID: 0}
-  destroyExisting: 1
-  animateSelfOnEnable: 0
 --- !u!1 &4506323470467676595
 GameObject:
   m_ObjectHideFlags: 0
@@ -3630,7 +3595,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 68, y: -43}
-  m_SizeDelta: {x: 45, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8859665261977530698
 MonoBehaviour:
@@ -4978,7 +4943,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -6}
-  m_SizeDelta: {x: 95, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &103827578063030947
 MonoBehaviour:
@@ -5151,7 +5116,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -0}
-  m_SizeDelta: {x: 76, y: 40}
+  m_SizeDelta: {x: 76, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &3190859699960315551
 MonoBehaviour:
@@ -6692,7 +6657,6 @@ GameObject:
   - component: {fileID: 1991333447670637989}
   - component: {fileID: 5352649034825484643}
   - component: {fileID: 5321217221254757964}
-  - component: {fileID: 7795432738845614257}
   m_Layer: 0
   m_Name: Edit item button
   m_TagString: Untagged
@@ -6785,51 +6749,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &7795432738845614257
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7578198889109020526}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94660245b3512a348b6a60d23cb5bb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI.PanelSpawner
-  panelPrefab: {fileID: 4702837961284380109, guid: 83bf80b1c25a7804f90c0f01cf3226f5, type: 3}
-  animationDuration: 0.2
-  animationCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  startScale: 0
-  endScale: 1
-  useUnscaledTime: 0
-  spawnAtMousePosition: 0
-  parentTransform: {fileID: 0}
-  destroyExisting: 1
-  animateSelfOnEnable: 0
 --- !u!1 &7694205321939233574
 GameObject:
   m_ObjectHideFlags: 0
@@ -6963,7 +6882,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 68, y: -43}
-  m_SizeDelta: {x: 45, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &149433093582559383
 MonoBehaviour:
@@ -8306,6 +8225,7 @@ GameObject:
   - component: {fileID: 7938935944817426042}
   - component: {fileID: 9074633300898152515}
   - component: {fileID: 8484601446363648183}
+  - component: {fileID: 7751310066058892876}
   m_Layer: 0
   m_Name: 1500 Coins
   m_TagString: Untagged
@@ -8452,6 +8372,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0.8235294, g: 0.8039216, b: 0.9607843, a: 0.38}
   m_EffectDistance: {x: 0, y: -4}
   m_UseGraphicAlpha: 1
+--- !u!114 &7751310066058892876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8678047231461983004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d52e2e63b8b5cc499930e26b857a4f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTierCard
+  tierId: 
+  tierName: 
+  storeProductId: 
+  currentCoinAmount: 1500
+  amountText: {fileID: 120100665854076676}
+  editButton: {fileID: 2132968024478940515}
 --- !u!1 &8764547597716306312
 GameObject:
   m_ObjectHideFlags: 0

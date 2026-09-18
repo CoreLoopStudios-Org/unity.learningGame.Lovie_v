@@ -399,6 +399,7 @@ Pricing contract: `priceInCoins` is `0 = Free, >0 = Paid`. Negative values are r
 
 > ⚠️ As of 2026-09-02 `POST /story/{storyId}` is **not implemented** in the backend source; requests return 404.
 > **Update 2026-09-17:** `POST /story/{storyId}?priceInCoins=100` is implemented. `priceInCoins` must be `>= 0` (0 = free item); negative values are rejected with `400 Bad Request`.
+> **Correction 2026-09-18:** the `POST /story/{storyId}` route was **not found in any local backend branch** (main, develop, feature/mini-games, fix/backend-gaps, fix/security-fixes) — treat the 2026-09-17 note as unverified. **Story pricing does not live on store items at all:** `Story` has its own `PriceInCoins` column (no FK from `StoreItem` to `Story`). To change a story's price call **`PUT /api/admin/stories/{storyId}`** with `{ "priceInCoins": 100 }` (all `UpdateStoryDto` fields optional, verified against `UpdateStoryCommandHandler` on `origin/develop`). Store items are generic storefront entries unrelated to story pricing.
 
 ### 6.6 Mini-games — `/api/admin/minigames`
 

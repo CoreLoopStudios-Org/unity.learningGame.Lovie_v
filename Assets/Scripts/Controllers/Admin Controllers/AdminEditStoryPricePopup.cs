@@ -43,6 +43,17 @@ namespace UI
                 amountInput.text = (story?.priceInCoins ?? 0).ToString(CultureInfo.InvariantCulture);
         }
 
+        // Amount-only setup for non-story reuse (e.g. IAP coin tiers).
+        public void Setup(int currentAmount)
+        {
+            Story = null;
+
+            if (errorText != null) errorText.gameObject.SetActive(false);
+
+            if (amountInput != null)
+                amountInput.text = currentAmount.ToString(CultureInfo.InvariantCulture);
+        }
+
         public void SetInteractable(bool interactable)
         {
             if (amountInput != null) amountInput.interactable = interactable;
