@@ -86,12 +86,6 @@ namespace Api.Endpoints
             return await client.GetAsync<StoreItem[]>("/api/child/store/items");
         }
 
-        public async Awaitable<Purchase> PurchaseItemAsync(string storeItemId)
-        {
-            var data = new { storeItemId };
-            return await client.PostAsync<Purchase>("/api/child/store/purchase", data);
-        }
-
         public async Awaitable<Purchase[]> GetMyItemsAsync()
         {
             return await client.GetAsync<Purchase[]>("/api/child/store/my-items");
@@ -99,9 +93,9 @@ namespace Api.Endpoints
 
         // Backend returns the child's new total coin balance.
         // 400 means the transactionId was already processed — treat as success.
-        public async Awaitable<int> ProcessIapAsync(string tierId, string transactionId)
+        public async Awaitable<int> ProcessIapAsync(string storeProductId, string transactionId)
         {
-            var data = new { tierId, transactionId };
+            var data = new { storeProductId, transactionId };
             return await client.PostAsync<int>("/api/child/store/iap/process", data);
         }
 

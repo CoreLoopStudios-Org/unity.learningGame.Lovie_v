@@ -41,12 +41,12 @@ namespace Api
         private readonly HashSet<string> _ownedItemIds = new();
         private readonly HashSet<string> _unlockedAvatarPartIds = new();
 
-        public event Action<Purchase> OnPurchaseCompleted;
         public event Action OnCatalogRefreshed;
         public event Action OnPurchasesRefreshed;
 
         public IReadOnlyList<StoreItem> Catalog => _cachedCatalog;
         public IReadOnlyList<Purchase> Purchases => _cachedPurchases;
+
 
         private void Awake()
         {
@@ -140,58 +140,6 @@ namespace Api
         {
             if (string.IsNullOrEmpty(avatarPartId)) return false;
             return _unlockedAvatarPartIds.Contains(avatarPartId);
-        }
-
-        public async Awaitable<(bool Success, string Message, Purchase Purchase)> PurchaseItemAsync(StoreItem item)
-        {
-            if (item == null)
-            {
-                return (false, "Invalid item selected.", null);
-            }
-
-            if (IsItemPurchased(item.id))
-            {
-                return (false, "You already own this item.", null);
-            }
-
-            int currentCoins = CoinWallet.Instance != null ? CoinWallet.Instance.Balance : 0;
-            if (currentCoins < item.priceInCoins)
-            {
-                return (false, "Not enough coins to complete purchase.", null);
-            }
-
-            try
-            {
-                var childApi = new ChildApi(ApiClient.Instance);
-                var purchase = await childApi.PurchaseItemAsync(item.id);
-
-                if (purchase != null)
-                {
-                    _cachedPurchases.Add(purchase);
-                    _ownedItemIds.Add(item.id);
-
-                    if (!string.IsNullOrEmpty(item.metadata))
-                    {
-                        ParseAndRegisterMetadata(item.metadata);
-                    }
-
-                    // Instant wallet balance refresh
-                    if (CoinWallet.Instance != null)
-                    {
-                        await CoinWallet.Instance.RefreshAsync();
-                    }
-
-                    OnPurchaseCompleted?.Invoke(purchase);
-                    return (true, "Purchase successful!", purchase);
-                }
-
-                return (false, "Purchase failed on server.", null);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[StoreService] Purchase exception: {ex.Message}");
-                return (false, $"Purchase failed: {ex.Message}", null);
-            }
         }
 
         private void ParseAndRegisterMetadata(string metadataJson)

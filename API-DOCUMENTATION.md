@@ -472,6 +472,7 @@ Rule for admins/agents authoring content: never reformat or re-serialize these p
 - Rate limits (nginx): `/api/` 10 r/s, `/api/auth/` 5 r/s per IP.
 
 ### 6.9 IAP Tiers — `/api/admin/iap-tiers/{id}`
+> ⚠️ **Superseded 2026-09-18:** the store-items endpoints in 6.5 are now the IAP pack store (`storeProductId` + `rewardCoinAmount`); `POST /api/child/store/iap/process` resolves packs by `storeProductId`. Treat this section as legacy.
 `PUT /api/admin/iap-tiers/{id}`
 Request: `{ "id": "guid", "name": "Tier 1", "storeProductId": "string", "coinWeight": 100 }`
 Response: `bool`

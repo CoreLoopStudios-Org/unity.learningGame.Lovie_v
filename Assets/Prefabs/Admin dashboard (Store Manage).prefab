@@ -171,7 +171,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 68, y: -43}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 45, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1480190683822323018
 MonoBehaviour:
@@ -939,10 +939,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d52e2e63b8b5cc499930e26b857a4f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTierCard
-  tierId: 
-  tierName: 
-  storeProductId: 
-  currentCoinAmount: 2500
+  storeProductId: store_pack_3
   amountText: {fileID: 8245217762550989876}
   editButton: {fileID: 5321217221254757964}
 --- !u!1 &1579001095761887438
@@ -1343,7 +1340,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -6}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 85, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8703740085952004204
 MonoBehaviour:
@@ -1651,10 +1648,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d52e2e63b8b5cc499930e26b857a4f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTierCard
-  tierId: 
-  tierName: 
-  storeProductId: 
-  currentCoinAmount: 500
+  storeProductId: store_pack_1
   amountText: {fileID: 4461188997450985872}
   editButton: {fileID: 3798717825998445720}
 --- !u!1 &2378485454398014643
@@ -2587,7 +2581,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2828717668325105273
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2648,6 +2642,7 @@ MonoBehaviour:
   - {fileID: 6198895486119203140}
   editPopupPrefab: {fileID: 4748380693608949440, guid: 83bf80b1c25a7804f90c0f01cf3226f5, type: 3}
   popupParent: {fileID: 3541169242450799975}
+  statusFeedbackText: {fileID: 3370637405813658626}
 --- !u!1 &3622713902420669217
 GameObject:
   m_ObjectHideFlags: 0
@@ -2685,7 +2680,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -0}
-  m_SizeDelta: {x: 76, y: 0}
+  m_SizeDelta: {x: 76, y: 40}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &7061273725171451316
 MonoBehaviour:
@@ -2858,7 +2853,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -6}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 94, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8246928496356794896
 MonoBehaviour:
@@ -3162,7 +3157,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7525239232737344469
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3319,7 +3314,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -0}
-  m_SizeDelta: {x: 76, y: 0}
+  m_SizeDelta: {x: 76, y: 40}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8258870746356828925
 MonoBehaviour:
@@ -3595,7 +3590,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 68, y: -43}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 45, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &8859665261977530698
 MonoBehaviour:
@@ -4943,7 +4938,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -6}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 95, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &103827578063030947
 MonoBehaviour:
@@ -5116,7 +5111,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 40, y: -0}
-  m_SizeDelta: {x: 76, y: 0}
+  m_SizeDelta: {x: 76, y: 40}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &3190859699960315551
 MonoBehaviour:
@@ -6882,7 +6877,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 68, y: -43}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 45, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &149433093582559383
 MonoBehaviour:
@@ -8384,10 +8379,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d52e2e63b8b5cc499930e26b857a4f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.AdminCoinTierCard
-  tierId: 
-  tierName: 
-  storeProductId: 
-  currentCoinAmount: 1500
+  storeProductId: store_pack_2
   amountText: {fileID: 120100665854076676}
   editButton: {fileID: 2132968024478940515}
 --- !u!1 &8764547597716306312

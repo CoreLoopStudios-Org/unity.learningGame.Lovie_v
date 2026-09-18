@@ -59,11 +59,6 @@ namespace UI
             {
                 CoinWallet.Instance.OnBalanceChanged += HandleBalanceChanged;
             }
-
-            if (StoreService.Instance != null)
-            {
-                StoreService.Instance.OnPurchaseCompleted += HandlePurchaseCompleted;
-            }
         }
 
         private void UnsubscribeEvents()
@@ -71,11 +66,6 @@ namespace UI
             if (CoinWallet.Instance != null)
             {
                 CoinWallet.Instance.OnBalanceChanged -= HandleBalanceChanged;
-            }
-
-            if (StoreService.Instance != null)
-            {
-                StoreService.Instance.OnPurchaseCompleted -= HandlePurchaseCompleted;
             }
         }
 
@@ -121,37 +111,8 @@ namespace UI
                 var card = cardGo.GetComponent<StoreItemCard>();
                 if (card != null)
                 {
-                    card.Setup(item, OnBuyItemClicked);
+                    card.Setup(item);
                     _spawnedCards.Add(card);
-                }
-            }
-        }
-
-        private async void OnBuyItemClicked(StoreItem item)
-        {
-            if (item == null) return;
-
-            ShowStatus($"Purchasing {item.name}...");
-
-            var result = await StoreService.Instance.PurchaseItemAsync(item);
-            if (result.Success)
-            {
-                ShowStatus($"Purchased {item.name}!");
-                RefreshCardStates();
-            }
-            else
-            {
-                ShowStatus(result.Message);
-            }
-        }
-
-        private void RefreshCardStates()
-        {
-            foreach (var card in _spawnedCards)
-            {
-                if (card != null)
-                {
-                    card.RefreshState();
                 }
             }
         }
@@ -179,12 +140,6 @@ namespace UI
         private void HandleBalanceChanged(int newBalance)
         {
             UpdateWalletUI();
-            RefreshCardStates();
-        }
-
-        private void HandlePurchaseCompleted(Purchase purchase)
-        {
-            RefreshCardStates();
         }
 
         private void UpdateWalletUI()

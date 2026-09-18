@@ -7,7 +7,8 @@ namespace Api.Models
     {
         public string id;
         public string name;
-        public int priceInCoins;
+        public string storeProductId;
+        public int rewardCoinAmount;
         public string assetUrl;
         public string metadata;
         public string createdAt;

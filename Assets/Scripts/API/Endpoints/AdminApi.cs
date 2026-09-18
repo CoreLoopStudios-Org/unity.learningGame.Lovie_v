@@ -189,29 +189,27 @@ namespace Api.Endpoints
             return await client.GetAsync<StoreItem>($"/api/admin/store-items/{id}");
         }
 
-        public async Awaitable<string> CreateStoreItemAsync(string name, int priceInCoins, string assetUrl, string metadata)
+        // Store items are strictly IAP coin packs: storeProductId + rewardCoinAmount.
+        public async Awaitable<string> CreateStoreItemAsync(string name, string storeProductId, int rewardCoinAmount, string assetUrl, string metadata)
         {
-            var data = new { name, priceInCoins, assetUrl, metadata };
+            var data = new { name, storeProductId, rewardCoinAmount, assetUrl, metadata };
             return await client.PostAsync<string>("/api/admin/store-items", data);
         }
 
-        public async Awaitable<bool> UpdateStoreItemAsync(string id, string name, int priceInCoins, string assetUrl, string metadata)
+        public async Awaitable<bool> UpdateStoreItemAsync(string id, string name, string storeProductId, int? rewardCoinAmount, string assetUrl, string metadata)
         {
-            var data = new { name, priceInCoins, assetUrl, metadata };
+            var data = new { name, storeProductId, rewardCoinAmount, assetUrl, metadata };
             return await client.PutAsync<bool>($"/api/admin/store-items/{id}", data);
+        }
+
+        public async Awaitable<bool> UpdateStoreItemRewardAsync(string id, int rewardCoinAmount)
+        {
+            return await client.PutAsync<bool>($"/api/admin/store-items/{id}", new { rewardCoinAmount });
         }
 
         public async Awaitable<bool> DeleteStoreItemAsync(string id)
         {
             return await client.DeleteAsync<bool>($"/api/admin/store-items/{id}");
-        }
-
-        // The backend PUT replaces the whole tier (no optional fields) and answers 400
-        // when the body id differs from the route id, so all fields are always sent.
-        public async Awaitable<bool> UpdateIapTierAsync(string id, string name, string storeProductId, int coinWeight)
-        {
-            var data = new { id, name, storeProductId, coinWeight };
-            return await client.PutAsync<bool>($"/api/admin/iap-tiers/{id}", data);
         }
 
         // MiniGame Content CRUD
