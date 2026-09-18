@@ -113,7 +113,7 @@ When the parent completes a purchase via Apple/Google (using Unity IAP), you mus
 [System.Serializable]
 public class ProcessIapRequest
 {
-    public string tierId; // The Guid of the IapTier configured in the Admin Panel
+    public string storeProductId; // The product ID configured in the Admin Panel matching Apple/Google
     public string transactionId; // The unique ID from Apple/Google
 }
 ```
@@ -127,20 +127,17 @@ public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
     string appleOrGoogleTransactionId = args.purchasedProduct.transactionID;
     string unityProductId = args.purchasedProduct.definition.id;
 
-    // Map your Unity Product ID to the Backend's Tier GUID
-    string backendTierGuid = GetTierGuidForProduct(unityProductId); 
-
-    // Fire and forget the async API call
-    _ = SendReceiptToBackendAsync(backendTierGuid, appleOrGoogleTransactionId);
+    // The Unity Product ID should exactly match the StoreItem.StoreProductId in the backend
+    _ = SendReceiptToBackendAsync(unityProductId, appleOrGoogleTransactionId);
 
     return PurchaseProcessingResult.Complete;
 }
 
-private async Task SendReceiptToBackendAsync(string tierId, string transactionId)
+private async Task SendReceiptToBackendAsync(string storeProductId, string transactionId)
 {
     var requestData = new ProcessIapRequest 
     { 
-        tierId = tierId, 
+        storeProductId = storeProductId, 
         transactionId = transactionId 
     };
 
@@ -172,5 +169,3 @@ private async Task SendReceiptToBackendAsync(string tierId, string transactionId
 }
 ```
 
-### Important IAP Mapping Note
-The `GetTierGuidForProduct()` method is up to your Unity architecture. You can hardcode a dictionary mapping `com.imagineme.coins.small` to the Guid `3fa85f64-...` generated in the Admin dashboard, or you can fetch the available tiers from a future Admin endpoint and cache them.

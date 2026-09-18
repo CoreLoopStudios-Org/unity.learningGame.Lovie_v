@@ -195,38 +195,26 @@ Response — `ActivityLoggedDto`:
 
 🔧 Planned additive behavior + fields (GAP-2): server-side coin awards; response gains `coinsEarned`, `totalCoins`, `message`. Coins are computed server-side — client-sent amounts are never trusted.
 
-### 4.12 `GET /api/child/store/items` — `StoreItemDto[]` (ordered by price)
+### 4.12 `GET /api/child/store/items` — `StoreItemDto[]` (ordered by reward amount)
 
 `StoreItemDto`:
 ```json
 {
-  "id": "guid", "name": "Golden Avatar", "priceInCoins": 100,
-  "assetUrl": "https://...", "metadata": "{\"rarity\":\"legendary\"}",
+  "id": "guid", "name": "Pack 1", "storeProductId": "store_pack_1",
+  "rewardCoinAmount": 100, "assetUrl": "https://...", "metadata": "{\"type\":\"iap_pack\"}",
   "createdAt": "...", "updatedAt": null
 }
 ```
 
 ### 4.13 `POST /api/child/store/purchase`
 
-Request: `{ "storeItemId": "guid" }`
-
-Behavior: validates coins, **deducts immediately**, creates a `Completed` purchase in one transaction. Errors: not enough coins, already purchased. There is **no pending-approval flow**.
-
-Response — `PurchaseDto`:
-```json
-{
-  "id": "guid", "childId": "guid", "childUsername": "childuser",
-  "storeItemId": "guid", "storeItemName": "Golden Avatar", "storeItemAssetUrl": "https://...",
-  "priceInCoins": 100, "status": 1, "requestedAt": "...", "completedAt": "...",
-  "rejectionReason": null
-}
-```
+*(DEPRECATED: Store items are now IAP packs, so direct purchase is disabled. Only `POST /api/child/store/iap/process` is used.)*
 
 ### 4.14 `GET /api/child/store/my-items` — `PurchaseDto[]`
 
 ### 4.14.1 `POST /api/child/store/iap/process` — `int` (New Total Coins)
-Request: `{ "tierId": "guid", "transactionId": "string" }`
-Behavior: Validates transaction ID uniqueness, retrieves tier, adds equivalent coins to child's balance, and records the IAP transaction in one database transaction. Returns the new total coins amount. Returns `400 Bad Request` if the `transactionId` has already been processed (enforced by a strict unique database index).
+Request: `{ "storeProductId": "string", "transactionId": "string" }`
+Behavior: Validates transaction ID uniqueness, retrieves store item by product ID, adds `rewardCoinAmount` to the child's balance, and records the IAP transaction as a `ChildPurchase` in one database transaction. Returns the new total coins amount. Returns `400 Bad Request` if the `transactionId` has already been processed (enforced by a strict unique database index).
 
 ### 4.15 `GET /api/child/minigames?gameType={optional-string}` — `MiniGameContentDto[]` (Published only)
 
@@ -390,16 +378,13 @@ Pricing contract: `priceInCoins` is `0 = Free, >0 = Paid`. Negative values are r
 
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|
-| POST | `/` | `{ "name", "priceInCoins", "assetUrl", "metadata"? }` | `"guid"` |
-| POST | `/story/{storyId}?priceInCoins=100` | — | `"guid"` |
+| POST | `/` | `{ "name", "storeProductId", "rewardCoinAmount", "assetUrl", "metadata"? }` | `"guid"` |
 | GET | `/?minPrice=50&maxPrice=500` | — | `StoreItemDto[]` |
 | GET | `/{id}` | — | `StoreItemDto` |
 | PUT | `/{id}` | all fields optional | `true` |
 | DELETE | `/{id}` | — | `true` |
 
-> ⚠️ As of 2026-09-02 `POST /story/{storyId}` is **not implemented** in the backend source; requests return 404.
-> **Update 2026-09-17:** `POST /story/{storyId}?priceInCoins=100` is implemented. `priceInCoins` must be `>= 0` (0 = free item); negative values are rejected with `400 Bad Request`.
-> **Correction 2026-09-18:** the `POST /story/{storyId}` route was **not found in any local backend branch** (main, develop, feature/mini-games, fix/backend-gaps, fix/security-fixes) — treat the 2026-09-17 note as unverified. **Story pricing does not live on store items at all:** `Story` has its own `PriceInCoins` column (no FK from `StoreItem` to `Story`). To change a story's price call **`PUT /api/admin/stories/{storyId}`** with `{ "priceInCoins": 100 }` (all `UpdateStoryDto` fields optional, verified against `UpdateStoryCommandHandler` on `origin/develop`). Store items are generic storefront entries unrelated to story pricing.
+> **Correction 2026-09-18:** Store items are strictly IAP coin packs. `priceInCoins` has been renamed to `rewardCoinAmount` and `storeProductId` (e.g. `store_pack_1`) added. `POST /story/{storyId}` (converting a story to an item) was removed.
 
 ### 6.6 Mini-games — `/api/admin/minigames`
 
