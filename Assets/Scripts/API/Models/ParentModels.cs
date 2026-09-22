@@ -21,6 +21,17 @@ namespace Api.Models
         public string lastActivityAt;
     }
 
+    // Shape of GET /api/parent/children — uses id/coins (unlike the dashboard endpoint's childId/totalCoins).
+    [Serializable]
+    public class ChildListItem
+    {
+        public string id;
+        public string username;
+        public int coins;
+        public int loginStreak;
+        public string lastActivityAt;
+    }
+
     [Serializable]
     public class ChildDetail
     {

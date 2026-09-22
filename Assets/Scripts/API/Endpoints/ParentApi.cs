@@ -28,9 +28,9 @@ namespace Api.Endpoints
             return await client.PostAsync<string>("/api/parent/children", data);
         }
 
-        public async Awaitable<ChildSummary[]> GetChildrenAsync()
+        public async Awaitable<ChildListItem[]> GetChildrenAsync()
         {
-            return await client.GetAsync<ChildSummary[]>("/api/parent/children");
+            return await client.GetAsync<ChildListItem[]>("/api/parent/children");
         }
 
         public async Awaitable<ChildDetail> GetChildAsync(string id)
