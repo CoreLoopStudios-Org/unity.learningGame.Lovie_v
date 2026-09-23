@@ -84,7 +84,7 @@ Response — `ChildAuthResponse`:
 ```json
 {
   "token": "eyJ...", "tokenType": "Bearer", "expiresAt": "2026-08-19T06:00:00Z",
-  "childId": "guid", "username": "childuser", "coins": 120, "loginStreak": 5
+  "childId": "guid", "fullName": "Child Full Name", "username": "childuser", "coins": 120, "loginStreak": 5
 }
 ```
 
@@ -116,7 +116,7 @@ The child id is always derived from the JWT. Never send it from the client.
 
 ```json
 {
-  "id": "guid", "username": "childuser", "coins": 120, "loginStreak": 5,
+  "id": "guid", "fullName": "Child Full Name", "username": "childuser", "coins": 120, "loginStreak": 5,
   "avatarState": "{\"hair\":\"brown\"}", "additionalData": null,
   "lastLoginDate": "2026-08-18T05:00:00Z", "lastActivityAt": "2026-08-18T05:30:00Z"
 }
@@ -251,13 +251,13 @@ Note: the array property is `childSummaries` (not `children`); coins field is `t
 
 ### 5.2 `POST /api/parent/children` — create child
 
-Request: `{ "username": "newchild", "password": "SecurePass123!" }` (username 3–50 chars, password 6–100)
+Request: `{ "fullName": "New Child", "username": "newchild", "password": "SecurePass123!" }` (fullName up to 256 chars, username 3–50 chars, password 6–100)
 Response: `"guid"` (child id)
 
 ### 5.3 `GET /api/parent/children` — `ChildSummaryDto[]`
 
 ```json
-[{ "id": "guid", "username": "kid1", "coins": 120, "loginStreak": 5, "lastActivityAt": "..." }]
+[{ "id": "guid", "fullName": "Kid One", "username": "kid1", "coins": 120, "loginStreak": 5, "lastActivityAt": "..." }]
 ```
 
 ### 5.4 `GET /api/parent/children/{id}` — `ChildDetailDto`
@@ -266,7 +266,7 @@ Response: `"guid"` (child id)
 
 ### 5.5 `PUT /api/parent/children/{id}` — update child
 
-Request (all optional): `{ "username": "...", "password": "...", "avatarState": "{...}", "additionalData": "{...}" }`
+Request (all optional): `{ "fullName": "...", "username": "...", "password": "...", "avatarState": "{...}", "additionalData": "{...}" }`
 Response: `true`
 
 ### 5.6 `DELETE /api/parent/children/{id}` — Response: `true`. Permanent.
@@ -338,7 +338,7 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 ```json
 {
   "children": [{
-    "id": "guid", "username": "childuser",
+    "id": "guid", "fullName": "Child Full Name", "username": "childuser",
     "coins": 120, "loginStreak": 5,
     "lastActivityAt": "...", "disabledAt": null, "additionalData": "{\"level\":3}"
   }],
