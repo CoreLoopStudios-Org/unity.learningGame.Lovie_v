@@ -33,7 +33,7 @@ namespace UI
             this.onSelect = onSelect;
 
             if (nameText != null)
-                nameText.text = child?.username ?? string.Empty;
+                nameText.text = string.IsNullOrEmpty(child?.fullName) ? child?.username ?? string.Empty : child.fullName;
         }
 
         private void OnSelectClicked()

@@ -35,6 +35,12 @@ namespace UI
             ResetAndLoad();
         }
 
+        // Called by AddChildrenPanelController after a child is created.
+        public void Refresh()
+        {
+            ResetAndLoad();
+        }
+
         private void ResetAndLoad()
         {
             ClearSpawnedCards();

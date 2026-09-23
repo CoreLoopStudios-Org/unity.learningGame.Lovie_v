@@ -17,10 +17,11 @@ namespace Api.Endpoints
             return await client.GetAsync<ParentDashboard>("/api/parent/dashboard");
         }
 
-        public async Awaitable<string> CreateChildAsync(string username, string password)
+        public async Awaitable<string> CreateChildAsync(string fullName, string username, string password)
         {
             var data = new
             {
+                fullName,
                 username,
                 password
             };

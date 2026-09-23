@@ -26,6 +26,7 @@ namespace Api.Models
     public class ChildListItem
     {
         public string id;
+        public string fullName;
         public string username;
         public int coins;
         public int loginStreak;
@@ -36,6 +37,7 @@ namespace Api.Models
     public class ChildDetail
     {
         public string id;
+        public string fullName;
         public string username;
         public int coins;
         public int loginStreak;

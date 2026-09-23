@@ -137,7 +137,10 @@ namespace UI
         private void RenderChild(ChildDetail detail, ChildActivity[] activities)
         {
             if (childNameText != null)
-                childNameText.text = string.IsNullOrEmpty(detail?.username) ? "-" : detail.username;
+            {
+                string displayName = string.IsNullOrEmpty(detail?.fullName) ? detail?.username : detail.fullName;
+                childNameText.text = string.IsNullOrEmpty(displayName) ? "-" : displayName;
+            }
 
             if (coinsText != null)
                 coinsText.text = (detail?.coins ?? 0).ToString();
