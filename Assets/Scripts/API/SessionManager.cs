@@ -5,6 +5,9 @@ namespace Api
 {
     public class SessionManager : MonoBehaviour
     {
+        private const string RoleClaimUri = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+        private const string NameIdClaimUri = "http://schemas.microsoft.com/ws/2008/06/identity/claims/nameid";
+
         private static SessionManager instance;
         public static SessionManager Instance => instance;
 
@@ -12,6 +15,8 @@ namespace Api
         private string expiresAt;
         private string role;
         private string childId;
+        private string userId;
+        private string email;
 
         public event Action OnSessionExpired;
         public event Action<string> OnTokenUpdated;
@@ -19,6 +24,8 @@ namespace Api
         public string Token => token;
         public string Role => role;
         public string ChildId => childId;
+        public string UserId => userId;
+        public string Email => email;
         public bool IsAuthenticated => !string.IsNullOrEmpty(token) && IsValidToken();
         public bool IsChildSession => role == "Child";
 
@@ -63,6 +70,8 @@ namespace Api
             expiresAt = TokenStore.GetExpiresAt();
             role = TokenStore.GetRole();
             childId = TokenStore.GetChildId();
+            userId = ExtractUserIdFromToken(token);
+            email = ExtractEmailFromToken(token);
         }
 
         public void SetSession(string newToken, string newExpiresAt, string newRole = null, string newChildId = null)
@@ -71,6 +80,8 @@ namespace Api
             expiresAt = newExpiresAt;
             role = newRole ?? ExtractRoleFromTokenStatic(newToken);
             childId = newChildId ?? ExtractChildIdFromToken(newToken);
+            userId = ExtractUserIdFromToken(newToken);
+            email = ExtractEmailFromToken(newToken);
 
             TokenStore.SaveToken(token, expiresAt, role, childId);
             OnTokenUpdated?.Invoke(token);
@@ -82,6 +93,8 @@ namespace Api
             expiresAt = null;
             role = null;
             childId = null;
+            userId = null;
+            email = null;
 
             TokenStore.ClearToken();
         }
@@ -136,19 +149,9 @@ namespace Api
 
         private string ExtractChildIdFromToken(string jwtToken)
         {
-            if (string.IsNullOrEmpty(jwtToken))
-                return null;
-
             try
             {
-                string[] parts = jwtToken.Split('.');
-                if (parts.Length < 2)
-                    return null;
-
-                string payload = parts[1];
-                string decoded = Base64Decode(payload);
-
-                TokenPayload tokenData = JsonUtility.FromJson<TokenPayload>(decoded);
+                TokenPayload tokenData = DecodeTokenPayload(jwtToken);
 
                 if (tokenData?.role == "Child")
                     return tokenData?.nameid ?? tokenData?.sub;
@@ -159,6 +162,52 @@ namespace Api
             {
                 return null;
             }
+        }
+
+        private string ExtractUserIdFromToken(string jwtToken)
+        {
+            try
+            {
+                TokenPayload tokenData = DecodeTokenPayload(jwtToken);
+
+                return tokenData?.nameid
+                    ?? tokenData?.sub
+                    ?? ExtractUriClaimValue(DecodePayloadString(jwtToken), NameIdClaimUri);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private string ExtractEmailFromToken(string jwtToken)
+        {
+            try
+            {
+                TokenPayload tokenData = DecodeTokenPayload(jwtToken);
+                return tokenData?.email;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static TokenPayload DecodeTokenPayload(string jwtToken)
+        {
+            return JsonUtility.FromJson<TokenPayload>(DecodePayloadString(jwtToken));
+        }
+
+        private static string DecodePayloadString(string jwtToken)
+        {
+            if (string.IsNullOrEmpty(jwtToken))
+                return null;
+
+            string[] parts = jwtToken.Split('.');
+            if (parts.Length < 2)
+                return null;
+
+            return Base64Decode(parts[1]);
         }
 
         private static string Base64Decode(string input)
@@ -183,29 +232,34 @@ namespace Api
                 if (!string.IsNullOrEmpty(tokenData?.role))
                     return tokenData.role;
 
-                // Search for full URI claim in JSON string
-                string roleKey = "\"http://schemas.microsoft.com/ws/2008/06/identity/claims/role\"";
-                int keyIndex = decodedPayload.IndexOf(roleKey);
-                if (keyIndex > 0)
-                {
-                    int valueStart = keyIndex + roleKey.Length + 1; // Skip colon
-                    // Skip whitespace
-                    while (valueStart < decodedPayload.Length && char.IsWhiteSpace(decodedPayload[valueStart]))
-                        valueStart++;
-
-                    if (valueStart < decodedPayload.Length && decodedPayload[valueStart] == '"')
-                    {
-                        int valueEnd = decodedPayload.IndexOf('"', valueStart + 1);
-                        if (valueEnd > valueStart)
-                            return decodedPayload.Substring(valueStart + 1, valueEnd - valueStart - 1);
-                    }
-                }
-                return null;
+                return ExtractUriClaimValue(decodedPayload, RoleClaimUri);
             }
             catch
             {
                 return null;
             }
+        }
+
+        private static string ExtractUriClaimValue(string decodedPayload, string claimUri)
+        {
+            // Search for a full-URI claim key in the JSON string
+            string key = "\"" + claimUri + "\"";
+            int keyIndex = decodedPayload.IndexOf(key);
+            if (keyIndex < 0)
+                return null;
+
+            int valueStart = keyIndex + key.Length + 1; // Skip colon
+            // Skip whitespace
+            while (valueStart < decodedPayload.Length && char.IsWhiteSpace(decodedPayload[valueStart]))
+                valueStart++;
+
+            if (valueStart < decodedPayload.Length && decodedPayload[valueStart] == '"')
+            {
+                int valueEnd = decodedPayload.IndexOf('"', valueStart + 1);
+                if (valueEnd > valueStart)
+                    return decodedPayload.Substring(valueStart + 1, valueEnd - valueStart - 1);
+            }
+            return null;
         }
 
         void OnApplicationFocus(bool hasFocus)
@@ -223,6 +277,7 @@ namespace Api
             public string nameid;
             public string sub;
             public string exp;
+            public string email;
         }
     }
 }
