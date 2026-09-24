@@ -1,5 +1,19 @@
+using System;
 using Api.Models;
 using UnityEngine;
+
+namespace Api.Models
+{
+    // GET /api/parent/profile — ParentProfileDto (API doc §5.8)
+    [Serializable]
+    public class ParentProfile
+    {
+        public string id;
+        public string fullName;
+        public string email;
+        public string profilePictureUrl;
+    }
+}
 
 namespace Api.Endpoints
 {
@@ -10,6 +24,11 @@ namespace Api.Endpoints
         public ParentApi(ApiClient apiClient)
         {
             client = apiClient;
+        }
+
+        public async Awaitable<ParentProfile> GetProfileAsync()
+        {
+            return await client.GetAsync<ParentProfile>("/api/parent/profile");
         }
 
         public async Awaitable<ParentDashboard> GetDashboardAsync()

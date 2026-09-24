@@ -1,7 +1,10 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Api;
+using Api.Endpoints;
+using Api.Models;
 
 namespace UI
 {
@@ -20,8 +23,16 @@ namespace UI
         [SerializeField] private Button logoutButton;
         [SerializeField] private string loginScene = "Parent Login";
 
+        private ApiClient apiClient;
+        private ParentApi parentApi;
+        private int requestId;
+
         private void Awake()
         {
+            apiClient = ApiClient.Instance;
+            apiClient.Initialize(ApiConfig.Instance);
+            parentApi = new ParentApi(apiClient);
+
             if (logoutButton != null)
                 logoutButton.onClick.AddListener(OnLogoutClicked);
         }
@@ -34,40 +45,79 @@ namespace UI
 
         private void OnEnable()
         {
-            Refresh();
+            _ = RefreshAsync();
         }
 
-        // Parents are plain Users in the backend (no parent profile endpoint) —
-        // id + email come from the session token's JWT claims.
         public void Refresh()
         {
-            if (SessionManager.Instance == null || !SessionManager.Instance.IsValidToken())
+            _ = RefreshAsync();
+        }
+
+        private async Awaitable RefreshAsync()
+        {
+            if (!SessionManager.Instance.IsValidToken())
             {
                 Debug.LogWarning("[ParentProfilePanelController] No valid session, skipping profile load.");
                 return;
             }
 
+            int id = ++requestId;
+
+            try
+            {
+                ParentProfile profile = await parentApi.GetProfileAsync();
+                if (id != requestId || !isActiveAndEnabled) return;
+
+                ApplyProfile(profile);
+            }
+            catch (ApiException ex)
+            {
+                if (id == requestId)
+                    Debug.LogWarning($"[ParentProfilePanelController] Failed to load profile: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                if (id == requestId)
+                    Debug.LogWarning($"[ParentProfilePanelController] Failed to load profile: {ex.Message}");
+            }
+        }
+
+        private void ApplyProfile(ParentProfile profile)
+        {
+            if (profile == null) return;
+
+            if (nameText != null)
+                nameText.text = string.IsNullOrEmpty(profile.fullName) ? "-" : profile.fullName;
+
             if (userIdText != null)
-                userIdText.text = string.IsNullOrEmpty(SessionManager.Instance.UserId)
-                    ? "-"
-                    : SessionManager.Instance.UserId;
+                userIdText.text = string.IsNullOrEmpty(profile.id) ? "-" : profile.id;
 
             if (emailText != null)
-                emailText.text = string.IsNullOrEmpty(SessionManager.Instance.Email)
-                    ? "-"
-                    : SessionManager.Instance.Email;
-
-            // The Users table has fullName, but no endpoint exposes the parent's
-            // own record yet — show "-" until the backend adds one.
-            if (nameText != null)
-                nameText.text = "-";
+                emailText.text = string.IsNullOrEmpty(profile.email) ? "-" : profile.email;
 
             // The API never returns the password, so it is always shown masked.
             if (passwordText != null)
                 passwordText.text = MaskedPassword;
 
-            // No API source for the parent's image yet — the designer
-            // placeholder on profileImage stays.
+            if (profileImage != null)
+            {
+                if (string.IsNullOrEmpty(profile.profilePictureUrl))
+                {
+                    profileImage.sprite = null;
+                    return;
+                }
+                LoadImageAsync(profile.profilePictureUrl);
+            }
+        }
+
+        private async void LoadImageAsync(string url)
+        {
+            var sprite = await RemoteAssetCache.Instance.GetSpriteAsync(url);
+            if (sprite != null && profileImage != null)
+            {
+                profileImage.sprite = sprite;
+                profileImage.enabled = true;
+            }
         }
 
         private void OnLogoutClicked()
