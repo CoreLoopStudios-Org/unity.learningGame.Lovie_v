@@ -1,5 +1,23 @@
+using System;
 using Api.Models;
 using UnityEngine;
+
+namespace Api.Models
+{
+    // /api/parent/profile is not in the backend yet (admin profile exists,
+    // parent profile still 404s) — JsonUtility leaves fields null until the
+    // backend adds the endpoint. Password is never returned by the API.
+    [Serializable]
+    public class ParentProfile
+    {
+        public string id;
+        public string username;
+        public string email;
+        public string fullName;
+        public string profileImageUrl;
+        public string createdAt;
+    }
+}
 
 namespace Api.Endpoints
 {
@@ -10,6 +28,11 @@ namespace Api.Endpoints
         public ParentApi(ApiClient apiClient)
         {
             client = apiClient;
+        }
+
+        public async Awaitable<ParentProfile> GetProfileAsync()
+        {
+            return await client.GetAsync<ParentProfile>("/api/parent/profile");
         }
 
         public async Awaitable<ParentDashboard> GetDashboardAsync()
