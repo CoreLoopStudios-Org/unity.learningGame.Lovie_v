@@ -277,6 +277,29 @@ Response: `true`
 [{ "id": "guid", "childId": "guid", "activityType": 1, "payload": "{...}", "createdAt": "..." }]
 ```
 
+### 5.8 `GET /api/parent/profile` — `ParentProfileDto`
+
+```json
+{ "id": "guid", "fullName": "John Doe", "email": "parent@example.com", "profilePictureUrl": "https://..." }
+```
+
+### 5.9 `PUT /api/parent/profile` — Update Profile
+
+Request:
+```json
+{ "fullName": "John Doe", "email": "new@example.com", "profilePictureUrl": "...", "currentPassword": "old", "newPassword": "new" }
+```
+Response: `true` (boolean)
+
+### 5.10 `POST /api/parent/media/upload` — Upload Profile Picture
+
+*Note: This endpoint accepts standard multipart/form-data. It is an alias of the `api/admin/media` upload endpoint but accepts the `Parent` role.*
+Request: `multipart/form-data` with a file field named `file` (PNG, JPG, GIF).
+Response:
+```json
+{ "url": "https://.../uploads/xyz.png" }
+```
+
 ---
 
 ## 6. Admin Endpoints — `[Authorize(Roles = "Admin")]`
