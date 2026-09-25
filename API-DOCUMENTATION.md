@@ -243,11 +243,11 @@ Parents can only access children where `parentId` matches their JWT.
 {
   "totalChildren": 2, "activeChildren": 1,
   "childSummaries": [
-    { "childId": "guid", "username": "kid1", "totalCoins": 120, "loginStreak": 5, "lastActivityAt": "..." }
+    { "childId": "guid", "username": "kid1", "totalCoins": 120, "loginStreak": 5, "lastActivityAt": "...", "password": "plaintextpassword" }
   ]
 }
 ```
-Note: the array property is `childSummaries` (not `children`); coins field is `totalCoins`.
+Note: the array property is `childSummaries` (not `children`); coins field is `totalCoins`. The password is provided in plaintext.
 
 ### 5.2 `POST /api/parent/children` — create child
 
@@ -257,8 +257,10 @@ Response: `"guid"` (child id)
 ### 5.3 `GET /api/parent/children` — `ChildSummaryDto[]`
 
 ```json
-[{ "id": "guid", "fullName": "Kid One", "username": "kid1", "coins": 120, "loginStreak": 5, "lastActivityAt": "..." }]
+[{ "id": "guid", "fullName": "Kid One", "username": "kid1", "coins": 120, "loginStreak": 5, "lastActivityAt": "...", "password": "plaintextpassword" }]
 ```
+
+*(Note: the `password` field returns the child's password in plaintext so the parent can view it).*
 
 ### 5.4 `GET /api/parent/children/{id}` — `ChildDetailDto`
 

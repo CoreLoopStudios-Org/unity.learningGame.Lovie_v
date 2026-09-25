@@ -19,6 +19,7 @@ namespace Api.Models
         public int totalCoins;
         public int loginStreak;
         public string lastActivityAt;
+        public string password;
     }
 
     // Shape of GET /api/parent/children — uses id/coins (unlike the dashboard endpoint's childId/totalCoins).
@@ -31,6 +32,7 @@ namespace Api.Models
         public int coins;
         public int loginStreak;
         public string lastActivityAt;
+        public string password;
     }
 
     [Serializable]
@@ -45,6 +47,7 @@ namespace Api.Models
         public string avatarState;
         public string additionalData;
         public string lastLoginDate;
+        public string password;
     }
 
     [Serializable]
