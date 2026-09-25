@@ -10,7 +10,7 @@ namespace UI
 {
     // Attach to the spawned Child List Scroll View prefab. Fetches the parent's children on enable
     // and instantiates a ChildDetailsCard per child; selecting one updates the dashboard.
-    public class ChildListPanelController : MonoBehaviour
+    public class ChildListPanelController : MonoBehaviour, IDropdownPanel
     {
         [Header("List")]
         [SerializeField] private Transform childrenContainer;
@@ -18,6 +18,15 @@ namespace UI
 
         [Header("Feedback")]
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
+
+        // Injected by the DropdownToggle that spawned this panel (prefabs can't
+        // reference scene objects, so this can't be a serialized field).
+        private DropdownToggle dropdownToggle;
+
+        public void SetOwnerToggle(DropdownToggle toggle)
+        {
+            dropdownToggle = toggle;
+        }
 
         private ParentApi parentApi;
         private int requestId;
@@ -92,6 +101,11 @@ namespace UI
         {
             if (ParentDashboardController.Instance != null)
                 ParentDashboardController.Instance.SelectChild(child);
+
+            // The DropdownToggle spawned this panel — reset its on/sprite state before
+            // we destroy the list ourselves, otherwise it stays stuck "on".
+            if (dropdownToggle != null)
+                dropdownToggle.TurnOff();
 
             Destroy(gameObject);
         }

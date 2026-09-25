@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Api.Models;
 using UnityEngine;
 
@@ -29,6 +30,19 @@ namespace Api.Endpoints
         public async Awaitable<ParentProfile> GetProfileAsync()
         {
             return await client.GetAsync<ParentProfile>("/api/parent/profile");
+        }
+
+        // PUT /api/parent/profile — every field is optional; nulls are omitted so
+        // only the supplied values are updated.
+        public async Awaitable<bool> UpdateProfileAsync(string fullName = null, string email = null, string profilePictureUrl = null, string currentPassword = null, string newPassword = null)
+        {
+            var data = new Dictionary<string, string>();
+            if (fullName != null) data["fullName"] = fullName;
+            if (email != null) data["email"] = email;
+            if (profilePictureUrl != null) data["profilePictureUrl"] = profilePictureUrl;
+            if (currentPassword != null) data["currentPassword"] = currentPassword;
+            if (newPassword != null) data["newPassword"] = newPassword;
+            return await client.PutAsync<bool>("/api/parent/profile", data);
         }
 
         public async Awaitable<ParentDashboard> GetDashboardAsync()

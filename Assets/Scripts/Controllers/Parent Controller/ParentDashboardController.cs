@@ -14,6 +14,9 @@ namespace UI
     {
         public static ParentDashboardController Instance { get; private set; }
 
+        // The child currently shown on the home dashboard; other panels (e.g. Progress) read this.
+        public ChildListItem SelectedChild { get; private set; }
+
         private const int MaxRecentActivities = 4;
 
         [Header("Child Profile")]
@@ -84,6 +87,8 @@ namespace UI
         public void SelectChild(ChildListItem child)
         {
             if (child == null || string.IsNullOrEmpty(child.id)) return;
+
+            SelectedChild = child;
             _ = LoadChildDataAsync(child.id);
         }
 
@@ -101,6 +106,7 @@ namespace UI
 
                 if (children == null || children.Length == 0)
                 {
+                    SelectedChild = null;
                     ShowDefaults(); // no children: keep default values on every field
                     return;
                 }
@@ -151,9 +157,8 @@ namespace UI
             if (childUsernameText != null)
                 childUsernameText.text = string.IsNullOrEmpty(detail?.username) ? "-" : detail.username;
 
-            // API never returns child passwords (hashed server-side); shows "-" until backend adds it.
             if (childPasswordText != null)
-                childPasswordText.text = "-";
+                childPasswordText.text = string.IsNullOrEmpty(detail?.password) ? "-" : detail.password;
 
             int storiesRead = 0;
             float quizScoreSum = 0f;

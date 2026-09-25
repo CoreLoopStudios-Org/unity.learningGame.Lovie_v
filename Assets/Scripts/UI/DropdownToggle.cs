@@ -5,6 +5,15 @@ using UnityEngine.Events;
 namespace UI
 {
     /// <summary>
+    /// Implemented by panels spawned via DropdownToggle so they can close the toggle
+    /// that owns them (a prefab cannot reference scene objects, so this is injected at spawn).
+    /// </summary>
+    public interface IDropdownPanel
+    {
+        void SetOwnerToggle(DropdownToggle toggle);
+    }
+
+    /// <summary>
     /// Modular toggle button with optional prefab spawning and sprite switching.
     /// Works as a simple toggle (sprite only) or dropdown (spawn prefab on open).
     /// </summary>
@@ -87,6 +96,12 @@ namespace UI
             }
 
             spawnedInstance = Instantiate(prefabToSpawn, parent);
+
+            // Prefabs can't hold scene references, so hand the owner toggle to any
+            // spawned panel that wants to close us later.
+            IDropdownPanel[] panels = spawnedInstance.GetComponentsInChildren<IDropdownPanel>(true);
+            foreach (IDropdownPanel panel in panels)
+                panel.SetOwnerToggle(this);
 
             if (closeOnOutsideClick)
             {
