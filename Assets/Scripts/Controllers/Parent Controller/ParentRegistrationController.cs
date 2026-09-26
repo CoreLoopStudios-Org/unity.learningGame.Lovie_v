@@ -26,7 +26,7 @@ namespace UI
         [Header("Common UI")]
         [SerializeField] private TextMeshProUGUI errorMessage;
         [SerializeField] private TextMeshProUGUI successMessage;
-        [SerializeField] private GameObject loadingIndicator;
+        [SerializeField] private GameObject loadingPanelPrefab;
         [SerializeField] private Button backToLoginButton;
 
         [Header("Scene Navigation")]
@@ -35,6 +35,7 @@ namespace UI
         private ApiClient apiClient;
         private AuthApi authApi;
         private string registeredEmail = string.Empty;
+        private GameObject loadingPanelInstance;
 
         void Start()
         {
@@ -117,10 +118,12 @@ namespace UI
             ShowLoading();
             ClearMessages();
 
+            bool navigatingToLogin = false;
             try
             {
                 await authApi.VerifyEmailAsync(registeredEmail, otp);
                 ShowSuccess("Email verified successfully! You can now log in.");
+                navigatingToLogin = true;
                 Invoke(nameof(OnBackToLoginClicked), 2f);
             }
             catch (ApiException ex)
@@ -134,7 +137,9 @@ namespace UI
             }
             finally
             {
-                HideLoading();
+                // Keep the loading panel visible through the scene transition on success.
+                if (!navigatingToLogin)
+                    HideLoading();
             }
         }
 
@@ -212,13 +217,23 @@ namespace UI
 
         void ShowLoading()
         {
-            if (loadingIndicator != null) loadingIndicator.SetActive(true);
+            if (loadingPanelPrefab != null && loadingPanelInstance == null)
+            {
+                // Spawn under the canvas root as last sibling so it always renders
+                // on top of whichever panel is open.
+                loadingPanelInstance = Instantiate(loadingPanelPrefab, transform.root);
+                loadingPanelInstance.transform.SetAsLastSibling();
+            }
             SetButtonsInteractable(false);
         }
 
         void HideLoading()
         {
-            if (loadingIndicator != null) loadingIndicator.SetActive(false);
+            if (loadingPanelInstance != null)
+            {
+                Destroy(loadingPanelInstance);
+                loadingPanelInstance = null;
+            }
             SetButtonsInteractable(true);
         }
 
