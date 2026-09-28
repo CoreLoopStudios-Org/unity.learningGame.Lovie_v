@@ -119,6 +119,14 @@ namespace Avatar
             }
         }
 
+        // Backend stores this JSON as-is in the Child.AvatarState column — only body, hair and dress are persisted
+        private static readonly AvatarPartCategory[] SavedCategories =
+        {
+            AvatarPartCategory.BodyColor,
+            AvatarPartCategory.Hair,
+            AvatarPartCategory.Dress
+        };
+
         private string ExportAvatarState()
         {
             if (avatarManager == null)
@@ -127,12 +135,11 @@ namespace Avatar
             var selections = avatarManager.GetAllSelections();
             var state = new Dictionary<string, string>();
 
-            foreach (var kvp in selections)
+            foreach (var category in SavedCategories)
             {
-                if (kvp.Value != null)
+                if (selections.TryGetValue(category, out var part) && part != null)
                 {
-                    string categoryKey = kvp.Key.ToString();
-                    state[categoryKey] = kvp.Value.ItemId;
+                    state[category.ToString()] = part.ItemId;
                 }
             }
 

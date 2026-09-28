@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Api;
 
 namespace Avatar
 {
@@ -180,7 +181,23 @@ namespace Avatar
             }
 
             PlayerPrefs.Save();
+            SyncToServer();
             OnAvatarSaved?.Invoke();
+        }
+
+        private async void SyncToServer()
+        {
+            if (SessionManager.Instance == null || !SessionManager.Instance.IsChildSession)
+                return;
+
+            if (AvatarSyncService.Instance == null)
+            {
+                var go = new GameObject("AvatarSyncService");
+                go.AddComponent<AvatarSyncService>();
+            }
+
+            AvatarSyncService.Instance.SetAvatarManager(this);
+            await AvatarSyncService.Instance.SaveToServerAsync();
         }
 
         /// <summary>
