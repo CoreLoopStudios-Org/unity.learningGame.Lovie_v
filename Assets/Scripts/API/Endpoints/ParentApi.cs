@@ -1,6 +1,7 @@
 using System;
 using Api.Models;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Api.Models
 {
@@ -33,6 +34,26 @@ namespace Api.Endpoints
         public async Awaitable<ParentProfile> GetProfileAsync()
         {
             return await client.GetAsync<ParentProfile>("/api/parent/profile");
+        }
+
+        public async Awaitable<bool> UpdateProfileAsync(string email = null, string fullName = null, string currentPassword = null, string newPassword = null, string profileImageUrl = null)
+        {
+            var data = new System.Collections.Generic.Dictionary<string, string>();
+            if (email != null) data["email"] = email;
+            if (fullName != null) data["fullName"] = fullName;
+            if (currentPassword != null) data["currentPassword"] = currentPassword;
+            if (newPassword != null) data["newPassword"] = newPassword;
+            if (profileImageUrl != null) data["profileImageUrl"] = profileImageUrl;
+            return await client.PutAsync<bool>("/api/parent/profile", data);
+        }
+
+        public async Awaitable<string> UploadMediaAsync(byte[] fileData, string fileName, string mimeType = null)
+        {
+            var form = new WWWForm();
+            form.AddBinaryData("file", fileData, fileName, mimeType);
+
+            var response = await client.PostFormAsync<System.Collections.Generic.Dictionary<string, string>>("/api/parent/media/upload", form);
+            return response != null && response.ContainsKey("url") ? response["url"] : null;
         }
 
         public async Awaitable<ParentDashboard> GetDashboardAsync()

@@ -5,6 +5,7 @@ using TMPro;
 using Api;
 using Api.Endpoints;
 using Api.Models;
+using Modules.Profile;
 
 namespace UI
 {
@@ -23,6 +24,9 @@ namespace UI
         [SerializeField] private Button logoutButton;
         [SerializeField] private string loginScene = "Main Game/Parent/Parent Login";
 
+        [Header("Profile Picture")]
+        [SerializeField] private ProfilePictureUploadPanel profilePictureUploadPanel;
+
         private ApiClient apiClient;
         private ParentApi parentApi;
         private int requestId;
@@ -35,12 +39,24 @@ namespace UI
 
             if (logoutButton != null)
                 logoutButton.onClick.AddListener(OnLogoutClicked);
+
+            if (profilePictureUploadPanel != null)
+            {
+                profilePictureUploadPanel.PanelOpened += OnProfilePicturePanelOpened;
+                profilePictureUploadPanel.ProfilePictureUpdated += OnProfilePictureUpdated;
+            }
         }
 
         private void OnDestroy()
         {
             if (logoutButton != null)
                 logoutButton.onClick.RemoveListener(OnLogoutClicked);
+
+            if (profilePictureUploadPanel != null)
+            {
+                profilePictureUploadPanel.PanelOpened -= OnProfilePicturePanelOpened;
+                profilePictureUploadPanel.ProfilePictureUpdated -= OnProfilePictureUpdated;
+            }
         }
 
         private void OnEnable()
@@ -118,6 +134,18 @@ namespace UI
                 profileImage.sprite = sprite;
                 profileImage.enabled = true;
             }
+        }
+
+        private void OnProfilePicturePanelOpened()
+        {
+            if (profilePictureUploadPanel == null) return;
+
+            profilePictureUploadPanel.Initialize(new ParentProfilePictureRepository(parentApi), profileImage != null ? profileImage.sprite : null);
+        }
+
+        private void OnProfilePictureUpdated()
+        {
+            _ = RefreshAsync();
         }
 
         private void OnLogoutClicked()

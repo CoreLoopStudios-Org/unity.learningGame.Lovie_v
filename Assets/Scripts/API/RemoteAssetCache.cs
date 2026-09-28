@@ -54,6 +54,8 @@ namespace Api
         {
             if (string.IsNullOrEmpty(url)) return null;
 
+            url = ResolveUrl(url);
+
             // 1. Memory cache check
             if (_spriteMemoryCache.TryGetValue(url, out var cachedSprite) && cachedSprite != null)
             {
@@ -142,6 +144,8 @@ namespace Api
         {
             if (string.IsNullOrEmpty(url)) return null;
 
+            url = ResolveUrl(url);
+
             if (_audioMemoryCache.TryGetValue(url, out var cachedClip) && cachedClip != null)
             {
                 return cachedClip;
@@ -168,6 +172,19 @@ namespace Api
             }
 
             return null;
+        }
+
+        private static string ResolveUrl(string url)
+        {
+            if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return url;
+            }
+
+            string baseUrl = ApiConfig.Instance.BaseUrl.TrimEnd('/');
+            string path = url.StartsWith("/") ? url : "/" + url;
+            return baseUrl + path;
         }
 
         private static string GetDiskPath(string url)
