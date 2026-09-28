@@ -365,11 +365,14 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
   "children": [{
     "id": "guid", "fullName": "Child Full Name", "username": "childuser",
     "coins": 120, "loginStreak": 5,
-    "lastActivityAt": "...", "disabledAt": null, "additionalData": "{\"level\":3}"
+    "lastActivityAt": "...", "disabledAt": null, "additionalData": "{\"level\":3}",
+    "avatarState": "{\"BodyColor\":\"body-1\",\"Hair\":\"hair-2\",\"Dress\":\"dress-1\"}"
   }],
   "totalCount": 30, "page": 1, "pageSize": 10, "totalPages": 3
 }
 ```
+
+> **Update 2026-09-28:** `avatarState` added to each child row (raw equipped-part JSON — same shape as `GET /api/child/profile`; BodyColor/Hair/Dress item IDs). Pending dev deploy.
 
 ### 6.3 Stories — `/api/admin/stories`
 

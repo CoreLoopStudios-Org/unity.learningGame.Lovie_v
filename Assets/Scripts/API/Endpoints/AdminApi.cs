@@ -72,6 +72,7 @@ namespace Api.Models
         public string lastActivityAt;
         public string disabledAt;
         public string additionalData;
+        public string avatarState;
     }
 
     [Serializable]

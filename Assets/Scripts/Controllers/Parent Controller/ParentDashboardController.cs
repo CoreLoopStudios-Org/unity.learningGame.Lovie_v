@@ -7,6 +7,7 @@ using TMPro;
 using Api;
 using Api.Endpoints;
 using Api.Models;
+using Avatar;
 
 namespace UI
 {
@@ -21,7 +22,12 @@ namespace UI
 
         [Header("Child Profile")]
         [SerializeField] private TextMeshProUGUI childNameText;
-        [SerializeField] private Image childProfilePicture;
+
+        [Header("Child Avatar")]
+        [SerializeField] private Image childBodyImage;
+        [SerializeField] private Image childHairImage;
+        [SerializeField] private Image childDressImage;
+        [SerializeField] private AvatarPartDatabase avatarDatabase;
 
         [Header("Stats")]
         [SerializeField] private TextMeshProUGUI readingStreakText;
@@ -148,6 +154,8 @@ namespace UI
                 childNameText.text = string.IsNullOrEmpty(displayName) ? "-" : displayName;
             }
 
+            AvatarSlotRenderer.Apply(detail?.avatarState, ResolveDatabase(), childBodyImage, childHairImage, childDressImage);
+
             if (coinsText != null)
                 coinsText.text = (detail?.coins ?? 0).ToString();
 
@@ -207,6 +215,15 @@ namespace UI
                 newWordsText.text = "0"; // no API source yet
 
             PopulateActivities(activities);
+        }
+
+        private AvatarPartDatabase ResolveDatabase()
+        {
+            if (avatarDatabase != null)
+                return avatarDatabase;
+
+            var manager = FindObjectOfType<AvatarCustomizationManager>();
+            return manager != null ? manager.Database : null;
         }
 
         private void PopulateActivities(ChildActivity[] activities)

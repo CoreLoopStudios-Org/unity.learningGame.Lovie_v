@@ -6,6 +6,7 @@ using TMPro;
 using Api;
 using Api.Endpoints;
 using Api.Models;
+using Avatar;
 
 namespace UI
 {
@@ -15,9 +16,14 @@ namespace UI
 
         [Header("Profile Section")]
         [SerializeField] private TextMeshProUGUI childNameText;
-        [SerializeField] private Image childProfilePicture; // no image URL in the API yet — keep the designer placeholder
         [SerializeField] private TextMeshProUGUI levelText;
         [SerializeField] private TextMeshProUGUI readingStreakText;
+
+        [Header("Child Avatar")]
+        [SerializeField] private Image childBodyImage;
+        [SerializeField] private Image childHairImage;
+        [SerializeField] private Image childDressImage;
+        [SerializeField] private AvatarPartDatabase avatarDatabase;
 
         [Header("Summary Section")]
         [SerializeField] private TextMeshProUGUI storiesReadText;
@@ -147,6 +153,8 @@ namespace UI
             if (levelText != null)
                 levelText.text = ParseLevel(detail?.additionalData);
 
+            AvatarSlotRenderer.Apply(detail?.avatarState, ResolveDatabase(), childBodyImage, childHairImage, childDressImage);
+
             if (readingStreakText != null)
                 readingStreakText.text = (detail?.loginStreak ?? 0).ToString();
 
@@ -194,6 +202,15 @@ namespace UI
 
             if (newWordsText != null)
                 newWordsText.text = "0"; // no API source yet
+        }
+
+        private AvatarPartDatabase ResolveDatabase()
+        {
+            if (avatarDatabase != null)
+                return avatarDatabase;
+
+            var manager = FindObjectOfType<AvatarCustomizationManager>();
+            return manager != null ? manager.Database : null;
         }
 
         private static string ParseLevel(string additionalData)

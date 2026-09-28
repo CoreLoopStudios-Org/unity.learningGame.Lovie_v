@@ -23,6 +23,11 @@ namespace Api.Models
         public bool canClaimDailyReward;
         public string lastLoginDate;
         public string lastActivityAt;
+        public int storiesRead;
+        public int quizzesTaken;
+        public int gamesPlayed;
+        public int totalCoinsEarned;
+        public int totalCoinsSpent;
     }
 
     [Serializable]

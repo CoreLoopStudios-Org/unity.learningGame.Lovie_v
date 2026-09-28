@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using System.Collections.Generic;
 using Api;
 using Api.Endpoints;
 using Api.Models;
@@ -92,81 +91,14 @@ namespace UI
 
         private void ApplyAvatarState(string avatarStateJson)
         {
-            if (bodyImage == null && hairImage == null && dressImage == null)
-                return;
-
-            var database = avatarDatabase != null ? avatarDatabase : FindAvatarDatabase();
-            if (database == null)
-            {
-                Debug.LogWarning("[ChildHomePageController] No AvatarPartDatabase found — cannot render avatar.");
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(avatarStateJson))
-            {
-                Debug.Log($"[ChildHomePageController] avatarState: {avatarStateJson}");
-
-                var state = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(avatarStateJson);
-                if (state != null && state.Count > 0)
-                {
-                    ApplyPart(state, nameof(AvatarPartCategory.BodyColor), database, bodyImage);
-                    ApplyPart(state, nameof(AvatarPartCategory.Hair), database, hairImage);
-                    ApplyPart(state, nameof(AvatarPartCategory.Dress), database, dressImage);
-                    return;
-                }
-            }
-
-            // No avatar saved yet (new child) — fall back to default parts
-            ApplyDefaultAvatar(database);
+            AvatarSlotRenderer.Apply(avatarStateJson, ResolveDatabase(), bodyImage, hairImage, dressImage);
         }
 
-        private void ApplyDefaultAvatar(AvatarPartDatabase database)
+        private AvatarPartDatabase ResolveDatabase()
         {
-            Debug.Log("[ChildHomePageController] No avatarState — applying default avatar.");
-            SetSlot(database.GetDefaultPartForCategory(AvatarPartCategory.BodyColor), bodyImage);
-            SetSlot(database.GetDefaultPartForCategory(AvatarPartCategory.Hair), hairImage);
-            SetSlot(database.GetDefaultPartForCategory(AvatarPartCategory.Dress), dressImage);
-        }
+            if (avatarDatabase != null)
+                return avatarDatabase;
 
-        private void SetSlot(AvatarPartItem part, Image target)
-        {
-            if (target == null)
-                return;
-
-            if (part != null && part.AvatarSprite != null)
-            {
-                target.sprite = part.AvatarSprite;
-                target.enabled = true;
-            }
-            else
-            {
-                target.enabled = false;
-            }
-        }
-
-        private void ApplyPart(Dictionary<string, string> state, string categoryKey, AvatarPartDatabase database, Image target)
-        {
-            if (target == null)
-                return;
-
-            if (state.TryGetValue(categoryKey, out string itemId))
-            {
-                var part = database.GetPartById(itemId);
-                if (part != null && part.AvatarSprite != null)
-                {
-                    target.sprite = part.AvatarSprite;
-                    target.enabled = true;
-                    return;
-                }
-
-                Debug.LogWarning($"[ChildHomePageController] Could not resolve avatar part '{itemId}' for {categoryKey} — check the AvatarPartDatabase assignment.");
-            }
-
-            target.enabled = false;
-        }
-
-        private AvatarPartDatabase FindAvatarDatabase()
-        {
             var manager = FindObjectOfType<AvatarCustomizationManager>();
             return manager != null ? manager.Database : null;
         }

@@ -1,7 +1,9 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using Api.Models;
+using Avatar;
 
 namespace UI
 {
@@ -17,8 +19,14 @@ namespace UI
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI idText;
         [SerializeField] private TextMeshProUGUI levelText;
-        [SerializeField] private UnityEngine.UI.Button banButton;
-        [SerializeField] private UnityEngine.UI.Button deleteButton;
+        [SerializeField] private Button banButton;
+        [SerializeField] private Button deleteButton;
+
+        [Header("Avatar")]
+        [SerializeField] private Image bodyImage;
+        [SerializeField] private Image hairImage;
+        [SerializeField] private Image dressImage;
+        [SerializeField] private AvatarPartDatabase avatarDatabase;
 
         private AdminChild currentChild;
         private System.Action<AdminChild> onBanAction;
@@ -56,6 +64,18 @@ namespace UI
             {
                 levelText.text = ExtractLevel(child?.additionalData);
             }
+
+            // No defaults fallback: an admin list should not show identical default avatars for kids without one
+            AvatarSlotRenderer.Apply(child?.avatarState, ResolveDatabase(), bodyImage, hairImage, dressImage, fallbackToDefaults: false);
+        }
+
+        private AvatarPartDatabase ResolveDatabase()
+        {
+            if (avatarDatabase != null)
+                return avatarDatabase;
+
+            var manager = FindObjectOfType<AvatarCustomizationManager>();
+            return manager != null ? manager.Database : null;
         }
 
         private void OnBanClicked()
