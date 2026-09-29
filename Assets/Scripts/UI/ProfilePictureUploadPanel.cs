@@ -11,11 +11,10 @@ namespace UI
     {
         [SerializeField] private ProfilePicturePickerView _pickerView;
         [SerializeField] private Button _updateButton;
-        [SerializeField] private ProfileUpdateConfirmView _confirmView;
-        [SerializeField] private ProfileUploadStatusView _statusView;
         [SerializeField] private TextMeshProUGUI _feedbackText;
 
         private IProfilePictureRepository _repository;
+        private bool _isUploading;
 
         private void Awake()
         {
@@ -27,16 +26,6 @@ namespace UI
 
             if (_updateButton != null)
                 _updateButton.onClick.AddListener(HandleUpdateClicked);
-
-            if (_confirmView != null)
-                _confirmView.Confirmed += HandleConfirmConfirmed;
-
-            RefreshUpdateButtonState();
-        }
-
-        private void OnEnable()
-        {
-            PanelOpened?.Invoke();
         }
 
         private void OnDestroy()
@@ -49,45 +38,43 @@ namespace UI
 
             if (_updateButton != null)
                 _updateButton.onClick.RemoveListener(HandleUpdateClicked);
+        }
 
-            if (_confirmView != null)
-                _confirmView.Confirmed -= HandleConfirmConfirmed;
+        private void OnEnable()
+        {
+            PanelOpened?.Invoke();
         }
 
         public void Initialize(IProfilePictureRepository repository, Sprite currentSprite)
         {
             _repository = repository;
+            _isUploading = false;
 
             if (_pickerView != null)
+            {
+                _pickerView.SetInteractable(true);
                 _pickerView.SetCurrentSprite(currentSprite);
+            }
 
+            RefreshUpdateButtonState();
             HideFeedback();
         }
 
         private void HandleUpdateClicked()
         {
-            if (_pickerView == null || !_pickerView.HasSelection || _confirmView == null)
+            if (_pickerView == null || !_pickerView.HasSelection || _repository == null || _isUploading)
                 return;
 
-            _confirmView.Show();
-        }
-
-        private void HandleConfirmConfirmed()
-        {
             _ = UploadAsync();
         }
 
         private async Task UploadAsync()
         {
-            if (_pickerView == null || !_pickerView.HasSelection || _repository == null || _statusView == null)
-                return;
-
+            _isUploading = true;
             _pickerView.SetInteractable(false);
             if (_updateButton != null) _updateButton.interactable = false;
-            await _statusView.ShowLoadingAsync();
 
-            bool success = false;
-
+            bool success;
             try
             {
                 success = await _repository.UpdateProfilePictureAsync(
@@ -96,6 +83,7 @@ namespace UI
             catch (Exception exception)
             {
                 Debug.LogException(exception, this);
+                success = false;
             }
 
             if (this == null)
@@ -103,17 +91,13 @@ namespace UI
 
             if (success)
             {
-                await _statusView.ShowSuccessAsync();
                 ProfilePictureUpdated?.Invoke();
+                gameObject.SetActive(false);
             }
             else
             {
-                _statusView.Hide();
+                _isUploading = false;
                 ShowFeedback("Failed to update profile picture.");
-            }
-
-            if (this != null)
-            {
                 _pickerView.SetInteractable(true);
                 RefreshUpdateButtonState();
             }
@@ -122,7 +106,7 @@ namespace UI
         private void RefreshUpdateButtonState()
         {
             if (_updateButton != null)
-                _updateButton.interactable = _pickerView != null && _pickerView.HasSelection;
+                _updateButton.interactable = !_isUploading && _pickerView != null && _pickerView.HasSelection;
         }
 
         private void ShowFeedback(string message)

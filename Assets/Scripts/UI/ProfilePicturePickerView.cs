@@ -12,21 +12,19 @@ namespace Modules.Profile
 
         [SerializeField] private ImageUploadConfigSO _config;
         [SerializeField] private Image _previewImage;
-        [SerializeField] private GameObject _previewMask;
         [SerializeField] private Button _pickButton;
 
         private IImagePicker _picker;
         private ImageProcessor _imageProcessor;
-        private byte[] _selectedImageBytes;
-        private string _selectedImageFileName;
+        private ProcessedImage _selectedImage;
 
         #endregion
 
         #region Properties
 
-        public bool HasSelection => _selectedImageBytes != null;
-        public byte[] SelectedImageBytes => _selectedImageBytes;
-        public string SelectedImageFileName => _selectedImageFileName;
+        public bool HasSelection => _selectedImage != null;
+        public byte[] SelectedImageBytes => _selectedImage?.JpegBytes;
+        public string SelectedImageFileName => _selectedImage?.FileName;
 
         #endregion
 
@@ -36,7 +34,6 @@ namespace Modules.Profile
         {
             _picker = new NativeGalleryImagePicker();
             _imageProcessor = new ImageProcessor(_config);
-            SetMaskActive(false);
 
             if (_pickButton != null)
             {
@@ -50,6 +47,8 @@ namespace Modules.Profile
             {
                 _pickButton.onClick.RemoveListener(HandlePickClicked);
             }
+
+            ReleaseSelectedImage();
         }
 
         #endregion
@@ -58,15 +57,14 @@ namespace Modules.Profile
 
         public void SetCurrentSprite(Sprite sprite)
         {
-            _selectedImageBytes = null;
-            _selectedImageFileName = null;
+            ReleaseSelectedImage();
 
             if (_previewImage != null)
             {
                 _previewImage.sprite = sprite;
             }
 
-            SetMaskActive(sprite != null);
+            SetPickButtonVisible(true);
         }
 
         public void SetInteractable(bool interactable)
@@ -90,6 +88,11 @@ namespace Modules.Profile
 
             ImagePickResult pickResult = await _picker.PickImageAsync(_config.PickerTitle);
 
+            if (this == null)
+            {
+                return;
+            }
+
             if (!pickResult.IsPicked)
             {
                 if (pickResult.Status == ImagePickStatus.PermissionDenied)
@@ -109,12 +112,18 @@ namespace Modules.Profile
             {
                 ProcessedImage processedImage = await _imageProcessor.ProcessAsync(filePath);
 
-                _selectedImageBytes = processedImage.JpegBytes;
-                _selectedImageFileName = processedImage.FileName;
+                if (this == null)
+                {
+                    processedImage.Dispose();
+                    return;
+                }
 
-                ApplyPreviewTexture(processedImage.PreviewTexture);
+                ReleaseSelectedImage();
+                _selectedImage = processedImage;
 
-                processedImage.Dispose();
+                ApplyPreviewTexture(_selectedImage.PreviewTexture);
+
+                SetPickButtonVisible(false);
 
                 SelectionChanged?.Invoke();
             }
@@ -139,14 +148,19 @@ namespace Modules.Profile
 
             Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             _previewImage.sprite = sprite;
-            SetMaskActive(true);
         }
 
-        private void SetMaskActive(bool isActive)
+        private void ReleaseSelectedImage()
         {
-            if (_previewMask != null)
+            _selectedImage?.Dispose();
+            _selectedImage = null;
+        }
+
+        private void SetPickButtonVisible(bool isVisible)
+        {
+            if (_pickButton != null)
             {
-                _previewMask.SetActive(isActive);
+                _pickButton.gameObject.SetActive(isVisible);
             }
         }
 
