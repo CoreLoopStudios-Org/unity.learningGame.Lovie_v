@@ -122,6 +122,10 @@ namespace Api
                     return await HandleErrorAsync<T>(request, retryCount);
                 }
             }
+            catch (ApiException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new ApiException(500, $"Request failed: {ex.Message}");

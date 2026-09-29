@@ -329,21 +329,22 @@ namespace Api.Endpoints
 
         // PUT /api/admin/profile — every field is optional; nulls are omitted so
         // only the supplied values are updated.
-        public async Awaitable<bool> UpdateProfileAsync(string email = null, string fullName = null, string currentPassword = null, string newPassword = null)
+        public async Awaitable<bool> UpdateProfileAsync(string email = null, string fullName = null, string currentPassword = null, string newPassword = null, string profileImageUrl = null)
         {
             var data = new Dictionary<string, string>();
             if (email != null) data["email"] = email;
             if (fullName != null) data["fullName"] = fullName;
             if (currentPassword != null) data["currentPassword"] = currentPassword;
             if (newPassword != null) data["newPassword"] = newPassword;
+            if (profileImageUrl != null) data["profileImageUrl"] = profileImageUrl;
             return await client.PutAsync<bool>("/api/admin/profile", data);
         }
 
         // Media Upload
-        public async Awaitable<string> UploadMediaAsync(byte[] fileData, string fileName)
+        public async Awaitable<string> UploadMediaAsync(byte[] fileData, string fileName, string mimeType = null)
         {
             var form = new WWWForm();
-            form.AddBinaryData("file", fileData, fileName);
+            form.AddBinaryData("file", fileData, fileName, mimeType);
             
             // The backend returns { "url": "/uploads/..." }
             var response = await client.PostFormAsync<System.Collections.Generic.Dictionary<string, string>>("/api/admin/media/upload", form);

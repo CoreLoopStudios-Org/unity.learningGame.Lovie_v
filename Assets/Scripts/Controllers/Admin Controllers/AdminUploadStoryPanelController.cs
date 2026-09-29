@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using Media;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -17,8 +17,10 @@ namespace UI
         [SerializeField] private TMP_InputField titleInput;
         [SerializeField] private TMP_InputField categoryInput;
         [SerializeField] private TMP_InputField priceInput;
-        [SerializeField] private TMP_InputField imagePathInput;
         [SerializeField] private TMP_InputField contentInput;
+
+        [Header("Background Image")]
+        [SerializeField] private StoryBackgroundImageSelector backgroundImageSelector;
 
         [Header("Actions")]
         [SerializeField] private Button uploadButton;
@@ -38,12 +40,18 @@ namespace UI
 
             if (uploadButton != null)
                 uploadButton.onClick.AddListener(OnUploadClicked);
+
+            if (backgroundImageSelector != null)
+                backgroundImageSelector.OnSelectionFailed += ShowStatus;
         }
 
         private void OnDestroy()
         {
             if (uploadButton != null)
                 uploadButton.onClick.RemoveListener(OnUploadClicked);
+
+            if (backgroundImageSelector != null)
+                backgroundImageSelector.OnSelectionFailed -= ShowStatus;
         }
 
         private void OnUploadClicked()
@@ -57,7 +65,6 @@ namespace UI
             string title = GetInputText(titleInput);
             string category = GetInputText(categoryInput);
             string content = GetInputText(contentInput);
-            string imagePath = GetInputText(imagePathInput);
             string priceText = GetInputText(priceInput);
 
             if (string.IsNullOrEmpty(title))
@@ -80,24 +87,18 @@ namespace UI
                 }
                 priceInCoins = parsedPrice;
             }
-            if (!string.IsNullOrEmpty(imagePath) && !IsUrl(imagePath) && !File.Exists(imagePath))
-            {
-                ShowStatus($"Image file not found: {imagePath}");
-                return;
-            }
 
             // The story API has no category column, so it is embedded in
             // contentPayload. "content" matches the child-side StoryQuestLevel
             // field so the uploaded text stays playable.
             var payload = new StoryContentPayload { category = category, content = content };
 
-            isUploading = true;
-            if (uploadButton != null) uploadButton.interactable = false;
-            ShowStatus("Uploading story...");
+            SetUploading(true);
 
             try
             {
-                string coverImageUrl = await ResolveCoverImageUrlAsync(imagePath);
+                string coverImageUrl = await UploadBackgroundImageAsync();
+                ShowStatus("Uploading story...");
                 string newStoryId = await adminApi.CreateStoryAsync(
                     title, coverImageUrl, JsonUtility.ToJson(payload), PublishedStatus, priceInCoins ?? 0);
 
@@ -121,30 +122,27 @@ namespace UI
             }
             finally
             {
-                isUploading = false;
-                if (uploadButton != null) uploadButton.interactable = true;
+                SetUploading(false);
             }
         }
 
-        // Accepts a direct image URL, or a local file path which is uploaded
-        // via /api/admin/media/upload to get a hosted URL.
-        private async Awaitable<string> ResolveCoverImageUrlAsync(string raw)
+        private async Awaitable<string> UploadBackgroundImageAsync()
         {
-            if (string.IsNullOrEmpty(raw)) return null;
+            if (backgroundImageSelector == null || !backgroundImageSelector.HasImage) return null;
 
-            if (IsUrl(raw)) return raw;
-
-            byte[] fileData = File.ReadAllBytes(raw);
-            string url = await adminApi.UploadMediaAsync(fileData, Path.GetFileName(raw));
+            ShowStatus("Uploading background image...");
+            string url = await adminApi.UploadMediaAsync(
+                backgroundImageSelector.ImageBytes, backgroundImageSelector.FileName, MediaConstants.JPEG_MIME_TYPE);
             if (string.IsNullOrEmpty(url))
                 throw new Exception("Image upload did not return a URL.");
             return url;
         }
 
-        private static bool IsUrl(string value)
+        private void SetUploading(bool uploading)
         {
-            return value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-                || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+            isUploading = uploading;
+            if (uploadButton != null) uploadButton.interactable = !uploading;
+            if (backgroundImageSelector != null) backgroundImageSelector.SetInteractable(!uploading);
         }
 
         private static string GetInputText(TMP_InputField input)
@@ -157,7 +155,7 @@ namespace UI
             if (titleInput != null) titleInput.text = string.Empty;
             if (categoryInput != null) categoryInput.text = string.Empty;
             if (priceInput != null) priceInput.text = string.Empty;
-            if (imagePathInput != null) imagePathInput.text = string.Empty;
+            if (backgroundImageSelector != null) backgroundImageSelector.Clear();
             if (contentInput != null) contentInput.text = string.Empty;
         }
 

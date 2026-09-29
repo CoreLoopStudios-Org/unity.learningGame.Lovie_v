@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Api.Models;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Api.Models
 {
@@ -43,6 +44,16 @@ namespace Api.Endpoints
             if (currentPassword != null) data["currentPassword"] = currentPassword;
             if (newPassword != null) data["newPassword"] = newPassword;
             return await client.PutAsync<bool>("/api/parent/profile", data);
+        }
+
+        // POST /api/parent/media/upload — multipart upload, returns the stored file URL.
+        public async Awaitable<string> UploadMediaAsync(byte[] fileData, string fileName, string mimeType = null)
+        {
+            var form = new WWWForm();
+            form.AddBinaryData("file", fileData, fileName, mimeType);
+
+            var response = await client.PostFormAsync<Dictionary<string, string>>("/api/parent/media/upload", form);
+            return response != null && response.ContainsKey("url") ? response["url"] : null;
         }
 
         public async Awaitable<ParentDashboard> GetDashboardAsync()
