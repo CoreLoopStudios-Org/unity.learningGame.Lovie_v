@@ -113,12 +113,12 @@ namespace UI
 
             if (profileImage != null)
             {
-                if (string.IsNullOrEmpty(profile.profileImageUrl))
+                if (string.IsNullOrEmpty(profile.profilePictureUrl))
                 {
                     profileImage.sprite = null;
                     return;
                 }
-                LoadImageAsync(profile.profileImageUrl);
+                LoadImageAsync(profile.profilePictureUrl);
             }
         }
 

@@ -461,19 +461,20 @@ Update request: same fields, all optional, plus `"isActive"`.
 
 ### 6.8 Admin Profile — `/api/admin/profile`
 
-> ⚠️ As of 2026-09-02 **no admin profile endpoints exist in the backend source** — requests return 404. Also missing from the backend: `POST /api/admin/media/upload`. Confirm with the backend team before wiring UI to these.
+> **Update 2026-09-29:** the endpoints exist on the dev API, but the deployed version has **no profile-picture field** — PUT silently drops `profilePictureUrl`/`profileImageUrl` and GET returns no picture property. A backend fix (branch `fix/admin-profile-picture`) adds `profilePictureUrl` to both DTOs, persisted in the User's `AdditionalData` JSON exactly like the parent profile (§5.8–5.9). Until that deploys, profile picture upload reports success but the picture is not saved. `POST /api/admin/media/upload` works on the dev API (verified 2026-09-29).
 
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|
 | GET | `/` | — | `AdminProfileDto` |
-| PUT | `/` | `{ "email"?, "fullName"?, "currentPassword"?, "newPassword"? }` | `true` |
+| PUT | `/` | `{ "email"?, "fullName"?, "profilePictureUrl"?, "currentPassword"?, "newPassword"? }` | `true` |
 
 `AdminProfileDto`:
 ```json
 {
   "id": "guid",
   "email": "admin@example.com",
-  "fullName": "Admin Name"
+  "fullName": "Admin Name",
+  "profilePictureUrl": "https://..."
 }
 ```
 

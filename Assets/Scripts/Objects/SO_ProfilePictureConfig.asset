@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c689e70e3d4768e4690cab148279288d, type: 3}
   m_Name: SO_ProfilePictureConfig
   m_EditorClassIdentifier: Assembly-CSharp::Media.ImageUploadConfigSO
-  _maxDimension: 1920
+  _outputWidth: 512
+  _outputHeight: 512
   _jpegQuality: 80
   _maxUploadSizeMegabytes: 5
-  _pickerTitle: Select story background
-  _uploadFileNamePrefix: story_background
+  _fallbackDecodeLimit: 4096
+  _pickerTitle: Select profile photo
+  _uploadFileNamePrefix: profile_picture
+  _previewVisibleSeconds: 3
   _previewAnimationDuration: 0.25
   _previewStartScale: 0.92

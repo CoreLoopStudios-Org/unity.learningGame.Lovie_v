@@ -25,8 +25,8 @@ namespace Api.Models
         public string thumbnailUrl;
     }
     
-    // phone/profileImageUrl are not in the backend AdminProfileDto yet —
-    // JsonUtility leaves them null until the backend adds them.
+    // phone is not in the backend AdminProfileDto yet —
+    // JsonUtility leaves it null until the backend adds it.
     [Serializable]
     public class AdminProfile
     {
@@ -34,7 +34,7 @@ namespace Api.Models
         public string email;
         public string fullName;
         public string phone;
-        public string profileImageUrl;
+        public string profilePictureUrl;
         public string createdAt;
     }
     
@@ -329,14 +329,14 @@ namespace Api.Endpoints
 
         // PUT /api/admin/profile — every field is optional; nulls are omitted so
         // only the supplied values are updated.
-        public async Awaitable<bool> UpdateProfileAsync(string email = null, string fullName = null, string currentPassword = null, string newPassword = null, string profileImageUrl = null)
+        public async Awaitable<bool> UpdateProfileAsync(string email = null, string fullName = null, string currentPassword = null, string newPassword = null, string profilePictureUrl = null)
         {
             var data = new Dictionary<string, string>();
             if (email != null) data["email"] = email;
             if (fullName != null) data["fullName"] = fullName;
             if (currentPassword != null) data["currentPassword"] = currentPassword;
             if (newPassword != null) data["newPassword"] = newPassword;
-            if (profileImageUrl != null) data["profileImageUrl"] = profileImageUrl;
+            if (profilePictureUrl != null) data["profilePictureUrl"] = profilePictureUrl;
             return await client.PutAsync<bool>("/api/admin/profile", data);
         }
 

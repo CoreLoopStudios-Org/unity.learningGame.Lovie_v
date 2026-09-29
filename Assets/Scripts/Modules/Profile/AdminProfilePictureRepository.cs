@@ -19,7 +19,7 @@ namespace Modules.Profile
             if (string.IsNullOrEmpty(url))
                 return false;
 
-            return await _adminApi.UpdateProfileAsync(profileImageUrl: url);
+            return await _adminApi.UpdateProfileAsync(profilePictureUrl: url);
         }
     }
 }
