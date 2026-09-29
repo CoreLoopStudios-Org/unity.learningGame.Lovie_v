@@ -22,6 +22,9 @@ namespace UI
         [SerializeField] private Button banButton;
         [SerializeField] private Button deleteButton;
 
+        [Header("Card Menu")]
+        [SerializeField] private AdminCardMenu cardMenu;
+
         [Header("Avatar")]
         [SerializeField] private Image bodyImage;
         [SerializeField] private Image hairImage;
@@ -81,11 +84,13 @@ namespace UI
         private void OnBanClicked()
         {
             if (currentChild != null) onBanAction?.Invoke(currentChild);
+            if (cardMenu != null) cardMenu.Close();
         }
 
         private void OnDeleteClicked()
         {
             if (currentChild != null) onDeleteAction?.Invoke(currentChild);
+            if (cardMenu != null) cardMenu.Close();
         }
 
         private static string ExtractLevel(string additionalData)

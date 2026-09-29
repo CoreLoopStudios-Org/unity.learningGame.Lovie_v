@@ -12,6 +12,9 @@ namespace UI
         [SerializeField] private UnityEngine.UI.Button banButton;
         [SerializeField] private UnityEngine.UI.Button deleteButton;
 
+        [Header("Card Menu")]
+        [SerializeField] private AdminCardMenu cardMenu;
+
         private UserSummary currentUser;
         private System.Action<UserSummary> onBanAction;
         private System.Action<UserSummary> onDeleteAction;
@@ -48,11 +51,13 @@ namespace UI
         private void OnBanClicked()
         {
             if (currentUser != null) onBanAction?.Invoke(currentUser);
+            if (cardMenu != null) cardMenu.Close();
         }
 
         private void OnDeleteClicked()
         {
             if (currentUser != null) onDeleteAction?.Invoke(currentUser);
+            if (cardMenu != null) cardMenu.Close();
         }
     }
 }

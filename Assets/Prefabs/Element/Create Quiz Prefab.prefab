@@ -110,10 +110,10 @@ RectTransform:
   - {fileID: 6768628515955262312}
   m_Father: {fileID: 8567160131230935310}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 181, y: -35}
-  m_SizeDelta: {x: 362, y: 70}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -37.4}
+  m_SizeDelta: {x: 356.7, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3670715965674611430
 MonoBehaviour:
@@ -307,6 +307,7 @@ MonoBehaviour:
   spawnAtMousePosition: 0
   parentTransform: {fileID: 0}
   destroyExisting: 1
+  animateSelfOnEnable: 0
 --- !u!1 &1577453215129649700
 GameObject:
   m_ObjectHideFlags: 0
