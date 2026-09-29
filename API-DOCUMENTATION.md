@@ -257,7 +257,7 @@ Response: `"guid"` (child id)
 ### 5.3 `GET /api/parent/children` — `ChildSummaryDto[]`
 
 ```json
-[{ "id": "guid", "fullName": "Kid One", "username": "kid1", "coins": 120, "loginStreak": 5, "lastActivityAt": "...", "password": "plaintextpassword" }]
+[{ "id": "guid", "fullName": "Kid One", "username": "kid1", "coins": 120, "loginStreak": 5, "lastActivityAt": "...", "avatarState": "{}", "password": "plaintextpassword" }]
 ```
 
 *(Note: the `password` field returns the child's password in plaintext so the parent can view it).*
@@ -372,7 +372,7 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 }
 ```
 
-> **Update 2026-09-28:** `avatarState` added to each child row (raw equipped-part JSON — same shape as `GET /api/child/profile`; BodyColor/Hair/Dress item IDs). Pending dev deploy.
+> **Note for Admin UI:** The admin dashboard UI will use the `id`, `fullName`, and `avatarState` directly from the `children` array to render the children list. No secondary API calls are required to fetch a child's avatar or full name.
 
 ### 6.3 Stories — `/api/admin/stories`
 
