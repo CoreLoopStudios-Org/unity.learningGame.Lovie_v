@@ -41,22 +41,23 @@ namespace Api
         {
             get 
             {
-                if (currentEnvironment == EnvironmentType.Auto)
-                {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    return RemoteDevUrl;
-#else
-                    return ProductionUrl;
-#endif
-                }
-
-                switch (currentEnvironment)
-                {
-                    case EnvironmentType.Local: return LocalDevUrl;
-                    case EnvironmentType.RemoteDev: return RemoteDevUrl;
-                    case EnvironmentType.Production: return ProductionUrl;
-                    default: return ProductionUrl;
-                }
+//                 if (currentEnvironment == EnvironmentType.Auto)
+//                 {
+// #if UNITY_EDITOR || DEVELOPMENT_BUILD
+//                     return RemoteDevUrl;
+// #else
+//                     return ProductionUrl;
+// #endif
+//                 }
+//
+//                 switch (currentEnvironment)
+//                 {
+//                     case EnvironmentType.Local: return LocalDevUrl;
+//                     case EnvironmentType.RemoteDev: return RemoteDevUrl;
+//                     case EnvironmentType.Production: return ProductionUrl;
+//                     default: return ProductionUrl;
+//                 }
+                return RemoteDevUrl;
             }
         }
 
