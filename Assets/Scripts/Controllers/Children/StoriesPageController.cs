@@ -21,6 +21,10 @@ namespace UI
         [Header("Feedback")]
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
 
+        [Header("Story Reading")]
+        [SerializeField] private GameObject bookReadingPanelPrefab;
+        [SerializeField] private Transform readingPanelParent;
+
         private readonly List<ChildStoryCard> spawnedCards = new();
         private int requestId;
 
@@ -112,8 +116,21 @@ namespace UI
 
         private void OnCardPlayClicked(ChildStoryCard card)
         {
-            // Story reading panel — handled later once the reading state store exists.
-            Debug.Log($"[StoriesPageController] Play clicked for \"{card.Story?.title}\" ({card.Story?.id}).");
+            Story story = card?.Story;
+            if (story == null) return;
+
+            if (bookReadingPanelPrefab == null)
+            {
+                Debug.LogWarning("[StoriesPageController] Book reading panel prefab not assigned.");
+                return;
+            }
+
+            Transform parent = readingPanelParent != null
+                ? readingPanelParent
+                : storiesContainer != null ? storiesContainer.root : transform;
+
+            GameObject panel = Instantiate(bookReadingPanelPrefab, parent);
+            panel.GetComponent<BookReadingPanelController>()?.Setup(story);
         }
 
         private void HandleSearchChanged(string text)
