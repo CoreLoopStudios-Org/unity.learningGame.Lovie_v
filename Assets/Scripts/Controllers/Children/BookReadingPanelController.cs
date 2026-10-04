@@ -5,7 +5,10 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Api;
+using Api.Endpoints;
 using Api.Models;
+using Newtonsoft.Json;
 
 namespace UI
 {
@@ -34,6 +37,8 @@ namespace UI
         private string[] pages = Array.Empty<string>();
         private int currentPage;
         private bool isTurningPage;
+        private bool completionRecorded;
+        private float readingStartTime;
 
         public Story Story { get; private set; }
 
@@ -69,6 +74,10 @@ namespace UI
             pages = BuildPages(ExtractContent(story?.contentPayload));
             currentPage = 0;
             isTurningPage = false;
+            readingStartTime = Time.unscaledTime;
+            completionRecorded = StoryProgressStore.IsStoryCompleted(
+                SessionManager.Instance != null ? SessionManager.Instance.ChildId : null,
+                story?.id);
 
             if (storyText != null)
             {
@@ -77,6 +86,13 @@ namespace UI
             }
 
             UpdateControls();
+
+            // A one-page story is fully revealed on open — no page turn will ever fire.
+            if (pages.Length == 1)
+            {
+                MarkStoryCompleted();
+            }
+
             _ = RevealFirstPageAsync();
         }
 
@@ -192,11 +208,51 @@ namespace UI
             }
 
             UpdatePageCountText();
+
+            // Reaching the last page counts as finishing the story.
+            if (currentPage >= pages.Length - 1)
+            {
+                MarkStoryCompleted();
+            }
+
             await FadeInTextAsync();
             if (this == null) return;
 
             isTurningPage = false;
             UpdateControls();
+        }
+
+        private void MarkStoryCompleted()
+        {
+            if (completionRecorded || Story == null || string.IsNullOrEmpty(Story.id)) return;
+            completionRecorded = true;
+
+            string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
+            StoryProgressStore.MarkStoryCompleted(childId, Story);
+
+            // "isComplete" rides in the payload — the DB has no completion column.
+            string payload = JsonConvert.SerializeObject(new
+            {
+                isComplete = true,
+                pagesRead = pages.Length,
+                timeSpent = Mathf.RoundToInt(Time.unscaledTime - readingStartTime)
+            });
+            _ = ReportStoryCompletionAsync(payload);
+        }
+
+        private async Awaitable ReportStoryCompletionAsync(string payload)
+        {
+            try
+            {
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
+                await new ChildApi(apiClient).LogStoryActivityAsync(Story.id, payload);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[BookReadingPanelController] Story completion log failed, queuing offline: {ex.Message}");
+                OfflineActivityQueue.Instance?.EnqueueActivity(Story.id, payload);
+            }
         }
 
         private async Awaitable WaitForPageSwapAsync()
