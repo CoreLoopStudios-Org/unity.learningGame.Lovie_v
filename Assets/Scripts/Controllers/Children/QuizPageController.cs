@@ -329,6 +329,14 @@ namespace UI
                 {
                     progressFillWidth = parent.rect.width;
                 }
+
+                // Grow from the left edge, not the center — move the pivot to the left
+                // edge and shift the position so the bar stays visually in place.
+                if (progressFillWidth > 0f && !Mathf.Approximately(progressFill.pivot.x, 0f))
+                {
+                    progressFill.anchoredPosition += new Vector2(-progressFill.pivot.x * progressFillWidth, 0f);
+                    progressFill.pivot = new Vector2(0f, progressFill.pivot.y);
+                }
             }
 
             if (progressFillWidth <= 0f) return;

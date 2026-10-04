@@ -24,10 +24,34 @@ namespace UI
         [SerializeField] private Image dressImage;
         [SerializeField] private AvatarPartDatabase avatarDatabase;
 
+        [Header("Logout")]
+        [SerializeField] private Button logoutButton;
+        [SerializeField] private string loginScene = "Login";
+
         [Header("Behaviour")]
         [SerializeField] private bool refreshOnEnable = true;
 
         private bool isRefreshing;
+
+        private void Awake()
+        {
+            if (logoutButton != null)
+                logoutButton.onClick.AddListener(OnLogoutClicked);
+        }
+
+        private void OnDestroy()
+        {
+            if (logoutButton != null)
+                logoutButton.onClick.RemoveListener(OnLogoutClicked);
+        }
+
+        private void OnLogoutClicked()
+        {
+            if (SessionManager.Instance != null)
+                SessionManager.Instance.ClearSession();
+
+            UnityEngine.SceneManagement.SceneManager.LoadScene(loginScene);
+        }
 
         private void OnEnable()
         {

@@ -79,9 +79,20 @@ namespace UI
                 SessionManager.Instance != null ? SessionManager.Instance.ChildId : null,
                 story?.id);
 
+            // Continue Reading: unfinished stories resume where the child left off.
+            if (!completionRecorded && story != null && pages.Length > 0)
+            {
+                StoryReadingRecord record = StoryProgressStore.GetLastReading(
+                    SessionManager.Instance != null ? SessionManager.Instance.ChildId : null);
+                if (record != null && record.storyId == story.id)
+                {
+                    currentPage = Mathf.Clamp(record.pagesRead - 1, 0, pages.Length - 1);
+                }
+            }
+
             if (storyText != null)
             {
-                storyText.text = pages.Length > 0 ? pages[0] : string.Empty;
+                storyText.text = pages.Length > 0 ? pages[currentPage] : string.Empty;
                 storyText.alpha = 0f;
             }
 
@@ -208,6 +219,7 @@ namespace UI
             }
 
             UpdatePageCountText();
+            SaveReadingProgress(currentPage + 1);
 
             // Reaching the last page counts as finishing the story.
             if (currentPage >= pages.Length - 1)
@@ -228,7 +240,7 @@ namespace UI
             completionRecorded = true;
 
             string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
-            StoryProgressStore.MarkStoryCompleted(childId, Story);
+            StoryProgressStore.MarkStoryCompleted(childId, Story, pages.Length);
 
             // "isComplete" rides in the payload — the DB has no completion column.
             string payload = JsonConvert.SerializeObject(new
@@ -238,6 +250,14 @@ namespace UI
                 timeSpent = Mathf.RoundToInt(Time.unscaledTime - readingStartTime)
             });
             _ = ReportStoryCompletionAsync(payload);
+        }
+
+        private void SaveReadingProgress(int pagesRead)
+        {
+            if (Story == null || string.IsNullOrEmpty(Story.id)) return;
+
+            string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
+            StoryProgressStore.SaveReadingProgress(childId, Story, pagesRead, pages.Length);
         }
 
         private async Awaitable ReportStoryCompletionAsync(string payload)

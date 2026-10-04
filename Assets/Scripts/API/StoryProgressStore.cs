@@ -6,24 +6,27 @@ using Api.Models;
 namespace Api
 {
     [Serializable]
-    public class CompletedStoryRecord
+    public class StoryReadingRecord
     {
         public string storyId;
         public string title;
-        public string completedAt;
+        public int pagesRead;
+        public int totalPages;
+        public bool isComplete;
+        public string updatedAt;
     }
 
     [Serializable]
     internal class StoryProgressData
     {
-        public List<CompletedStoryRecord> completedStories = new List<CompletedStoryRecord>();
+        public List<StoryReadingRecord> stories = new List<StoryReadingRecord>();
         public List<string> takenQuizIds = new List<string>();
     }
 
     /// <summary>
-    /// The backend has no story-completion field, so reading progress rides in a local
-    /// JSON document (PlayerPrefs, keyed per child) plus an "isComplete" key inside the
-    /// activity payload posted to /api/child/activities/story.
+    /// The backend has no reading-progress or story-completion fields, so they ride in a
+    /// local JSON document (PlayerPrefs, keyed per child) plus an "isComplete" key inside
+    /// the activity payload posted to /api/child/activities/story.
     /// </summary>
     public static class StoryProgressStore
     {
@@ -34,34 +37,64 @@ namespace Api
             return KeyPrefix + (string.IsNullOrEmpty(childId) ? "default" : childId);
         }
 
-        public static void MarkStoryCompleted(string childId, Story story)
+        public static void SaveReadingProgress(string childId, Story story, int pagesRead, int totalPages)
+        {
+            Upsert(childId, story, pagesRead, totalPages, false);
+        }
+
+        public static void MarkStoryCompleted(string childId, Story story, int totalPages)
+        {
+            Upsert(childId, story, totalPages, totalPages, true);
+        }
+
+        private static void Upsert(string childId, Story story, int pagesRead, int totalPages, bool isComplete)
         {
             if (story == null || string.IsNullOrEmpty(story.id)) return;
 
             StoryProgressData data = Load(childId);
-            if (data.completedStories.Exists(s => s.storyId == story.id)) return;
-
-            data.completedStories.Add(new CompletedStoryRecord
+            StoryReadingRecord record = data.stories.Find(s => s.storyId == story.id);
+            if (record == null)
             {
-                storyId = story.id,
-                title = story.title,
-                completedAt = DateTime.UtcNow.ToString("o")
-            });
+                record = new StoryReadingRecord { storyId = story.id, title = story.title };
+                data.stories.Add(record);
+            }
+
+            record.title = story.title;
+            record.totalPages = Mathf.Max(totalPages, record.totalPages);
+            record.pagesRead = record.isComplete
+                ? record.totalPages
+                : Mathf.Clamp(Mathf.Max(pagesRead, record.pagesRead), 0, record.totalPages);
+            record.isComplete = record.isComplete || isComplete;
+            record.updatedAt = DateTime.UtcNow.ToString("o");
             Save(childId, data);
+        }
+
+        // Most recently touched story, complete or not — the Continue Reading card.
+        public static StoryReadingRecord GetLastReading(string childId)
+        {
+            StoryReadingRecord latest = null;
+            foreach (StoryReadingRecord record in Load(childId).stories)
+            {
+                if (latest == null || string.CompareOrdinal(record.updatedAt, latest.updatedAt) > 0)
+                {
+                    latest = record;
+                }
+            }
+            return latest;
         }
 
         public static bool IsStoryCompleted(string childId, string storyId)
         {
             if (string.IsNullOrEmpty(storyId)) return false;
-            return Load(childId).completedStories.Exists(s => s.storyId == storyId);
+            return Load(childId).stories.Exists(s => s.storyId == storyId && s.isComplete);
         }
 
-        // Newest first — the quiz page serves the most recently finished story.
-        public static List<CompletedStoryRecord> GetCompletedStories(string childId)
+        // Completed stories newest first — the quiz page serves the most recent.
+        public static List<StoryReadingRecord> GetCompletedStories(string childId)
         {
-            List<CompletedStoryRecord> stories = Load(childId).completedStories;
-            stories.Sort((a, b) => string.CompareOrdinal(b.completedAt, a.completedAt));
-            return stories;
+            List<StoryReadingRecord> completed = Load(childId).stories.FindAll(s => s.isComplete);
+            completed.Sort((a, b) => string.CompareOrdinal(b.updatedAt, a.updatedAt));
+            return completed;
         }
 
         public static bool IsQuizTaken(string childId, string quizId)

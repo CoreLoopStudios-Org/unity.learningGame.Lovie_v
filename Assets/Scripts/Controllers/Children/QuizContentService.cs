@@ -44,10 +44,10 @@ namespace UI
             var childApi = new ChildApi(apiClient);
 
             string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
-            List<CompletedStoryRecord> completedStories = StoryProgressStore.GetCompletedStories(childId);
+            List<StoryReadingRecord> completedStories = StoryProgressStore.GetCompletedStories(childId);
             var takenQuizIds = new HashSet<string>(StoryProgressStore.GetTakenQuizIds(childId));
 
-            foreach (CompletedStoryRecord record in completedStories)
+            foreach (StoryReadingRecord record in completedStories)
             {
                 Quiz[] quizzes = await childApi.GetQuizzesAsync(record.storyId);
                 if (isCancelled != null && isCancelled()) return null;

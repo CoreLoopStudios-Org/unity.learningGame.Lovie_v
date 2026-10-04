@@ -25,8 +25,27 @@ namespace UI
         [SerializeField] private GameObject bookReadingPanelPrefab;
         [SerializeField] private Transform readingPanelParent;
 
+        [Header("Continue Reading")]
+        [SerializeField] private ContinueReadingCard continueReadingCard;
+
         private readonly List<ChildStoryCard> spawnedCards = new();
         private int requestId;
+
+        private void Awake()
+        {
+            if (continueReadingCard != null)
+            {
+                continueReadingCard.PlayClicked += HandleContinuePlayClicked;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (continueReadingCard != null)
+            {
+                continueReadingCard.PlayClicked -= HandleContinuePlayClicked;
+            }
+        }
 
         private void OnEnable()
         {
@@ -93,6 +112,7 @@ namespace UI
             }
 
             // Only free stories and stories already purchased with coins.
+            var visibleStories = new List<Story>();
             foreach (Story story in stories)
             {
                 if (story == null) continue;
@@ -102,7 +122,10 @@ namespace UI
                 card.Setup(story);
                 card.PlayClicked += OnCardPlayClicked;
                 spawnedCards.Add(card);
+                visibleStories.Add(story);
             }
+
+            UpdateContinueReadingCard(visibleStories);
 
             if (spawnedCards.Count == 0)
             {
@@ -114,9 +137,48 @@ namespace UI
             ApplySearchFilter(searchField != null ? searchField.text : string.Empty);
         }
 
+        // The story the child opened last; falls back to the first story of the list at 0%.
+        private void UpdateContinueReadingCard(List<Story> visibleStories)
+        {
+            if (continueReadingCard == null || visibleStories.Count == 0) return;
+
+            string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
+            StoryReadingRecord record = StoryProgressStore.GetLastReading(childId);
+
+            Story target = null;
+            float progress = 0f;
+
+            if (record != null)
+            {
+                target = visibleStories.Find(s => s.id == record.storyId);
+                if (target != null)
+                {
+                    progress = record.isComplete
+                        ? 1f
+                        : record.totalPages > 0 ? (float)record.pagesRead / record.totalPages : 0f;
+                }
+            }
+
+            if (target == null)
+            {
+                target = visibleStories[0];
+            }
+
+            continueReadingCard.Setup(target, progress);
+        }
+
+        private void HandleContinuePlayClicked()
+        {
+            SpawnReadingPanel(continueReadingCard != null ? continueReadingCard.Story : null);
+        }
+
         private void OnCardPlayClicked(ChildStoryCard card)
         {
-            Story story = card?.Story;
+            SpawnReadingPanel(card?.Story);
+        }
+
+        private void SpawnReadingPanel(Story story)
+        {
             if (story == null) return;
 
             if (bookReadingPanelPrefab == null)
