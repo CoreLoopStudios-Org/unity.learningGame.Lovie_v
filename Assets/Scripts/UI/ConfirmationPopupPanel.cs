@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace UI
 {
@@ -8,6 +9,7 @@ namespace UI
     {
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
+        [SerializeField] private TMP_Text contextText;
 
         private Action onConfirm;
 
@@ -26,6 +28,13 @@ namespace UI
         public void Setup(Action onConfirm)
         {
             this.onConfirm = onConfirm;
+        }
+
+        public void Setup(Action onConfirm, string context)
+        {
+            Setup(onConfirm);
+            if (contextText != null)
+                contextText.text = context;
         }
 
         private void OnConfirmClicked()

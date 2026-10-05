@@ -112,17 +112,13 @@ namespace UI
             }
 
             // Only free stories and stories already purchased with coins.
-            var visibleStories = new List<Story>();
-            foreach (Story story in stories)
+            var visibleStories = ContinueReading.FilterVisible(stories);
+            foreach (Story story in visibleStories)
             {
-                if (story == null) continue;
-                if (story.priceInCoins != 0 && !story.isUnlocked) continue;
-
                 ChildStoryCard card = Instantiate(storyCardPrefab, storiesContainer);
                 card.Setup(story);
                 card.PlayClicked += OnCardPlayClicked;
                 spawnedCards.Add(card);
-                visibleStories.Add(story);
             }
 
             UpdateContinueReadingCard(visibleStories);
@@ -140,31 +136,15 @@ namespace UI
         // The story the child opened last; falls back to the first story of the list at 0%.
         private void UpdateContinueReadingCard(List<Story> visibleStories)
         {
-            if (continueReadingCard == null || visibleStories.Count == 0) return;
+            if (continueReadingCard == null) return;
 
             string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
-            StoryReadingRecord record = StoryProgressStore.GetLastReading(childId);
+            var (target, progress) = ContinueReading.Select(visibleStories, childId);
 
-            Story target = null;
-            float progress = 0f;
-
-            if (record != null)
+            if (target != null)
             {
-                target = visibleStories.Find(s => s.id == record.storyId);
-                if (target != null)
-                {
-                    progress = record.isComplete
-                        ? 1f
-                        : record.totalPages > 0 ? (float)record.pagesRead / record.totalPages : 0f;
-                }
+                continueReadingCard.Setup(target, progress);
             }
-
-            if (target == null)
-            {
-                target = visibleStories[0];
-            }
-
-            continueReadingCard.Setup(target, progress);
         }
 
         private void HandleContinuePlayClicked()
@@ -181,18 +161,11 @@ namespace UI
         {
             if (story == null) return;
 
-            if (bookReadingPanelPrefab == null)
-            {
-                Debug.LogWarning("[StoriesPageController] Book reading panel prefab not assigned.");
-                return;
-            }
-
             Transform parent = readingPanelParent != null
                 ? readingPanelParent
                 : storiesContainer != null ? storiesContainer.root : transform;
 
-            GameObject panel = Instantiate(bookReadingPanelPrefab, parent);
-            panel.GetComponent<BookReadingPanelController>()?.Setup(story);
+            ContinueReading.SpawnReadingPanel(bookReadingPanelPrefab, story, parent);
         }
 
         private void HandleSearchChanged(string text)

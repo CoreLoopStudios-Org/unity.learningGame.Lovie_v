@@ -17,6 +17,41 @@ namespace UI
 
         public Story Story { get; private set; }
 
+        public event Action<StoreStoryCard> PurchaseClicked;
+
+        private Button purchaseButton;
+
+        // The store card prefab has no Button; the whole card is the tap target.
+        private void Awake()
+        {
+            purchaseButton = GetComponent<Button>();
+            if (purchaseButton == null)
+            {
+                purchaseButton = gameObject.AddComponent<Button>();
+                purchaseButton.transition = Selectable.Transition.None;
+            }
+
+            purchaseButton.onClick.AddListener(OnCardClicked);
+        }
+
+        private void OnDestroy()
+        {
+            if (purchaseButton != null)
+                purchaseButton.onClick.RemoveListener(OnCardClicked);
+        }
+
+        private void OnCardClicked()
+        {
+            if (Story == null) return;
+            PurchaseClicked?.Invoke(this);
+        }
+
+        public void SetPurchasing(bool purchasing)
+        {
+            if (purchaseButton != null)
+                purchaseButton.interactable = !purchasing;
+        }
+
         public void Setup(Story story)
         {
             Story = story;

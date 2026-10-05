@@ -3286,6 +3286,7 @@ GameObject:
   - component: {fileID: 6927624306889672477}
   - component: {fileID: 6922530011683181415}
   - component: {fileID: 3128483710008073348}
+  - component: {fileID: 6481608177368367860}
   m_Layer: 0
   m_Name: 250
   m_TagString: Untagged
@@ -3360,7 +3361,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 250
+  m_text: 00
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3e1e4c18c21e8fa43a68cb3fe2b6829f, type: 2}
   m_sharedMaterial: {fileID: 1608979947722608652, guid: 3e1e4c18c21e8fa43a68cb3fe2b6829f, type: 2}
@@ -3446,6 +3447,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 0
   m_VerticalFit: 2
+--- !u!114 &6481608177368367860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812675383858091751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6186a044f2f569478b66aabe54b57ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.CoinBalanceText
+  coinText: {fileID: 6922530011683181415}
+  prefix: 
 --- !u!1 &1874320087694509657
 GameObject:
   m_ObjectHideFlags: 0

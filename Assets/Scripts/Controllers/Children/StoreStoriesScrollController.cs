@@ -14,10 +14,15 @@ namespace UI
         [SerializeField] private Transform storiesContainer;
         [SerializeField] private StoreStoryCard storyCardPrefab;
 
+        [Header("Purchase")]
+        [SerializeField] private ConfirmationPopupPanel confirmationPopupPrefab;
+
         [Header("Feedback")]
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
 
         private readonly List<StoreStoryCard> spawnedCards = new();
+        private ConfirmationPopupPanel activePopup;
+        private bool isPurchasing;
         private int requestId;
 
         private void OnEnable()
@@ -79,6 +84,7 @@ namespace UI
 
                 StoreStoryCard card = Instantiate(storyCardPrefab, storiesContainer);
                 card.Setup(story);
+                card.PurchaseClicked += OnPurchaseClicked;
                 spawnedCards.Add(card);
             }
 
@@ -89,6 +95,82 @@ namespace UI
             }
 
             ClearStatus();
+        }
+
+        private void OnPurchaseClicked(StoreStoryCard card)
+        {
+            if (card == null || card.Story == null || isPurchasing) return;
+
+            if (confirmationPopupPrefab == null)
+            {
+                Debug.LogWarning("[StoreStoriesScrollController] Confirmation popup prefab not assigned — buying directly.", this);
+                _ = PurchaseStoryAsync(card);
+                return;
+            }
+
+            if (activePopup != null) Destroy(activePopup.gameObject);
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            activePopup = canvas != null
+                ? Instantiate(confirmationPopupPrefab, canvas.rootCanvas.transform)
+                : Instantiate(confirmationPopupPrefab);
+            activePopup.Setup(
+                () => _ = PurchaseStoryAsync(card),
+                $"Buy \"{card.Story.title}\" for {card.Story.priceInCoins} coins?");
+        }
+
+        private async Awaitable PurchaseStoryAsync(StoreStoryCard card)
+        {
+            if (isPurchasing || card == null || card.Story == null) return;
+
+            isPurchasing = true;
+            card.SetPurchasing(true);
+
+            try
+            {
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
+                var childApi = new ChildApi(apiClient);
+
+                bool success = await childApi.PurchaseStoryAsync(card.Story.id);
+
+                // Card may have been destroyed (list refreshed) while awaiting.
+                if (this == null) return;
+
+                if (success)
+                {
+                    spawnedCards.Remove(card);
+                    Destroy(card.gameObject);
+
+                    if (CoinWallet.Instance != null)
+                        _ = CoinWallet.Instance.RefreshAsync();
+
+                    ShowStatus($"\"{card.Story.title}\" unlocked! Find it on the Stories page.");
+                }
+                else
+                {
+                    ShowStatus("Purchase failed. Please try again.");
+                }
+            }
+            catch (ApiException ex) when (ex.responseCode == 400)
+            {
+                ShowStatus(string.IsNullOrWhiteSpace(ex.errorMessage)
+                    ? "Not enough coins or already owned."
+                    : ex.errorMessage);
+            }
+            catch (Exception ex)
+            {
+                if (this != null)
+                    ShowStatus($"Purchase failed: {ex.Message}");
+            }
+            finally
+            {
+                if (this != null)
+                    isPurchasing = false;
+
+                if (card != null)
+                    card.SetPurchasing(false);
+            }
         }
 
         private void ShowStatus(string message)
@@ -115,6 +197,7 @@ namespace UI
             {
                 if (card != null)
                 {
+                    card.PurchaseClicked -= OnPurchaseClicked;
                     Destroy(card.gameObject);
                 }
             }

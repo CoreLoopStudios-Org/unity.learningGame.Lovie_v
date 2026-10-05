@@ -163,16 +163,22 @@ namespace Api
             }
 
             string errorResponse = request.downloadHandler?.text ?? "{}";
+            string errorMessage = errorResponse;
 
+            // Error envelope has "status" as either a number or "Fail" (e.g. child purchase
+            // endpoint) — only the message is reliably parseable; the HTTP code stays authoritative.
             try
             {
                 var error = JsonConvert.DeserializeObject<ApiErrorResponse>(errorResponse);
-                throw new ApiException(error);
+                if (!string.IsNullOrEmpty(error?.message))
+                    errorMessage = error.message;
             }
             catch
             {
-                throw new ApiException((int)request.responseCode, errorResponse);
+                // Body wasn't the expected envelope — keep the raw text.
             }
+
+            throw new ApiException((int)request.responseCode, errorMessage);
         }
 
         private bool IsRetryableError(long responseCode)

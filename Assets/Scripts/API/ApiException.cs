@@ -13,18 +13,12 @@ namespace Api
             responseCode = code;
             errorMessage = message;
         }
-
-        public ApiException(ApiErrorResponse error) : base(error.message)
-        {
-            responseCode = error.status;
-            errorMessage = error.message;
-        }
     }
 
     [Serializable]
     public class ApiErrorResponse
     {
-        public int status;
+        public string status;
         public string message;
     }
 }
