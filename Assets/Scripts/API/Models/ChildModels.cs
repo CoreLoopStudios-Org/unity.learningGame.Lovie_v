@@ -23,6 +23,11 @@ namespace Api.Models
         public bool canClaimDailyReward;
         public string lastLoginDate;
         public string lastActivityAt;
+
+        // Coins awarded per day of the weekly streak cycle (index 0 = day 1).
+        // Null until the backend deploys it — fall back to the controller's inspector table.
+        public int[] dailyRewardCoins;
+
         public int storiesRead;
         public int quizzesTaken;
         public int gamesPlayed;

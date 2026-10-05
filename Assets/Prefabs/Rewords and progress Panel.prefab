@@ -1143,7 +1143,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Day 1
+  m_text: Day 2
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -4835,7 +4835,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 484, y: -25}
+  m_AnchoredPosition: {x: 484, y: -30}
   m_SizeDelta: {x: 968, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &512593365021118313
@@ -9952,6 +9952,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2409095727229657996}
   - component: {fileID: 6904832514919171826}
+  - component: {fileID: 2573989810808818140}
   m_Layer: 0
   m_Name: Daily Streaks
   m_TagString: Untagged
@@ -10000,6 +10001,30 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &2573989810808818140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2997066116033450604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 795804a637e23a3429af36f3ceeccd7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakController
+  dayViews:
+  - {fileID: 3273974592502816893}
+  - {fileID: 8378120059629603587}
+  - {fileID: 4684223376068214530}
+  - {fileID: 8630918711834093375}
+  - {fileID: 5533525779402176148}
+  - {fileID: 3045714565023980138}
+  - {fileID: 2008688917818523923}
+  fallbackDayCoins: 0a000000140000001e00000028000000320000004b00000064000000
+  resetsInText: {fileID: 8168625503858949560}
+  resetsTextPrefix: 'Resets in: '
+  timerRefreshSeconds: 30
 --- !u!1 &3000875086394522024
 GameObject:
   m_ObjectHideFlags: 0
@@ -10463,7 +10488,7 @@ GameObject:
   - component: {fileID: 1085540965180749508}
   - component: {fileID: 3714016275997626121}
   m_Layer: 0
-  m_Name: Day 4
+  m_Name: Day 7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10536,7 +10561,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Day 4
+  m_text: Day 7
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -10792,6 +10817,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4751109783300386316}
   - component: {fileID: 3249545444042491343}
+  - component: {fileID: 2008688917818523923}
   m_Layer: 0
   m_Name: Day 7
   m_TagString: Untagged
@@ -10841,6 +10867,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &2008688917818523923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3160841227492924421}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 2810457543678444002}
+  coinsText: {fileID: 5149643698185977151}
 --- !u!1 &3249067618972193384
 GameObject:
   m_ObjectHideFlags: 0
@@ -11028,7 +11068,7 @@ GameObject:
   - component: {fileID: 6683819833404603296}
   - component: {fileID: 315746874627976501}
   m_Layer: 0
-  m_Name: Day 4
+  m_Name: Day 5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11101,7 +11141,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Day 4
+  m_text: Day 5
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -12674,7 +12714,7 @@ GameObject:
   - component: {fileID: 1342586941789488650}
   - component: {fileID: 8022943971627747866}
   m_Layer: 0
-  m_Name: 75 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12747,7 +12787,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 75 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -12847,7 +12887,7 @@ GameObject:
   - component: {fileID: 5149643698185977151}
   - component: {fileID: 7114048266766129478}
   m_Layer: 0
-  m_Name: 125 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12920,7 +12960,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 125 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -14859,7 +14899,7 @@ GameObject:
   - component: {fileID: 2898714260120602198}
   - component: {fileID: 2049328245691769257}
   m_Layer: 0
-  m_Name: Day 4
+  m_Name: Day 6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14932,7 +14972,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Day 4
+  m_text: Day 6
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -15725,7 +15765,7 @@ GameObject:
   - component: {fileID: 668877903423996676}
   - component: {fileID: 763074924720519098}
   m_Layer: 0
-  m_Name: 125 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15798,7 +15838,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 125 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -16499,7 +16539,7 @@ GameObject:
   - component: {fileID: 6197534124607954449}
   - component: {fileID: 7991898690886000403}
   m_Layer: 0
-  m_Name: 125 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16572,7 +16612,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 125 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -19073,7 +19113,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
-  m_MinWidth: 207
+  m_MinWidth: 270
   m_MinHeight: 30
   m_PreferredWidth: 207
   m_PreferredHeight: 30
@@ -19138,9 +19178,9 @@ MonoBehaviour:
   m_fontSize: 24
   m_fontSizeBase: 24
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 15
+  m_fontSizeMax: 24
   m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
@@ -21404,6 +21444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8781266614495317445}
   - component: {fileID: 473143958772558732}
+  - component: {fileID: 8630918711834093375}
   m_Layer: 0
   m_Name: Day 4
   m_TagString: Untagged
@@ -21453,6 +21494,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &8630918711834093375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6342637885998540874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 4836228873298073185}
+  coinsText: {fileID: 5912070320331515013}
 --- !u!1 &6370995568875675180
 GameObject:
   m_ObjectHideFlags: 0
@@ -21640,7 +21695,7 @@ GameObject:
   - component: {fileID: 5188642759016688893}
   - component: {fileID: 434976863955487978}
   m_Layer: 0
-  m_Name: 50 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21713,7 +21768,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 50 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -27652,6 +27707,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7354860160037137999}
   - component: {fileID: 1788064357233700156}
+  - component: {fileID: 3045714565023980138}
   m_Layer: 0
   m_Name: Day 6
   m_TagString: Untagged
@@ -27701,6 +27757,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3045714565023980138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8172995441873188583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 4294540873879547404}
+  coinsText: {fileID: 668877903423996676}
 --- !u!1 &8182284330452460931
 GameObject:
   m_ObjectHideFlags: 0
@@ -28700,6 +28770,7 @@ GameObject:
   m_Component:
   - component: {fileID: 544880877755017163}
   - component: {fileID: 8794055882366553743}
+  - component: {fileID: 4684223376068214530}
   m_Layer: 0
   m_Name: Day 3
   m_TagString: Untagged
@@ -28749,6 +28820,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4684223376068214530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8475366589470174552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 5405285472289209226}
+  coinsText: {fileID: 1486206752437113007}
 --- !u!1 &8501719690168644936
 GameObject:
   m_ObjectHideFlags: 0
@@ -29716,6 +29801,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2036503899576723085}
   - component: {fileID: 7156722180488726211}
+  - component: {fileID: 8378120059629603587}
   m_Layer: 0
   m_Name: Day 2
   m_TagString: Untagged
@@ -29765,6 +29851,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &8378120059629603587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8733862403619122354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 8230860263297001368}
+  coinsText: {fileID: 1342586941789488650}
 --- !u!1 &8746248205150543962
 GameObject:
   m_ObjectHideFlags: 0
@@ -29775,6 +29875,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8285984156129991582}
   - component: {fileID: 2191412709265551896}
+  - component: {fileID: 3273974592502816893}
   m_Layer: 0
   m_Name: Day 1
   m_TagString: Untagged
@@ -29824,6 +29925,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3273974592502816893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8746248205150543962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 5281096568873592169}
+  coinsText: {fileID: 5188642759016688893}
 --- !u!1 &8778143827329397969
 GameObject:
   m_ObjectHideFlags: 0
@@ -30241,7 +30356,7 @@ GameObject:
   - component: {fileID: 5912070320331515013}
   - component: {fileID: 5130786217372446207}
   m_Layer: 0
-  m_Name: 125 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30314,7 +30429,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 125 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -30573,7 +30688,7 @@ GameObject:
   - component: {fileID: 1486206752437113007}
   - component: {fileID: 3987793192626479713}
   m_Layer: 0
-  m_Name: 100 Coins
+  m_Name: 10 Coins
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30646,7 +30761,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 100 Coins
+  m_text: 10 Coins
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
   m_sharedMaterial: {fileID: 425681724767998276, guid: f514e4fc3154b064482ffe597e8a7ffc, type: 2}
@@ -31069,6 +31184,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8215142515662785725}
   - component: {fileID: 7030122466248815959}
+  - component: {fileID: 5533525779402176148}
   m_Layer: 0
   m_Name: Day 5
   m_TagString: Untagged
@@ -31118,6 +31234,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &5533525779402176148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9067920572853756868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b1e48d73497f49a7dbaab8dabacb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.DailyStreakDayView
+  tickImage: {fileID: 1564169937851875819}
+  coinsText: {fileID: 6197534124607954449}
 --- !u!1 &9132959469844740137
 GameObject:
   m_ObjectHideFlags: 0
