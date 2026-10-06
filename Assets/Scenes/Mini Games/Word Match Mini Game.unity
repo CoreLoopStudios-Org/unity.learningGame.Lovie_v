@@ -615,6 +615,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2330450699373950412, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+      propertyPath: m_text
+      value: 00
+      objectReference: {fileID: 0}
     - target: {fileID: 7345565238585346401, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
       propertyPath: m_Name
       value: Word Match
@@ -638,6 +642,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3089284906043629822, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3852278479573964515}
+    - targetCorrespondingSourceObject: {fileID: 6330707963602935916, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3852278479573964518}
   m_SourcePrefab: {fileID: 100100000, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
 --- !u!224 &3852278479573964513 stripped
 RectTransform:
@@ -661,6 +668,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c61eb83ebc955184983c9a71b61b893a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.MiniGameBackButton
+--- !u!1 &3852278479573964516 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6330707963602935916, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+  m_PrefabInstance: {fileID: 3852278479573964512}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3852278479573964517 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2330450699373950412, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+  m_PrefabInstance: {fileID: 3852278479573964512}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3852278479573964516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &3852278479573964518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3852278479573964516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6186a044f2f569478b66aabe54b57ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.CoinBalanceText
+  coinText: {fileID: 3852278479573964517}
+  prefix: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

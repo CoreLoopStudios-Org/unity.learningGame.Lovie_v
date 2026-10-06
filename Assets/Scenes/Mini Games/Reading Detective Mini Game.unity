@@ -1286,6 +1286,36 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &895642258 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6330707963602935916, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+  m_PrefabInstance: {fileID: 3852278479573964512}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &895642259 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2330450699373950412, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+  m_PrefabInstance: {fileID: 3852278479573964512}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895642258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &895642260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 895642258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6186a044f2f569478b66aabe54b57ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.CoinBalanceText
+  coinText: {fileID: 895642259}
+  prefix: 
 --- !u!1 &1230298080
 GameObject:
   m_ObjectHideFlags: 0
@@ -2998,6 +3028,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2330450699373950412, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+      propertyPath: m_text
+      value: 00
+      objectReference: {fileID: 0}
     - target: {fileID: 3888070889598163196, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
       propertyPath: m_Name
       value: NextButton
@@ -3220,6 +3254,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3089284906043629822, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3852278479573964517}
+    - targetCorrespondingSourceObject: {fileID: 6330707963602935916, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 895642260}
   m_SourcePrefab: {fileID: 100100000, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
 --- !u!224 &3852278479573964513 stripped
 RectTransform:
