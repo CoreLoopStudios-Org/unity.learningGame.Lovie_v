@@ -146,6 +146,21 @@ Response: `true`
 
 Guarded per calendar day (login may have already claimed it — then `alreadyClaimed: true, coinsAwarded: 0`).
 
+### 4.4.1 `POST /api/child/rewards/claim` — `int` (New Total Coins)
+
+Mission-reward claim from the Unity Rewards panel. **Implemented 2026-10-06** (`feat/reward-claim` in `api.learninggame.lovie_v`): credits coins, records `ChildRewardClaim` + `RewardClaim` activity, returns new total.
+
+Request:
+```json
+{ "rewardId": "play_3_games", "coinsAwarded": 25, "dayKey": null, "isDaily": false }
+```
+
+- `rewardId` — client catalog id (free-form string, max ~100 chars).
+- `coinsAwarded` — amount to credit. Clamp to a sane range (e.g. `1..1000`) server-side.
+- `dayKey` — `"yyyyMMdd"` for daily-reset rewards, `null` for one-time rewards.
+
+Behavior: adds `coinsAwarded` to the child's balance and returns the new total. Uniqueness — unique index on `(ChildId, RewardId, DayKey)` (`dayKey` stored `""` for one-time): one-time claims are permanent; daily claims once per `dayKey`. Returns `400 Bad Request` if the claim was already processed — the Unity client treats that as "already claimed" and resyncs the balance from `GET /api/child/stats`.
+
 ### 4.5 `GET /api/child/stories` — `StoryDto[]` (Published only)
 
 `StoryDto`:

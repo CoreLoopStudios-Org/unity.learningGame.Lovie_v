@@ -33,6 +33,15 @@ namespace Api.Endpoints
             return await client.PostAsync<DailyRewardResult>("/api/child/daily-reward", new { });
         }
 
+        // Awards mission-reward coins. Server-side authority: returns the child's new total
+        // coin balance. 400 means this rewardId/dayKey was already claimed — treat as success
+        // and resync the balance from /api/child/stats.
+        public async Awaitable<int> ClaimRewardAsync(string rewardId, int coinsAwarded, string dayKey, bool isDaily)
+        {
+            var data = new { rewardId, coinsAwarded, dayKey, isDaily };
+            return await client.PostAsync<int>("/api/child/rewards/claim", data);
+        }
+
         public async Awaitable<Story[]> GetStoriesAsync()
         {
             return await client.GetAsync<Story[]>("/api/child/stories");

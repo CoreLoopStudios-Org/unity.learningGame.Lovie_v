@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Api;
+using Api.Endpoints;
 
 namespace UI
 {
@@ -76,9 +77,47 @@ namespace UI
 
             RewardProgressStore.MarkClaimed(definition.id, definition.resetType);
 
+            // Instant UI grant; the backend call then reconciles the authoritative total.
             if (CoinWallet.Instance != null)
             {
                 CoinWallet.Instance.UpdateBalance(CoinWallet.Instance.Balance + definition.coinReward);
+            }
+
+            SyncClaimToBackendAsync(definition);
+        }
+
+        private async void SyncClaimToBackendAsync(RewardDefinition definition)
+        {
+            try
+            {
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
+                var childApi = new ChildApi(apiClient);
+
+                bool isDaily = definition.resetType == RewardResetType.Daily;
+                string dayKey = isDaily
+                    ? System.DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)
+                    : null;
+
+                int totalCoins = await childApi.ClaimRewardAsync(definition.id, definition.coinReward, dayKey, isDaily);
+                if (CoinWallet.Instance != null)
+                {
+                    CoinWallet.Instance.UpdateBalance(totalCoins);
+                }
+            }
+            catch (ApiException ex)
+            {
+                // Already claimed server-side (e.g. local claim record lost) — the server
+                // did not award coins, so resync the authoritative balance.
+                Debug.LogWarning($"[RewardMissionsController] Reward claim rejected: {ex.Message}");
+                if (CoinWallet.Instance != null)
+                {
+                    await CoinWallet.Instance.RefreshAsync();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[RewardMissionsController] Reward claim sync failed: {ex.Message}");
             }
         }
 
