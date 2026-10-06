@@ -8,12 +8,6 @@ using Api.Models;
 
 namespace UI
 {
-    /// <summary>
-    /// Daily Streaks section of the Rewards panel: 7 day items with tick marks and
-    /// per-day coin amounts, plus the countdown to the next streak reset.
-    /// Display only — the reward is claimed automatically at child login and lands
-    /// in the CoinWallet there.
-    /// </summary>
     public class DailyStreakController : MonoBehaviour
     {
         [Header("Day Items")]

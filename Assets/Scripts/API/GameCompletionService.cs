@@ -236,6 +236,9 @@ namespace Api
                 return;
             }
 
+            // Mission trigger — id must match a Reward Catalog entry ("play a game" reward).
+            RewardProgressStore.ReportProgress("play_game");
+
             EnsureCanvasSetup();
             EnsurePanelInstantiated();
             InitializeDependencies();

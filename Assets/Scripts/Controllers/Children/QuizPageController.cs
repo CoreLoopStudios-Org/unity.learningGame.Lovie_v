@@ -10,12 +10,6 @@ using Api.Models;
 
 namespace UI
 {
-    /// <summary>
-    /// Quiz page flow: Default Panel (Next disabled) until the child finishes a story,
-    /// then that story's quiz questions one by one. Correct answers enable Next, wrong
-    /// ones flash red and reset; finishing shows the animation panel and logs the reward.
-    /// Option visuals live on QuizOptionView, content loading on QuizContentService.
-    /// </summary>
     public class QuizPageController : MonoBehaviour
     {
         [Header("Panels")]
@@ -240,6 +234,10 @@ namespace UI
             // The last question of this quiz was just answered — record + reward it.
             string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
             StoryProgressStore.MarkQuizTaken(childId, group.quizId);
+
+            // Mission trigger — id must match a Reward Catalog entry ("complete quizzes" reward).
+            RewardProgressStore.ReportProgress("quiz_complete");
+
             _ = ReportQuizCompletionAsync(group);
         }
 
