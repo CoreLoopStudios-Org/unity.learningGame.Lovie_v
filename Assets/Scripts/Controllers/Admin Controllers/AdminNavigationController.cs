@@ -41,10 +41,17 @@ namespace UI
         private AdminPageType currentPage = AdminPageType.Home;
         private bool isTransitioning = false;
 
+        // Set before loading the menu scene (e.g. MiniGameNavigator returning from a
+        // minigame) — consumed once by Start, then cleared. Null = open on Home.
+        public static AdminPageType? PendingPage;
+
         private void Start()
         {
             InitializeNavigation();
-            ShowPage(AdminPageType.Home, false);
+
+            AdminPageType initialPage = PendingPage ?? AdminPageType.Home;
+            PendingPage = null;
+            ShowPage(initialPage, false);
         }
 
         private void InitializeNavigation()

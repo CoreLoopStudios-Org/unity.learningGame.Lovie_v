@@ -52,13 +52,24 @@ namespace Api
             return KeyPrefix + (string.IsNullOrEmpty(childId) ? "default" : childId);
         }
 
-        public static void ReportProgress(string rewardId, int amount = 1, RewardResetType type = RewardResetType.None)
+        // Progress is written to the base key AND today's daily bucket, so a trigger
+        // never needs to know the reset type of the catalog entry consuming it:
+        // one-time cards read the base key, daily cards read the day bucket.
+        public static void ReportProgress(string rewardId, int amount = 1)
         {
             if (string.IsNullOrEmpty(rewardId) || amount == 0) return;
 
             string childId = CurrentChildId();
             RewardProgressData data = Load(childId);
-            string key = ProgressKey(rewardId, type);
+            AddProgress(data, rewardId, amount);
+            AddProgress(data, $"{rewardId}:{TodayKey()}", amount);
+            Save(childId, data);
+
+            OnProgressChanged?.Invoke(rewardId);
+        }
+
+        private static void AddProgress(RewardProgressData data, string key, int amount)
+        {
             RewardRecord record = data.progress.Find(r => r.key == key);
             if (record == null)
             {
@@ -67,9 +78,6 @@ namespace Api
             }
 
             record.progress += amount;
-            Save(childId, data);
-
-            OnProgressChanged?.Invoke(rewardId);
         }
 
         public static int GetProgress(string rewardId, RewardResetType type = RewardResetType.None)

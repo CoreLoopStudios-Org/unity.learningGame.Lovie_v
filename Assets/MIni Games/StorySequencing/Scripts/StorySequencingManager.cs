@@ -71,6 +71,23 @@ namespace Modules.Games.StorySequencing
             completionReporter.SetGameId("story_sequencing");
 
             LoadAndDisplayStory();
+
+            // The scene's CompleteBtn OnClick target is dangling, so wire the handler here.
+            if (_checkAnswerButton != null)
+            {
+                _checkAnswerButton.onClick.AddListener(CheckAnswer);
+            }
+
+            // No Next button exists in the scene to reach the sequencing panel — spawn
+            // one on the reading panel, or jump straight there if it's missing.
+            if (_readingPanel != null)
+            {
+                CreateNextButton(_readingPanel.transform);
+            }
+            else
+            {
+                ShowSequencingPanel();
+            }
         }
 
         private void OnDestroy()
@@ -198,6 +215,40 @@ namespace Modules.Games.StorySequencing
                 int swapIndex = Random.Range(0, i + 1);
                 (events[i], events[swapIndex]) = (events[swapIndex], events[i]);
             }
+        }
+
+        // Interim stand-in for the designed Next button (none exists in the scene):
+        // purple pill at the bottom of the reading panel, styled after the app palette.
+        private void CreateNextButton(Transform parent)
+        {
+            GameObject buttonObject = new GameObject("NextBtn", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+
+            RectTransform rect = (RectTransform)buttonObject.transform;
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(380f, 120f);
+            rect.anchoredPosition = new Vector2(0f, 60f);
+
+            buttonObject.GetComponent<Image>().color = new Color(0.608f, 0.365f, 0.898f, 1f);
+
+            GameObject labelObject = new GameObject("Label", typeof(RectTransform));
+            labelObject.transform.SetParent(buttonObject.transform, false);
+
+            TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
+            label.text = "Next";
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 52;
+            label.color = Color.white;
+            label.raycastTarget = false;
+
+            RectTransform labelRect = (RectTransform)labelObject.transform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.sizeDelta = Vector2.zero;
+
+            buttonObject.GetComponent<Button>().onClick.AddListener(ShowSequencingPanel);
         }
 
         private void UnsubscribeFromSpawnedCards()

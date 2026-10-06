@@ -242,6 +242,9 @@ namespace UI
             string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
             StoryProgressStore.MarkStoryCompleted(childId, Story, pages.Length);
 
+            // Mission trigger — id must match a Reward Catalog entry ("read stories" reward).
+            RewardProgressStore.ReportProgress("story_complete");
+
             // "isComplete" rides in the payload — the DB has no completion column.
             string payload = JsonConvert.SerializeObject(new
             {

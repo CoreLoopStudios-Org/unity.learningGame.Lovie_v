@@ -655,6 +655,7 @@ MonoBehaviour:
   _audioSource: {fileID: 1214771055}
   _playAudioButton: {fileID: 269504384}
   _completionPanel: {fileID: 0}
+  completionReporter: {fileID: 0}
 --- !u!4 &1214771054
 Transform:
   m_ObjectHideFlags: 0
@@ -1527,6 +1528,7 @@ GameObject:
   - component: {fileID: 1708152302681759857}
   - component: {fileID: 6454776506048100745}
   - component: {fileID: 9013663554694637327}
+  - component: {fileID: 9013663554694637328}
   m_Layer: 0
   m_Name: Back Button
   m_TagString: Untagged
@@ -3983,6 +3985,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &9013663554694637328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710250282973626010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c61eb83ebc955184983c9a71b61b893a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MiniGameBackButton
 --- !u!114 &9070442587770026734
 MonoBehaviour:
   m_ObjectHideFlags: 0

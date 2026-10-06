@@ -105,6 +105,10 @@ public class GameManager : MonoBehaviour
             AudioManager.Instance.OnWordAudioStarted += HandleWordAudioStarted;
             AudioManager.Instance.OnWordAudioFinished += HandleWordAudioFinished;
         }
+
+        // No start button exists in the scene, so the round begins on load instead of
+        // waiting in Idle forever.
+        StartRound();
     }
 
     private void OnDestroy()

@@ -119,6 +119,23 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &937047869 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3089284906043629822, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+  m_PrefabInstance: {fileID: 3852278479573964512}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &937047870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937047869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c61eb83ebc955184983c9a71b61b893a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MiniGameBackButton
 --- !u!1 &1268265858
 GameObject:
   m_ObjectHideFlags: 0
@@ -815,6 +832,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1280731193543314468, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3852278479573964522}
+    - targetCorrespondingSourceObject: {fileID: 3089284906043629822, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 937047870}
   m_SourcePrefab: {fileID: 100100000, guid: e523e4cf228c8034e82fde27f112cde5, type: 3}
 --- !u!224 &3852278479573964513 stripped
 RectTransform:
@@ -896,6 +916,7 @@ MonoBehaviour:
   timeUpDisplayDuration: 2
   timeUpRestartButton: {fileID: 1846687688}
   timeUpCountdownText: {fileID: 1846687689}
+  completionReporter: {fileID: 0}
   lineColor: {r: 0.6117647, g: 0.3647059, b: 0.8941177, a: 1}
   correctColor: {r: 0, g: 1, b: 0, a: 1}
   incorrectColor: {r: 1, g: 0, b: 0, a: 1}

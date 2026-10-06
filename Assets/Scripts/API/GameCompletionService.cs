@@ -236,8 +236,14 @@ namespace Api
                 return;
             }
 
-            // Mission trigger — id must match a Reward Catalog entry ("play a game" reward).
+            // Mission triggers — ids must match Reward Catalog entries. "play_game"
+            // counts any finished game; the specific GameId (word_match, word_listen,
+            // story_quest, ...) lets the catalog target single games.
             RewardProgressStore.ReportProgress("play_game");
+            if (!string.IsNullOrEmpty(result.GameId))
+            {
+                RewardProgressStore.ReportProgress(result.GameId);
+            }
 
             EnsureCanvasSetup();
             EnsurePanelInstantiated();

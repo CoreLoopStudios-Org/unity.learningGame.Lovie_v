@@ -52,8 +52,8 @@ namespace UI
         public void LoadGame(MiniGame game)
         {
             SetLastPlayed(game);
-            string sceneName = GetSceneName(game);
-            SceneManager.LoadScene(sceneName);
+            RequestGamesPageOnLoad();
+            SceneManager.LoadScene(GetSceneName(game));
         }
 
         public void LoadConfiguredGame()
@@ -63,18 +63,35 @@ namespace UI
 
         public void ReturnToMainMenu()
         {
-            SceneManager.LoadScene(MainMenuScene);
+            BackToMenu();
         }
 
         public static void Load(MiniGame game)
         {
             SetLastPlayed(game);
+            RequestGamesPageOnLoad();
             SceneManager.LoadScene(GetSceneName(game));
         }
 
         public static void BackToMenu()
         {
+            // Back tapped after finishing but before Continue — don't let the
+            // DontDestroyOnLoad completion overlay persist into the menu.
+            var completion = FindFirstObjectByType<Api.GameCompletionService>();
+            if (completion != null)
+            {
+                completion.HideCompletionPanel();
+            }
+
+            RequestGamesPageOnLoad();
             SceneManager.LoadScene(MainMenuScene);
+        }
+
+        // The menu always opens on Home otherwise; every minigame exit should land
+        // back on the Games page.
+        private static void RequestGamesPageOnLoad()
+        {
+            AdminNavigationController.PendingPage = AdminPageType.Games;
         }
 
         public static void SetLastPlayed(MiniGame game)
@@ -98,12 +115,15 @@ namespace UI
                 MiniGame.StoryQuest => StoryQuestScene,
                 MiniGame.ReadingDetective => ReadingDetectiveScene,
                 MiniGame.StorySequencing => StorySequencingScene,
-                MiniGame.WordWizard => WordWizardScene,
+                // The two scene files contain each other's managers (the Word Wizard
+                // scene runs the Word-Listen game and vice versa), so the card routes
+                // are crossed until the scenes themselves are fixed.
+                MiniGame.WordWizard => ListenWordScene,
                 MiniGame.PrefixSuffix => PrefixSuffixScene,
                 MiniGame.RhymeTime => RhymeTimeScene,
                 MiniGame.WordMatch => WordMatchScene,
                 MiniGame.SentenceBuilder => SentenceBuilderScene,
-                MiniGame.ListenWord => ListenWordScene,
+                MiniGame.ListenWord => WordWizardScene,
                 MiniGame.SightWordPop => SightWordPopScene,
                 _ => MainMenuScene
             };
