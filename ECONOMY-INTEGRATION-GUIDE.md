@@ -169,3 +169,44 @@ private async Task SendReceiptToBackendAsync(string storeProductId, string trans
 }
 ```
 
+---
+
+## 5. Direct Coin Addition (Bypassing Server Logic)
+If you need to bypass all server-side economy rules (for example, rewarding game completion without server-side validation), you can explicitly add a positive number of coins to the child's balance using the `profile/add-coins` endpoint.
+
+### Step 5A: Define the Request Model
+```csharp
+[System.Serializable]
+public class AddCoinsRequest
+{
+    public int coins;
+}
+```
+
+### Step 5B: Call the API
+```csharp
+public async Task AddCoinsDirectlyAsync(int coinsToAdd)
+{
+    var requestData = new AddCoinsRequest { coins = coinsToAdd };
+
+    try
+    {
+        string url = $"{API_BASE_URL}/api/child/profile/add-coins";
+        
+        // Backend returns an int representing the NEW total coin balance
+        int newTotalCoins = await ApiClient.PostAsync<int>(url, requestData);
+        
+        // Update the UI Header
+        ChildStore.SetTotalCoins(newTotalCoins);
+        Debug.Log($"Successfully added {coinsToAdd} coins. New total: {newTotalCoins}");
+    }
+    catch (ApiException ex)
+    {
+        if (ex.StatusCode == 400)
+        {
+            Debug.LogError("Server rejected the request. Ensure coins is a positive number.");
+        }
+    }
+}
+```
+*Note: This endpoint accepts any positive value and provides no server-side verification against double-claims or spoofed amounts.*
