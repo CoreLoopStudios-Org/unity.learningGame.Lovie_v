@@ -31,7 +31,7 @@ namespace Api
         [SerializeField] private string mainMenuSceneName = "Main Game/Children/Main Menu";
 
         [Header("Rewards")]
-        [Tooltip("Coins granted per completed game via /api/child/profile/add-coins.")]
+        [Tooltip("Fallback coins granted per completed game when the game was not launched via a games-page card (editor direct scene entry). Normal play awards the game's MiniGameInfo.Coins via /api/child/profile/add-coins.")]
         [SerializeField] private int coinsPerCompletion = 25;
 
         [Header("UI References (auto-assigned from prefab)")]
@@ -258,36 +258,46 @@ namespace Api
 
             ActivityLogged response = null;
             bool activityLogged = false;
+            int coinReward = ResolveCompletionCoins();
+
+            // The backend awards exactly the payload `coins` value (the game's
+            // MiniGameInfo amount, 100/day cap across games) and returns the
+            // authoritative balance in the response.
+            string payloadJson = JsonConvert.SerializeObject(new
+            {
+                gameId = result.GameId,
+                score = result.Score,
+                correctCount = result.CorrectCount,
+                totalCount = result.TotalCount,
+                durationSeconds = result.DurationSeconds,
+                coins = coinReward
+            });
 
             try
             {
-                var payloadData = new
-                {
-                    gameId = result.GameId,
-                    score = result.Score,
-                    correctCount = result.CorrectCount,
-                    totalCount = result.TotalCount,
-                    durationSeconds = result.DurationSeconds
-                };
-
-                string payloadJson = JsonConvert.SerializeObject(payloadData);
-
                 if (childApi != null)
                 {
                     response = await childApi.LogGameActivityAsync(payloadJson);
                     activityLogged = true;
 
-                    // Award the completion coins directly — the activity log does not
-                    // grant anything server-side (ECONOMY-INTEGRATION-GUIDE §5).
-                    int newTotalCoins = await childApi.AddCoinsAsync(coinsPerCompletion);
-                    CoinWallet.Instance?.UpdateBalance(newTotalCoins);
+                    if (response != null && response.totalCoins > 0)
+                    {
+                        CoinWallet.Instance?.UpdateBalance(response.totalCoins);
+                    }
+                    else if (CoinWallet.Instance != null)
+                    {
+                        await CoinWallet.Instance.RefreshAsync();
+                    }
                 }
                 else if (CoinWallet.Instance != null)
                 {
                     await CoinWallet.Instance.RefreshAsync();
                 }
 
-                ShowCompletionPanel(result, coinsPerCompletion);
+                // coinsEarned reflects the server's actual award (0 once the daily cap
+                // hits) — show the truth, not the requested amount.
+                int earned = response != null ? response.coinsEarned : coinReward;
+                ShowCompletionPanel(result, earned);
                 OnCompletionDisplayed?.Invoke(result, response);
             }
             catch (ApiException ex)
@@ -295,33 +305,31 @@ namespace Api
                 Debug.LogWarning($"[GameCompletionService] API warning: {ex.Message}");
                 if (!activityLogged)
                 {
-                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
-                        gameId = result.GameId,
-                        score = result.Score,
-                        correctCount = result.CorrectCount,
-                        totalCount = result.TotalCount,
-                        durationSeconds = result.DurationSeconds
-                    }));
+                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", payloadJson);
                 }
                 await RefreshWalletAfterFailedAwardAsync();
-                ShowCompletionPanel(result, coinsPerCompletion);
+                ShowCompletionPanel(result, coinReward);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GameCompletionService] Error reporting completion: {ex.Message}");
                 if (!activityLogged)
                 {
-                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
-                        gameId = result.GameId,
-                        score = result.Score,
-                        correctCount = result.CorrectCount,
-                        totalCount = result.TotalCount,
-                        durationSeconds = result.DurationSeconds
-                    }));
+                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", payloadJson);
                 }
                 await RefreshWalletAfterFailedAwardAsync();
-                ShowCompletionPanel(result, coinsPerCompletion);
+                ShowCompletionPanel(result, coinReward);
             }
+        }
+
+        // The reward is defined per game on its MiniGameInfo SO (shown on the games-page
+        // card) and stashed in the navigator at launch; -1 means the scene was entered
+        // without a card, so fall back to the serialized default.
+        private int ResolveCompletionCoins()
+        {
+            return UI.MiniGameNavigator.LastPlayedCoins >= 0
+                ? UI.MiniGameNavigator.LastPlayedCoins
+                : coinsPerCompletion;
         }
 
         // The coins were not credited server-side, so pull the authoritative balance

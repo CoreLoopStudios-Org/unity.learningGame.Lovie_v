@@ -6,6 +6,7 @@ using TMPro;
 using Newtonsoft.Json;
 using Api;
 using Api.Endpoints;
+using Api.Models;
 
 namespace UI
 {
@@ -269,13 +270,19 @@ namespace UI
 
             try
             {
-                await childApi.LogQuizActivityAsync(group.quizId, payload);
+                ActivityLogged response = await childApi.LogQuizActivityAsync(group.quizId, payload);
                 activityLogged = true;
 
-                // Award the quiz coins directly — the activity log does not grant
-                // anything server-side (ECONOMY-INTEGRATION-GUIDE §5).
-                int newTotalCoins = await childApi.AddCoinsAsync(coinsPerQuiz);
-                CoinWallet.Instance?.UpdateBalance(newTotalCoins);
+                // The backend awards quiz coins itself (5/10/15 by score tier, first
+                // attempt per quiz per day) — the client only syncs the authoritative total.
+                if (response != null && response.totalCoins > 0)
+                {
+                    CoinWallet.Instance?.UpdateBalance(response.totalCoins);
+                }
+                else if (CoinWallet.Instance != null)
+                {
+                    await CoinWallet.Instance.RefreshAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -285,7 +292,6 @@ namespace UI
                     OfflineActivityQueue.Instance?.EnqueueActivity(group.quizId, payload);
                 }
 
-                // The award did not land — resync the authoritative balance.
                 if (CoinWallet.Instance != null)
                 {
                     await CoinWallet.Instance.RefreshAsync();

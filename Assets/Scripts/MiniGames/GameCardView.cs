@@ -46,7 +46,7 @@ namespace MiniGames
         private void HandlePlayClicked()
         {
             if (info != null)
-                UI.MiniGameNavigator.Load(info.Game);
+                UI.MiniGameNavigator.Load(info);
         }
     }
 }

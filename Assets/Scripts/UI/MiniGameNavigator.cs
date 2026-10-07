@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using MiniGames;
 
 namespace UI
 {
@@ -49,8 +50,13 @@ namespace UI
             }
         }
 
+        // Coin reward for the launched game, taken from its MiniGameInfo at card launch.
+        // -1 = launched without a card (e.g. editor direct scene entry) — callers fall back.
+        public static int LastPlayedCoins { get; private set; } = -1;
+
         public void LoadGame(MiniGame game)
         {
+            LastPlayedCoins = -1;
             SetLastPlayed(game);
             RequestGamesPageOnLoad();
             SceneManager.LoadScene(GetSceneName(game));
@@ -68,9 +74,24 @@ namespace UI
 
         public static void Load(MiniGame game)
         {
+            LastPlayedCoins = -1;
             SetLastPlayed(game);
             RequestGamesPageOnLoad();
             SceneManager.LoadScene(GetSceneName(game));
+        }
+
+        // Sole launch path from the games page cards — carries the SO coin reward
+        // through to GameCompletionService.
+        public static void Load(MiniGameInfo info)
+        {
+            if (info == null)
+            {
+                Load(MiniGame.StoryQuest);
+                return;
+            }
+
+            Load(info.Game);
+            LastPlayedCoins = info.Coins;
         }
 
         public static void BackToMenu()
