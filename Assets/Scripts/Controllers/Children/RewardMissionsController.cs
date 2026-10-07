@@ -88,36 +88,29 @@ namespace UI
 
         private async void SyncClaimToBackendAsync(RewardDefinition definition)
         {
+            // The backend add-coins endpoint does no dedup — RewardProgressStore's local
+            // claim record is the only double-claim guard, so it must be set before this call.
             try
             {
                 var apiClient = ApiClient.Instance;
                 apiClient.Initialize(ApiConfig.Instance);
                 var childApi = new ChildApi(apiClient);
 
-                bool isDaily = definition.resetType == RewardResetType.Daily;
-                string dayKey = isDaily
-                    ? System.DateTime.Now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)
-                    : null;
-
-                int totalCoins = await childApi.ClaimRewardAsync(definition.id, definition.coinReward, dayKey, isDaily);
+                int totalCoins = await childApi.AddCoinsAsync(definition.coinReward);
                 if (CoinWallet.Instance != null)
                 {
                     CoinWallet.Instance.UpdateBalance(totalCoins);
                 }
             }
-            catch (ApiException ex)
+            catch (System.Exception ex)
             {
-                // Already claimed server-side (e.g. local claim record lost) — the server
-                // did not award coins, so resync the authoritative balance.
-                Debug.LogWarning($"[RewardMissionsController] Reward claim rejected: {ex.Message}");
+                // The grant never reached the server while the UI already credited it —
+                // resync the authoritative balance to undo the local credit.
+                Debug.LogWarning($"[RewardMissionsController] Reward claim sync failed: {ex.Message}");
                 if (CoinWallet.Instance != null)
                 {
                     await CoinWallet.Instance.RefreshAsync();
                 }
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogWarning($"[RewardMissionsController] Reward claim sync failed: {ex.Message}");
             }
         }
 

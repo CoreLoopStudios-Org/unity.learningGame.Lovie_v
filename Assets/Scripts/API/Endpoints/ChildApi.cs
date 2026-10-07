@@ -33,13 +33,13 @@ namespace Api.Endpoints
             return await client.PostAsync<DailyRewardResult>("/api/child/daily-reward", new { });
         }
 
-        // Awards mission-reward coins. Server-side authority: returns the child's new total
-        // coin balance. 400 means this rewardId/dayKey was already claimed — treat as success
-        // and resync the balance from /api/child/stats.
-        public async Awaitable<int> ClaimRewardAsync(string rewardId, int coinsAwarded, string dayKey, bool isDaily)
+        // Directly adds coins to the child's balance and returns the new total.
+        // The backend does no validation or dedup (ECONOMY-INTEGRATION-GUIDE §5) —
+        // the caller owns the amount and double-claim guarding. 400 if coins <= 0.
+        public async Awaitable<int> AddCoinsAsync(int coins)
         {
-            var data = new { rewardId, coinsAwarded, dayKey, isDaily };
-            return await client.PostAsync<int>("/api/child/rewards/claim", data);
+            var data = new { coins };
+            return await client.PostAsync<int>("/api/child/profile/add-coins", data);
         }
 
         public async Awaitable<Story[]> GetStoriesAsync()

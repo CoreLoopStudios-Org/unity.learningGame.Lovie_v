@@ -6,7 +6,6 @@ using TMPro;
 using Newtonsoft.Json;
 using Api;
 using Api.Endpoints;
-using Api.Models;
 
 namespace UI
 {
@@ -252,7 +251,6 @@ namespace UI
             int score = group.questions.Count == 0 ? 0 : Mathf.RoundToInt(100f * firstTry / group.questions.Count);
             float timeSpent = Time.unscaledTime - quizStartTime;
 
-            // Backend GAP-2: coins are computed server-side; the payload requests coinsPerQuiz.
             string payload = JsonConvert.SerializeObject(new
             {
                 score,
@@ -263,31 +261,35 @@ namespace UI
                 timeSpent = Mathf.RoundToInt(timeSpent)
             });
 
+            var apiClient = ApiClient.Instance;
+            apiClient.Initialize(ApiConfig.Instance);
+            ChildApi childApi = new ChildApi(apiClient);
+
+            bool activityLogged = false;
+
             try
             {
-                var apiClient = ApiClient.Instance;
-                apiClient.Initialize(ApiConfig.Instance);
+                await childApi.LogQuizActivityAsync(group.quizId, payload);
+                activityLogged = true;
 
-                ActivityLogged response = await new ChildApi(apiClient).LogQuizActivityAsync(group.quizId, payload);
-
-                if (response != null && response.totalCoins > 0)
-                {
-                    CoinWallet.Instance?.UpdateBalance(response.totalCoins);
-                }
-                else if (CoinWallet.Instance != null)
-                {
-                    await CoinWallet.Instance.RefreshAsync();
-                }
-            }
-            catch (ApiException ex)
-            {
-                Debug.LogWarning($"[QuizPageController] Quiz activity failed, queuing offline: {ex.Message}");
-                OfflineActivityQueue.Instance?.EnqueueActivity(group.quizId, payload);
+                // Award the quiz coins directly — the activity log does not grant
+                // anything server-side (ECONOMY-INTEGRATION-GUIDE §5).
+                int newTotalCoins = await childApi.AddCoinsAsync(coinsPerQuiz);
+                CoinWallet.Instance?.UpdateBalance(newTotalCoins);
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[QuizPageController] Quiz activity error, queuing offline: {ex.Message}");
-                OfflineActivityQueue.Instance?.EnqueueActivity(group.quizId, payload);
+                Debug.LogWarning($"[QuizPageController] Quiz reporting failed: {ex.Message}");
+                if (!activityLogged)
+                {
+                    OfflineActivityQueue.Instance?.EnqueueActivity(group.quizId, payload);
+                }
+
+                // The award did not land — resync the authoritative balance.
+                if (CoinWallet.Instance != null)
+                {
+                    await CoinWallet.Instance.RefreshAsync();
+                }
             }
         }
 

@@ -30,6 +30,10 @@ namespace Api
         [Header("Scene Navigation")]
         [SerializeField] private string mainMenuSceneName = "Main Game/Children/Main Menu";
 
+        [Header("Rewards")]
+        [Tooltip("Coins granted per completed game via /api/child/profile/add-coins.")]
+        [SerializeField] private int coinsPerCompletion = 25;
+
         [Header("UI References (auto-assigned from prefab)")]
         [SerializeField] private GameObject currentPanel;
         [SerializeField] private TMP_Text scoreText;
@@ -252,6 +256,9 @@ namespace Api
             isShowingCompletion = true;
             ShowLoading();
 
+            ActivityLogged response = null;
+            bool activityLogged = false;
+
             try
             {
                 var payloadData = new
@@ -264,48 +271,66 @@ namespace Api
                 };
 
                 string payloadJson = JsonConvert.SerializeObject(payloadData);
-                ActivityLogged response = null;
 
                 if (childApi != null)
                 {
                     response = await childApi.LogGameActivityAsync(payloadJson);
-                }
+                    activityLogged = true;
 
-                if (response != null && response.totalCoins > 0)
-                {
-                    CoinWallet.Instance?.UpdateBalance(response.totalCoins);
+                    // Award the completion coins directly — the activity log does not
+                    // grant anything server-side (ECONOMY-INTEGRATION-GUIDE §5).
+                    int newTotalCoins = await childApi.AddCoinsAsync(coinsPerCompletion);
+                    CoinWallet.Instance?.UpdateBalance(newTotalCoins);
                 }
                 else if (CoinWallet.Instance != null)
                 {
                     await CoinWallet.Instance.RefreshAsync();
                 }
 
-                ShowCompletionPanel(result, response);
+                ShowCompletionPanel(result, coinsPerCompletion);
                 OnCompletionDisplayed?.Invoke(result, response);
             }
             catch (ApiException ex)
             {
                 Debug.LogWarning($"[GameCompletionService] API warning: {ex.Message}");
-                OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
-                    gameId = result.GameId,
-                    score = result.Score,
-                    correctCount = result.CorrectCount,
-                    totalCount = result.TotalCount,
-                    durationSeconds = result.DurationSeconds
-                }));
-                ShowCompletionPanel(result, null);
+                if (!activityLogged)
+                {
+                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
+                        gameId = result.GameId,
+                        score = result.Score,
+                        correctCount = result.CorrectCount,
+                        totalCount = result.TotalCount,
+                        durationSeconds = result.DurationSeconds
+                    }));
+                }
+                await RefreshWalletAfterFailedAwardAsync();
+                ShowCompletionPanel(result, coinsPerCompletion);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[GameCompletionService] Error reporting completion: {ex.Message}");
-                OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
-                    gameId = result.GameId,
-                    score = result.Score,
-                    correctCount = result.CorrectCount,
-                    totalCount = result.TotalCount,
-                    durationSeconds = result.DurationSeconds
-                }));
-                ShowCompletionPanel(result, null);
+                if (!activityLogged)
+                {
+                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", JsonConvert.SerializeObject(new {
+                        gameId = result.GameId,
+                        score = result.Score,
+                        correctCount = result.CorrectCount,
+                        totalCount = result.TotalCount,
+                        durationSeconds = result.DurationSeconds
+                    }));
+                }
+                await RefreshWalletAfterFailedAwardAsync();
+                ShowCompletionPanel(result, coinsPerCompletion);
+            }
+        }
+
+        // The coins were not credited server-side, so pull the authoritative balance
+        // instead of trusting whatever the local wallet cached.
+        private async Awaitable RefreshWalletAfterFailedAwardAsync()
+        {
+            if (CoinWallet.Instance != null)
+            {
+                await CoinWallet.Instance.RefreshAsync();
             }
         }
 
@@ -323,7 +348,7 @@ namespace Api
             if (continueButton != null) continueButton.gameObject.SetActive(false);
         }
 
-        private void ShowCompletionPanel(GameResult result, ActivityLogged response)
+        private void ShowCompletionPanel(GameResult result, int coinsEarned)
         {
             if (currentPanel != null) currentPanel.SetActive(true);
             if (loadingText != null) loadingText.gameObject.SetActive(false);
@@ -337,14 +362,13 @@ namespace Api
             if (coinsEarnedText != null)
             {
                 coinsEarnedText.gameObject.SetActive(true);
-                int earned = response != null ? response.coinsEarned : (result.Score / 50);
-                coinsEarnedText.text = $"+{earned} Coins";
+                coinsEarnedText.text = $"+{coinsEarned} Coins";
             }
 
             if (totalCoinsText != null)
             {
                 totalCoinsText.gameObject.SetActive(true);
-                int total = CoinWallet.Instance != null ? CoinWallet.Instance.Balance : (response != null ? response.totalCoins : 0);
+                int total = CoinWallet.Instance != null ? CoinWallet.Instance.Balance : 0;
                 totalCoinsText.text = $"Total: {total} Coins";
             }
 
