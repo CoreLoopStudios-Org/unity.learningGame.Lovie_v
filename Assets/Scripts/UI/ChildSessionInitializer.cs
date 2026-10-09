@@ -12,6 +12,21 @@ namespace UI
         [SerializeField] private bool autoInitializeOnStart = true;
         [SerializeField] private float initializationDelay = 0.1f;
 
+        private static ChildSessionInitializer instance;
+
+        private void Awake()
+        {
+            // SceneBootstrap auto-creates this for resumed child sessions; a
+            // manually placed copy in the scene must not double-initialize.
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            instance = this;
+        }
+
         private async void Start()
         {
             if (!autoInitializeOnStart)

@@ -96,6 +96,7 @@ namespace UI
             {
                 case "Child":
                     SceneManager.LoadScene(childMainMenuScene);
+                    EnsureChildSessionInitializer();
                     break;
                 case "Parent":
                     SceneManager.LoadScene(parentDashboardScene);
@@ -108,6 +109,18 @@ namespace UI
                     SessionManager.Instance.ClearSession();
                     break;
             }
+        }
+
+        // Wallet/avatar/daily-reward boot for the child lives in ChildSessionInitializer,
+        // which is scene-wired — auto-create it so resumed sessions initialize too.
+        private static void EnsureChildSessionInitializer()
+        {
+            if (FindFirstObjectByType<ChildSessionInitializer>() != null)
+                return;
+
+            var go = new GameObject("ChildSessionInitializer");
+            go.AddComponent<ChildSessionInitializer>();
+            DontDestroyOnLoad(go);
         }
     }
 }
