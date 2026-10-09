@@ -13,7 +13,9 @@ namespace Api
 
         public static void SaveToken(string token, string expiresAt, string role = null, string childId = null)
         {
-            PlayerPrefs.SetString(TokenKey, Obfuscate(token));
+            // XOR alone yields control chars (incl. NUL) that PlayerPrefs truncates
+            // (registry REG_SZ / Android XML) — Base64 keeps the stored string safe.
+            PlayerPrefs.SetString(TokenKey, System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(Obfuscate(token))));
             PlayerPrefs.SetString(ExpiresAtKey, expiresAt);
 
             if (!string.IsNullOrEmpty(role))
@@ -30,8 +32,16 @@ namespace Api
             if (!PlayerPrefs.HasKey(TokenKey))
                 return null;
 
-            string encrypted = PlayerPrefs.GetString(TokenKey);
-            return Deobfuscate(encrypted);
+            try
+            {
+                string stored = PlayerPrefs.GetString(TokenKey);
+                return Obfuscate(System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(stored)));
+            }
+            catch (System.FormatException)
+            {
+                // Pre-Base64 stored value (corrupted by the old XOR-only format)
+                return null;
+            }
         }
 
         public static string GetExpiresAt()
@@ -87,11 +97,6 @@ namespace Api
                 result[i] = (char)(input[i] ^ ObfuscationKey[i % ObfuscationKey.Length]);
             }
             return new string(result);
-        }
-
-        private static string Deobfuscate(string input)
-        {
-            return Obfuscate(input);
         }
     }
 }

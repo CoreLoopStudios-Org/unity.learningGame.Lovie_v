@@ -137,7 +137,7 @@ The `AdminApi` class has been expanded to support extended dashboard features:
 While the C# API logic is complete, the final step is wiring the UI Controllers to Unity Scenes in the Editor. **AI Agents cannot do this automatically**; a human developer must open the Unity Editor to attach the scripts.
 
 ### Required Editor Wiring Checklist:
-1.  **Bootstrap Scene (`SceneBootstrap.cs`)**: Attach this to an empty GameObject in the initial loading scene. It ensures `ApiClient` is initialized and listens for `OnSessionExpired`.
+1.  **Bootstrap (`SceneBootstrap.cs`)**: No wiring needed — it creates itself at startup (`RuntimeInitializeOnLoadMethod`), restores any saved session, routes logged-in users to their role's home scene, and listens for `OnSessionExpired`.
 2.  **Child Login (`ChildLoginController.cs`)**: Attach to the login panel in `Main Game/Children/Login`. Assign the Username input, Password input, and Login button in the Inspector.
 3.  **Parent Login (`ParentLoginController.cs`)**: Attach to `Main Game/Parent/Parent Login`.
 4.  **Parent Dashboard (`ParentDashboardController.cs`)**: Attach to the parent dashboard scene. Wire up the "Create Child" inputs, "View Activities" button, and text fields.

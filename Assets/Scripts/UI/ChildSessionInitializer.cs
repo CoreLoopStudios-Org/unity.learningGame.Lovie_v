@@ -1,5 +1,7 @@
 using UnityEngine;
+using System;
 using Api;
+using Api.Endpoints;
 using Avatar;
 
 namespace UI
@@ -26,8 +28,37 @@ namespace UI
         public async Awaitable InitializeAsync()
         {
             EnsureCoinWallet();
+            await TryClaimDailyRewardAsync();
             await InitializeCoinWallet();
             await InitializeAvatarSync();
+        }
+
+        // Session auto-resume skips ChildLoginController, which is where the daily
+        // reward was claimed — so claim here instead.
+        private async Awaitable TryClaimDailyRewardAsync()
+        {
+            try
+            {
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
+                var childApi = new ChildApi(apiClient);
+
+                var stats = await childApi.GetStatsAsync();
+                if (stats == null || !stats.canClaimDailyReward)
+                    return;
+
+                var result = await childApi.ClaimDailyRewardAsync();
+
+                if (result != null && !result.alreadyClaimed && CoinWallet.Instance != null)
+                {
+                    CoinWallet.Instance.UpdateBalance(result.totalCoins);
+                    CoinWallet.Instance.UpdateStreak(result.loginStreak);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ChildSessionInitializer] Daily reward claim failed: {ex.Message}");
+            }
         }
 
         private void EnsureCoinWallet()
