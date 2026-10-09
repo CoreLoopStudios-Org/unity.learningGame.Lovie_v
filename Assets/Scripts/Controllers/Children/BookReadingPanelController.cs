@@ -184,16 +184,16 @@ namespace UI
         private void HandleNextClicked()
         {
             if (isTurningPage || currentPage >= pages.Length - 1) return;
-            _ = TurnPageAsync(currentPage + 1);
+            _ = TurnPageAsync(currentPage + 1, goingBack: false);
         }
 
         private void HandleBackClicked()
         {
             if (isTurningPage || currentPage <= 0) return;
-            _ = TurnPageAsync(currentPage - 1);
+            _ = TurnPageAsync(currentPage - 1, goingBack: true);
         }
 
-        private async Awaitable TurnPageAsync(int newPage)
+        private async Awaitable TurnPageAsync(int newPage, bool goingBack)
         {
             isTurningPage = true;
             SetButtonsInteractive(false);
@@ -204,12 +204,7 @@ namespace UI
                 storyText.alpha = 0f;
             }
 
-            if (bookAnimator != null)
-            {
-                bookAnimator.Play(PageSwapStateName, 0, 0f);
-            }
-
-            await WaitForPageSwapAsync();
+            await PlayPageSwapAsync(goingBack);
             if (this == null) return;
 
             currentPage = newPage;
@@ -276,6 +271,44 @@ namespace UI
                 Debug.LogWarning($"[BookReadingPanelController] Story completion log failed, queuing offline: {ex.Message}");
                 OfflineActivityQueue.Instance?.EnqueueActivity(Story.id, payload);
             }
+        }
+
+        // Frozen-animator scrubbing: negative Animator.speed doesn't reliably rewind
+        // an already-clamped state, so drive normalizedTime explicitly each frame —
+        // forwards or backwards, always exact.
+        private async Awaitable PlayPageSwapAsync(bool reverse)
+        {
+            if (bookAnimator == null || !bookAnimator.gameObject.activeInHierarchy)
+            {
+                await Awaitable.WaitForSecondsAsync(0.2f);
+                return;
+            }
+
+            int stateHash = Animator.StringToHash(PageSwapStateName);
+
+            AnimatorStateInfo current = bookAnimator.GetCurrentAnimatorStateInfo(0);
+            float duration = current.shortNameHash == stateHash
+                ? Mathf.Max(0.05f, current.length)
+                : 0.3f;
+
+            bookAnimator.speed = 0f;
+            bookAnimator.Play(stateHash, 0, reverse ? 1f : 0f);
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                await Awaitable.NextFrameAsync();
+                if (this == null) return;
+
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                bookAnimator.Play(stateHash, 0, reverse ? 1f - t : t);
+            }
+
+            // Park on the clip's final frame BEFORE restoring speed — if speed comes
+            // back while the reverse scrub sits at frame 0, the clip replays forwards.
+            bookAnimator.Play(stateHash, 0, 1f);
+            bookAnimator.speed = 1f;
         }
 
         private async Awaitable WaitForPageSwapAsync()
