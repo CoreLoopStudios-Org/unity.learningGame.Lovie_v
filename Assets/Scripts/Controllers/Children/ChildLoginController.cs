@@ -75,7 +75,7 @@ namespace UI
                     InitializeCoinWallet(response.coins, response.loginStreak);
                     await CheckDailyReward(response.token);
 
-                    UnityEngine.SceneManagement.SceneManager.LoadScene(mainMenuScene);
+                    SceneTransition.Load(mainMenuScene);
                 }
                 else
                 {

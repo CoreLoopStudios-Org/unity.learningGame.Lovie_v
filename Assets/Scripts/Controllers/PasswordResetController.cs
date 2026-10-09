@@ -122,7 +122,7 @@ namespace UI
 
         void OnBackToLoginClicked()
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(loginScene);
+            SceneTransition.Load(loginScene);
         }
 
         void ShowPanel(GameObject panelToShow)

@@ -144,7 +144,7 @@ namespace Api
             };
 
             Debug.Log($"[SessionManager] Session expired or invalid. Redirecting to {sceneName}");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+            UI.SceneTransition.Load(sceneName);
         }
 
         private string ExtractChildIdFromToken(string jwtToken)

@@ -397,7 +397,7 @@ namespace Api
             // Return to Main Menu
             if (!string.IsNullOrEmpty(mainMenuSceneName))
             {
-                SceneManager.LoadScene(mainMenuSceneName);
+                UI.SceneTransition.Load(mainMenuSceneName);
             }
         }
 

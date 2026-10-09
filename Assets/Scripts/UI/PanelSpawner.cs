@@ -31,12 +31,30 @@ namespace UI
         {
             if (parentTransform == null)
             {
-                var canvas = FindObjectOfType<Canvas>();
+                var canvas = FindSpawnCanvas();
                 if (canvas != null)
                 {
                     parentTransform = canvas.transform;
                 }
             }
+        }
+
+        // Overlay canvases (SceneTransition splash, launch cover) live in the
+        // DontDestroyOnLoad scene — a plain FindObjectOfType can return them, and
+        // panels parented under them are invisible or destroyed with the overlay.
+        private Canvas FindSpawnCanvas()
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas != null)
+                return canvas;
+
+            foreach (Canvas candidate in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (candidate.isActiveAndEnabled && candidate.gameObject.scene == gameObject.scene)
+                    return candidate;
+            }
+
+            return null;
         }
 
         private void OnEnable()
@@ -103,14 +121,20 @@ namespace UI
                 float t = Mathf.Clamp01(elapsed / animationDuration);
                 float curvedT = animationCurve.Evaluate(t);
 
+                if (rectTransform == null || canvasGroup == null)
+                    yield break; // panel destroyed mid-animation (scene switch, replaced popup)
+
                 rectTransform.localScale = Vector3.one * Mathf.Lerp(startScale, endScale, curvedT);
                 canvasGroup.alpha = curvedT;
 
                 yield return null;
             }
 
-            rectTransform.localScale = Vector3.one * endScale;
-            canvasGroup.alpha = 1f;
+            if (rectTransform != null && canvasGroup != null)
+            {
+                rectTransform.localScale = Vector3.one * endScale;
+                canvasGroup.alpha = 1f;
+            }
         }
 
         public void SetPanelPrefab(GameObject prefab)

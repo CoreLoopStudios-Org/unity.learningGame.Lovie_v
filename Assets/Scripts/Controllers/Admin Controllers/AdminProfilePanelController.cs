@@ -149,7 +149,7 @@ namespace UI
             if (SessionManager.Instance != null)
                 SessionManager.Instance.ClearSession();
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(adminLoginScene);
+            SceneTransition.Load(adminLoginScene);
         }
     }
 }

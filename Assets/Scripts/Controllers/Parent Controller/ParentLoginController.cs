@@ -73,7 +73,7 @@ namespace UI
                     }
 
                     SessionManager.Instance.SetSession(response.token, response.expiresAt, "Parent", null);
-                    UnityEngine.SceneManagement.SceneManager.LoadScene(dashboardScene);
+                    SceneTransition.Load(dashboardScene);
                 }
                 else
                 {

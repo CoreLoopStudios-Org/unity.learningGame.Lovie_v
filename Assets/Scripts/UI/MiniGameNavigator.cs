@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using MiniGames;
 
 namespace UI
@@ -59,7 +58,7 @@ namespace UI
             LastPlayedCoins = -1;
             SetLastPlayed(game);
             RequestGamesPageOnLoad();
-            SceneManager.LoadScene(GetSceneName(game));
+            SceneTransition.Load(GetSceneName(game));
         }
 
         public void LoadConfiguredGame()
@@ -77,7 +76,7 @@ namespace UI
             LastPlayedCoins = -1;
             SetLastPlayed(game);
             RequestGamesPageOnLoad();
-            SceneManager.LoadScene(GetSceneName(game));
+            SceneTransition.Load(GetSceneName(game));
         }
 
         // Sole launch path from the games page cards — carries the SO coin reward
@@ -105,7 +104,7 @@ namespace UI
             }
 
             RequestGamesPageOnLoad();
-            SceneManager.LoadScene(MainMenuScene);
+            SceneTransition.Load(MainMenuScene);
         }
 
         // The menu always opens on Home otherwise; every minigame exit should land

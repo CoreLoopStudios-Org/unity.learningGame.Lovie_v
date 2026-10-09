@@ -50,7 +50,7 @@ namespace UI
             if (SessionManager.Instance != null)
                 SessionManager.Instance.ClearSession();
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(loginScene);
+            SceneTransition.Load(loginScene);
         }
 
         private void OnEnable()

@@ -73,7 +73,7 @@ namespace UI
                     }
 
                     SessionManager.Instance.SetSession(response.token, response.expiresAt, "Admin", null);
-                    UnityEngine.SceneManagement.SceneManager.LoadScene(adminDashboardScene);
+                    SceneTransition.Load(adminDashboardScene);
                 }
                 else
                 {

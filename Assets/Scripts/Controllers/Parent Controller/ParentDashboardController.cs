@@ -347,7 +347,7 @@ namespace UI
         private void OnLogoutClicked()
         {
             SessionManager.Instance.ClearSession();
-            UnityEngine.SceneManagement.SceneManager.LoadScene(loginScene);
+            SceneTransition.Load(loginScene);
         }
     }
 }

@@ -91,7 +91,7 @@ namespace UI
             Transform parent = spawnParent;
             if (parent == null)
             {
-                Canvas canvas = FindObjectOfType<Canvas>();
+                Canvas canvas = FindSpawnCanvas();
                 if (canvas != null) parent = canvas.transform;
             }
 
@@ -110,6 +110,23 @@ namespace UI
             }
 
             StartCoroutine(SpawnAnimation());
+        }
+
+        // Same rule as PanelSpawner: never parent into the DontDestroyOnLoad overlay
+        // canvases (SceneTransition splash, launch cover).
+        private Canvas FindSpawnCanvas()
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas != null)
+                return canvas;
+
+            foreach (Canvas candidate in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (candidate.isActiveAndEnabled && candidate.gameObject.scene == gameObject.scene)
+                    return candidate;
+            }
+
+            return null;
         }
 
         private System.Collections.IEnumerator SpawnAnimation()
@@ -136,14 +153,20 @@ namespace UI
                 float t = Mathf.Clamp01(elapsed / spawnAnimationDuration);
                 float curvedT = spawnCurve.Evaluate(t);
 
+                if (rect == null || canvasGroup == null)
+                    yield break; // panel destroyed mid-animation
+
                 rect.localScale = Vector3.one * curvedT;
                 canvasGroup.alpha = curvedT;
 
                 yield return null;
             }
 
-            rect.localScale = Vector3.one;
-            canvasGroup.alpha = 1f;
+            if (rect != null && canvasGroup != null)
+            {
+                rect.localScale = Vector3.one;
+                canvasGroup.alpha = 1f;
+            }
         }
 
         private System.Collections.IEnumerator DespawnWithAnimation()
@@ -170,6 +193,9 @@ namespace UI
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / despawnAnimationDuration);
                 float curvedT = despawnCurve.Evaluate(t);
+
+                if (rect == null || canvasGroup == null)
+                    yield break; // panel destroyed mid-animation
 
                 rect.localScale = startScale * (1f - curvedT);
                 canvasGroup.alpha = 1f - curvedT;
