@@ -1,14 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Api;
-using Api.Endpoints;
 using Api.Models;
-using Newtonsoft.Json;
 
 namespace UI
 {
@@ -16,6 +11,8 @@ namespace UI
     /// Shows a story inside the Book reading Panel a couple of lines at a time.
     /// Next/back turn pages with the book page-swap animation; the text fades in
     /// once the animation finishes and vanishes instantly on the next turn.
+    /// Text paging: StoryPaginator — page-turn playback: BookPageTurnPlayer —
+    /// progress/completion: StoryProgressService.
     /// </summary>
     public class BookReadingPanelController : MonoBehaviour
     {
@@ -71,22 +68,19 @@ namespace UI
         public void Setup(Story story)
         {
             Story = story;
-            pages = BuildPages(ExtractContent(story?.contentPayload));
+            pages = StoryPaginator.BuildPages(StoryPaginator.ExtractContent(story?.contentPayload), charsPerPage);
             currentPage = 0;
             isTurningPage = false;
             readingStartTime = Time.unscaledTime;
-            completionRecorded = StoryProgressStore.IsStoryCompleted(
-                SessionManager.Instance != null ? SessionManager.Instance.ChildId : null,
-                story?.id);
+            completionRecorded = StoryProgressService.IsStoryCompleted(story);
 
             // Continue Reading: unfinished stories resume where the child left off.
-            if (!completionRecorded && story != null && pages.Length > 0)
+            if (!completionRecorded)
             {
-                StoryReadingRecord record = StoryProgressStore.GetLastReading(
-                    SessionManager.Instance != null ? SessionManager.Instance.ChildId : null);
-                if (record != null && record.storyId == story.id)
+                int resumePage = StoryProgressService.GetResumePage(story, pages.Length);
+                if (resumePage >= 0)
                 {
-                    currentPage = Mathf.Clamp(record.pagesRead - 1, 0, pages.Length - 1);
+                    currentPage = resumePage;
                 }
             }
 
@@ -107,75 +101,10 @@ namespace UI
             _ = RevealFirstPageAsync();
         }
 
-        [Serializable]
-        private class StoryContentPayload
-        {
-            public string content;
-        }
-
-        // Story text rides inside the contentPayload JSON string ("content": "...").
-        private static string ExtractContent(string contentPayload)
-        {
-            if (string.IsNullOrEmpty(contentPayload)) return string.Empty;
-
-            try
-            {
-                return JsonUtility.FromJson<StoryContentPayload>(contentPayload)?.content ?? string.Empty;
-            }
-            catch
-            {
-                return contentPayload;
-            }
-        }
-
-        private string[] BuildPages(string content)
-        {
-            if (string.IsNullOrWhiteSpace(content)) return Array.Empty<string>();
-
-            List<string> pageList = new List<string>();
-            StringBuilder page = new StringBuilder();
-
-            // Sentences keep kids' reading natural; a page is a few sentences up to charsPerPage.
-            foreach (string sentence in Regex.Split(content.Trim(), @"(?<=[.!?])\s+"))
-            {
-                if (string.IsNullOrWhiteSpace(sentence)) continue;
-
-                if (page.Length > 0 && page.Length + sentence.Length + 1 > charsPerPage)
-                {
-                    pageList.Add(page.ToString().Trim());
-                    page.Clear();
-                }
-
-                if (page.Length > 0)
-                {
-                    page.Append(' ');
-                }
-
-                page.Append(sentence.Trim());
-
-                // Single sentence longer than a page is split by words so it still fits.
-                while (page.Length > charsPerPage)
-                {
-                    int cut = page.ToString().LastIndexOf(' ', Math.Min(charsPerPage, page.Length - 1));
-                    if (cut <= 0) break;
-
-                    pageList.Add(page.ToString(0, cut).Trim());
-                    page.Remove(0, cut + 1);
-                }
-            }
-
-            if (page.Length > 0)
-            {
-                pageList.Add(page.ToString().Trim());
-            }
-
-            return pageList.ToArray();
-        }
-
         private async Awaitable RevealFirstPageAsync()
         {
             // The book plays its page-swap animation when the panel spawns; fade in after it.
-            await WaitForPageSwapAsync();
+            await BookPageTurnPlayer.WaitAsync(bookAnimator, PageSwapStateName);
             if (this == null) return;
 
             await FadeInTextAsync();
@@ -204,7 +133,7 @@ namespace UI
                 storyText.alpha = 0f;
             }
 
-            await PlayPageSwapAsync(goingBack);
+            await BookPageTurnPlayer.PlayAsync(bookAnimator, PageSwapStateName, goingBack);
             if (this == null) return;
 
             currentPage = newPage;
@@ -214,7 +143,7 @@ namespace UI
             }
 
             UpdatePageCountText();
-            SaveReadingProgress(currentPage + 1);
+            StoryProgressService.SaveReadingProgress(Story, currentPage + 1, pages.Length);
 
             // Reaching the last page counts as finishing the story.
             if (currentPage >= pages.Length - 1)
@@ -231,117 +160,10 @@ namespace UI
 
         private void MarkStoryCompleted()
         {
-            if (completionRecorded || Story == null || string.IsNullOrEmpty(Story.id)) return;
+            if (completionRecorded) return;
             completionRecorded = true;
 
-            string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
-            StoryProgressStore.MarkStoryCompleted(childId, Story, pages.Length);
-
-            // Mission trigger — id must match a Reward Catalog entry ("read stories" reward).
-            RewardProgressStore.ReportProgress("story_complete");
-
-            // "isComplete" rides in the payload — the DB has no completion column.
-            string payload = JsonConvert.SerializeObject(new
-            {
-                isComplete = true,
-                pagesRead = pages.Length,
-                timeSpent = Mathf.RoundToInt(Time.unscaledTime - readingStartTime)
-            });
-            _ = ReportStoryCompletionAsync(payload);
-        }
-
-        private void SaveReadingProgress(int pagesRead)
-        {
-            if (Story == null || string.IsNullOrEmpty(Story.id)) return;
-
-            string childId = SessionManager.Instance != null ? SessionManager.Instance.ChildId : null;
-            StoryProgressStore.SaveReadingProgress(childId, Story, pagesRead, pages.Length);
-        }
-
-        private async Awaitable ReportStoryCompletionAsync(string payload)
-        {
-            try
-            {
-                var apiClient = ApiClient.Instance;
-                apiClient.Initialize(ApiConfig.Instance);
-                await new ChildApi(apiClient).LogStoryActivityAsync(Story.id, payload);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[BookReadingPanelController] Story completion log failed, queuing offline: {ex.Message}");
-                OfflineActivityQueue.Instance?.EnqueueActivity(Story.id, payload);
-            }
-        }
-
-        // Frozen-animator scrubbing: negative Animator.speed doesn't reliably rewind
-        // an already-clamped state, so drive normalizedTime explicitly each frame —
-        // forwards or backwards, always exact.
-        private async Awaitable PlayPageSwapAsync(bool reverse)
-        {
-            if (bookAnimator == null || !bookAnimator.gameObject.activeInHierarchy)
-            {
-                await Awaitable.WaitForSecondsAsync(0.2f);
-                return;
-            }
-
-            int stateHash = Animator.StringToHash(PageSwapStateName);
-
-            AnimatorStateInfo current = bookAnimator.GetCurrentAnimatorStateInfo(0);
-            float duration = current.shortNameHash == stateHash
-                ? Mathf.Max(0.05f, current.length)
-                : 0.3f;
-
-            bookAnimator.speed = 0f;
-            bookAnimator.Play(stateHash, 0, reverse ? 1f : 0f);
-
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                await Awaitable.NextFrameAsync();
-                if (this == null) return;
-
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                bookAnimator.Play(stateHash, 0, reverse ? 1f - t : t);
-            }
-
-            // Park on the clip's final frame BEFORE restoring speed — if speed comes
-            // back while the reverse scrub sits at frame 0, the clip replays forwards.
-            bookAnimator.Play(stateHash, 0, 1f);
-            bookAnimator.speed = 1f;
-        }
-
-        private async Awaitable WaitForPageSwapAsync()
-        {
-            if (bookAnimator == null || !bookAnimator.gameObject.activeInHierarchy)
-            {
-                await Awaitable.WaitForSecondsAsync(0.2f);
-                return;
-            }
-
-            int stateHash = Animator.StringToHash(PageSwapStateName);
-
-            // Wait for the animation to (re)start — the state info is one frame stale after Play.
-            // Timeout guards against a disabled animator so the text always shows.
-            for (float elapsed = 0f; elapsed < 3f; elapsed += Time.deltaTime)
-            {
-                if (this == null) return;
-
-                AnimatorStateInfo state = bookAnimator.GetCurrentAnimatorStateInfo(0);
-                if (state.shortNameHash == stateHash && state.normalizedTime < 0.9f) break;
-
-                await Awaitable.NextFrameAsync();
-            }
-
-            for (float elapsed = 0f; elapsed < 3f; elapsed += Time.deltaTime)
-            {
-                if (this == null) return;
-
-                AnimatorStateInfo state = bookAnimator.GetCurrentAnimatorStateInfo(0);
-                if (state.shortNameHash != stateHash || state.normalizedTime >= 1f) return;
-
-                await Awaitable.NextFrameAsync();
-            }
+            StoryProgressService.MarkStoryCompleted(Story, pages.Length, readingStartTime);
         }
 
         private async Awaitable FadeInTextAsync()
