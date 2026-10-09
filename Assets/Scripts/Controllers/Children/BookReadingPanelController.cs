@@ -50,6 +50,11 @@ namespace UI
             {
                 backButton.onClick.AddListener(HandleBackClicked);
             }
+
+            // Book-page swipes: right-to-left flips forward, left-to-right flips back.
+            SwipeDetector swipe = gameObject.AddComponent<SwipeDetector>();
+            swipe.SwipeLeft += HandleNextClicked;
+            swipe.SwipeRight += HandleBackClicked;
         }
 
         private void OnDestroy()
