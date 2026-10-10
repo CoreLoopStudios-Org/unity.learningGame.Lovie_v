@@ -70,8 +70,15 @@ namespace UI
 
         private static Vector2 PointerPosition()
         {
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
-                return Touchscreen.current.primaryTouch.position.ReadValue();
+            Touchscreen touchscreen = Touchscreen.current;
+            if (touchscreen != null)
+            {
+                var touch = touchscreen.primaryTouch;
+                // isPressed is already false on the release frame — read the
+                // touch's last position instead of falling through to the mouse.
+                if (touch.press.isPressed || touch.press.wasReleasedThisFrame)
+                    return touch.position.ReadValue();
+            }
 
             return Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
         }
