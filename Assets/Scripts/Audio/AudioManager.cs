@@ -10,12 +10,22 @@ namespace Audio
     public class AudioManager : MonoBehaviour
     {
         private static AudioManager instance;
+        // Once the real manager is destroyed (scene close/play mode exit), stop
+        // lazy re-creation — callers' `Instance == null` checks would otherwise
+        // spawn a fresh AudioManager mid-teardown, which Unity reports as a leak.
+        private static bool recreationSuppressed;
+
         public static AudioManager Instance
         {
             get
             {
                 if (instance == null)
                 {
+                    if (recreationSuppressed)
+                    {
+                        return null;
+                    }
+
                     GameObject go = new GameObject("AudioManager");
                     instance = go.AddComponent<AudioManager>();
                     DontDestroyOnLoad(go);
@@ -89,6 +99,15 @@ namespace Audio
 
             InitializeAudioSources();
             LoadSettings();
+        }
+
+        private void OnDestroy()
+        {
+            // Only the real manager flips the flag — self-destroyed duplicates skip it.
+            if (instance == this)
+            {
+                recreationSuppressed = true;
+            }
         }
 
         private void InitializeAudioSources()
