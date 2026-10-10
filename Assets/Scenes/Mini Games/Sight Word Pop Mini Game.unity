@@ -352,6 +352,7 @@ GameObject:
   - component: {fileID: 937702042}
   - component: {fileID: 937702046}
   - component: {fileID: 937702047}
+  - component: {fileID: 937702048}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -557,6 +558,20 @@ MonoBehaviour:
   _correctColor: {r: 1, g: 0.85, b: 0, a: 1}
   _wrongColor: {r: 1, g: 0.3, b: 0.3, a: 1}
   _feedbackDuration: 0.8
+--- !u!114 &937702048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937702040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50033ef59afd144892acab309c2519d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.AutoPauseBGM
+  pauseOnEnable: 1
+  resumeOnDisable: 1
 --- !u!1 &1039529882
 GameObject:
   m_ObjectHideFlags: 0

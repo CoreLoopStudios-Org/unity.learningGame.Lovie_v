@@ -3908,6 +3908,7 @@ GameObject:
   - component: {fileID: 2021419828}
   - component: {fileID: 2021419829}
   - component: {fileID: 2021419830}
+  - component: {fileID: 2021419831}
   m_Layer: 0
   m_Name: PrefixSuffixManager
   m_TagString: Untagged
@@ -3988,6 +3989,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Modules.GameFramework.UI.RoundTimer
   _durationSeconds: 60
   _timerText: {fileID: 1845319686}
+--- !u!114 &2021419831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2021419827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50033ef59afd144892acab309c2519d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Audio.AutoPauseBGM
+  pauseOnEnable: 1
+  resumeOnDisable: 1
 --- !u!1 &2048629225
 GameObject:
   m_ObjectHideFlags: 0
