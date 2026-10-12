@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using Avatar;
 
 namespace UI
 {
@@ -52,6 +53,23 @@ namespace UI
             AdminPageType initialPage = PendingPage ?? AdminPageType.Home;
             PendingPage = null;
             ShowPage(initialPage, false);
+        }
+
+        private void OnEnable()
+        {
+            AvatarItemButton.OnLockedItemTapped += HandleLockedAvatarItemTapped;
+        }
+
+        private void OnDisable()
+        {
+            AvatarItemButton.OnLockedItemTapped -= HandleLockedAvatarItemTapped;
+        }
+
+        // A locked avatar item was tapped - send the player to the store
+        // instead of leaving the tap with no effect.
+        private void HandleLockedAvatarItemTapped()
+        {
+            ShowPage(AdminPageType.Store, true);
         }
 
         private void InitializeNavigation()

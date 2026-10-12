@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -93,9 +94,11 @@ namespace Avatar
                     lockText.gameObject.SetActive(true);
                 }
 
+                // Stays interactable while locked so the tap still reaches
+                // OnButtonClick below and can route to the store.
                 if (button != null)
                 {
-                    button.interactable = false;
+                    button.interactable = true;
                 }
 
                 UpdateLockVisuals();
@@ -208,12 +211,27 @@ namespace Avatar
 
         #region Interaction
 
+        /// <summary>
+        /// Raised when any locked avatar item is tapped. The navigation layer
+        /// listens for this to open the store, without AvatarItemButton
+        /// needing a direct reference to it.
+        /// </summary>
+        public static event Action OnLockedItemTapped;
+
+        /// <summary>
+        /// Raised when this item is tapped while unlocked.
+        /// </summary>
+        public event Action OnItemSelected;
+
         private void OnButtonClick()
         {
-            if (isLocked) return;
+            if (isLocked)
+            {
+                OnLockedItemTapped?.Invoke();
+                return;
+            }
 
-            // Event will be handled by UI Controller
-            // This button just provides visual feedback
+            OnItemSelected?.Invoke();
         }
 
         #endregion
