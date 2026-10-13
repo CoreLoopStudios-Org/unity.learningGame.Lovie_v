@@ -279,12 +279,10 @@ namespace Avatar
                 bool isSelected = customizationManager?.GetSelectedPartId(currentCategory) == part.ItemId;
                 avatarButton.Setup(part, isSelected);
 
-                // Setup button click through the AvatarItemButton's Button component
-                Button button = itemButton.GetComponent<Button>();
-                if (button != null)
-                {
-                    button.onClick.AddListener(() => OnItemButtonClicked(part));
-                }
+                // AvatarItemButton owns the Button component and already filters
+                // out locked taps internally, so selection only fires once this
+                // item is actually unlocked.
+                avatarButton.OnItemSelected += () => OnItemButtonClicked(part);
 
                 Debug.Log($"[AvatarUIController] Created AvatarItemButton for {part.DisplayName}");
             }
