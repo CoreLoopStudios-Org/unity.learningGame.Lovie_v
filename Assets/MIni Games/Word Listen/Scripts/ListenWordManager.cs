@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Modules.GameFramework.UI;
 
 namespace CoreLoop.ListenWord
 {
@@ -45,6 +46,13 @@ namespace CoreLoop.ListenWord
         [SerializeField] private Button timeUpRestartButton;
         [SerializeField] private TextMeshProUGUI timeUpCountdownText;
         [SerializeField] private Api.GameCompletionReporter completionReporter;
+
+        [Header("Round & Feedback")]
+        [SerializeField] private TextMeshProUGUI roundCounterText;
+        [SerializeField] private TextMeshProUGUI feedbackText;
+        [SerializeField] private AnswerFeedback answerFeedback;
+        [SerializeField] private string correctFeedbackMessage = "Correct!";
+        [SerializeField] private string incorrectFeedbackMessage = "Try Again!";
 
         private int currentWordIndex = 0;
         private int remainingHints;
@@ -272,6 +280,9 @@ namespace CoreLoop.ListenWord
 
             currentWordIndex = index;
             currentWordData  = levelData.wordsToSpell[index];
+
+            if (roundCounterText != null)
+                roundCounterText.text = $"Round {index + 1}/{levelData.wordsToSpell.Count}";
 
             if (referenceImage != null)
             {
@@ -509,6 +520,10 @@ namespace CoreLoop.ListenWord
                 if (audioSource != null && successSound != null)
                     audioSource.PlayOneShot(successSound);
 
+                ShowFeedback(correctFeedbackMessage);
+                if (answerFeedback != null)
+                    answerFeedback.PlayCorrect();
+
                 int next = currentWordIndex + 1;
                 if (next < levelData.wordsToSpell.Count)
                     StartCoroutine(LoadWordRoutine(next));
@@ -529,7 +544,18 @@ namespace CoreLoop.ListenWord
                 Debug.Log("Incorrect Word!");
                 if (audioSource != null && errorSound != null)
                     audioSource.PlayOneShot(errorSound);
+
+                ShowFeedback(incorrectFeedbackMessage);
+                if (answerFeedback != null)
+                    answerFeedback.PlayWrong();
             }
+        }
+
+        // Shared feedback text setter - keeps CheckAnswer focused on win/lose logic only.
+        private void ShowFeedback(string message)
+        {
+            if (feedbackText != null)
+                feedbackText.text = message;
         }
 
         private IEnumerator FadeCanvasGroup(CanvasGroup cg, float start, float end, float duration)

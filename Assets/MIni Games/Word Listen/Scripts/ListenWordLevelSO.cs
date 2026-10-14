@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CoreLoop.ListenWord
 {
@@ -24,13 +25,17 @@ namespace CoreLoop.ListenWord
         public char[] GetParsedLetters()
         {
             if (string.IsNullOrWhiteSpace(targetWord)) return new char[0];
-            return targetWord.ToCharArray();
+
+            // Drop whitespace rather than turning it into a blank letter tile -
+            // content authors sometimes leave a stray space in the source word.
+            return targetWord.Where(c => !char.IsWhiteSpace(c)).ToArray();
         }
         
         public char[] GetDecoyLetters()
         {
             if (string.IsNullOrWhiteSpace(decoyLetters)) return new char[0];
-            return decoyLetters.ToCharArray();
+
+            return decoyLetters.Where(c => !char.IsWhiteSpace(c)).ToArray();
         }
     }
 
