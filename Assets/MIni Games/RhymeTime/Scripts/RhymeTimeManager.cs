@@ -168,7 +168,7 @@ namespace CoreLoop.WordMatch
 
             RhymeTimeMatchPoint hitPoint = FindMatchPointUnderPointer(eventData);
 
-            if (hitPoint == null || hitPoint == _currentStartPoint)
+            if (hitPoint == null || hitPoint == _currentStartPoint || AreInSameColumn(_currentStartPoint, hitPoint))
             {
                 CancelDragLine();
                 return;
@@ -269,6 +269,17 @@ namespace CoreLoop.WordMatch
             _rightItems.Clear();
             _matches.Clear();
             _committedLines.Clear();
+        }
+
+        // Mirrors Word Match, which only accepts a connection between the two different columns.
+        private bool AreInSameColumn(RhymeTimeMatchPoint a, RhymeTimeMatchPoint b)
+        {
+            if (a == null || b == null || a.OwnerItem == null || b.OwnerItem == null) return false;
+            if (leftColumn == null) return false;
+
+            bool aIsLeft = a.OwnerItem.transform.IsChildOf(leftColumn);
+            bool bIsLeft = b.OwnerItem.transform.IsChildOf(leftColumn);
+            return aIsLeft == bIsLeft;
         }
 
         private RhymeTimeMatchPoint FindMatchPointUnderPointer(PointerEventData eventData)

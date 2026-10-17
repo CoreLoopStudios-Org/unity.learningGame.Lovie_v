@@ -332,6 +332,9 @@ namespace CoreLoop.ListenWord
                 _timerRunning = true;
             }
 
+            // The previous round's "Correct!" has had its moment - clear it for the new word.
+            ShowFeedback(string.Empty);
+
             isAnimating = false;
         }
 

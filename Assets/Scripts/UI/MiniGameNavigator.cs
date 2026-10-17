@@ -14,7 +14,7 @@ namespace UI
         public const string RhymeTimeScene = "Scenes/Mini Games/Rhyme Time Mini Game";
         public const string WordMatchScene = "Scenes/Mini Games/Word Match Mini Game";
         public const string SentenceBuilderScene = "Scenes/Mini Games/Sentence Builder Mini Game";
-        public const string ListenWordScene = "Scenes/Mini Games/Listen Word Mini Game";
+        public const string ListenWordScene = "Scenes/Mini Games/Sound And Spell mini Game";
         public const string SightWordPopScene = "Scenes/Mini Games/Sight Word Pop Mini Game";
 
         public enum MiniGame
@@ -135,15 +135,12 @@ namespace UI
                 MiniGame.StoryQuest => StoryQuestScene,
                 MiniGame.ReadingDetective => ReadingDetectiveScene,
                 MiniGame.StorySequencing => StorySequencingScene,
-                // The two scene files contain each other's managers (the Word Wizard
-                // scene runs the Word-Listen game and vice versa), so the card routes
-                // are crossed until the scenes themselves are fixed.
-                MiniGame.WordWizard => ListenWordScene,
+                MiniGame.WordWizard => WordWizardScene,
                 MiniGame.PrefixSuffix => PrefixSuffixScene,
                 MiniGame.RhymeTime => RhymeTimeScene,
                 MiniGame.WordMatch => WordMatchScene,
                 MiniGame.SentenceBuilder => SentenceBuilderScene,
-                MiniGame.ListenWord => WordWizardScene,
+                MiniGame.ListenWord => ListenWordScene,
                 MiniGame.SightWordPop => SightWordPopScene,
                 _ => MainMenuScene
             };
