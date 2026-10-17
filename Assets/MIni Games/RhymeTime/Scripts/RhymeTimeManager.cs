@@ -143,10 +143,16 @@ namespace CoreLoop.WordMatch
         {
             if (_isTransitioning) return;
 
+            // Drop any preview line left over from an interrupted drag.
+            DestroyDragLineOnly();
+
+            // Re-dragging from a connected card removes its old connection first (same as Word Match).
+            UndoExistingMatch(point);
+
             _currentStartPoint = point;
             _currentDragLine = Instantiate(linePrefab, lineContainer);
             _currentDragLine.SetColor(lineColor);
-            _currentDragLine.UpdateLine(point.RectTransform.position, screenPosition);
+            _currentDragLine.UpdateLine(point.RectTransform.position, ScreenToLineWorldPoint(screenPosition));
         }
 
         /// <summary>Called by RhymeTimeMatchPoint while dragging.</summary>
@@ -154,7 +160,7 @@ namespace CoreLoop.WordMatch
         {
             if (_currentDragLine == null || _currentStartPoint == null) return;
 
-            _currentDragLine.UpdateLine(_currentStartPoint.RectTransform.position, screenPosition);
+            _currentDragLine.UpdateLine(_currentStartPoint.RectTransform.position, ScreenToLineWorldPoint(screenPosition));
         }
 
         /// <summary>Called by RhymeTimeMatchPoint when a drag ends.</summary>
@@ -271,6 +277,20 @@ namespace CoreLoop.WordMatch
             _committedLines.Clear();
         }
 
+        // The canvas is Screen Space - Camera, so raw pointer pixels are NOT world positions.
+        // Converting here keeps the preview line glued to the pointer (same as Word Match).
+        private Vector3 ScreenToLineWorldPoint(Vector2 screenPosition)
+        {
+            RectTransform container = lineContainer as RectTransform;
+            Canvas canvas = lineContainer != null ? lineContainer.GetComponentInParent<Canvas>() : null;
+            if (container == null || canvas == null) return screenPosition;
+
+            Canvas rootCanvas = canvas.rootCanvas;
+            Camera eventCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(container, screenPosition, eventCamera, out Vector3 worldPoint);
+            return worldPoint;
+        }
+
         // Mirrors Word Match, which only accepts a connection between the two different columns.
         private bool AreInSameColumn(RhymeTimeMatchPoint a, RhymeTimeMatchPoint b)
         {
@@ -347,6 +367,8 @@ namespace CoreLoop.WordMatch
 
             point.SetConnected(false);
             previousPartner.SetConnected(false);
+            point.OwnerItem.SetMatched(false);
+            previousPartner.OwnerItem.SetMatched(false);
         }
 
         private IEnumerator ClearIncorrectMatchRoutine(RhymeTimeMatchPoint a, RhymeTimeMatchPoint b)
