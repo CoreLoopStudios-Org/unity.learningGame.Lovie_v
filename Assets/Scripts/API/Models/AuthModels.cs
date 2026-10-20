@@ -21,4 +21,18 @@ namespace Api.Models
         public int coins;
         public int loginStreak;
     }
+
+    [Serializable]
+    public class GoogleLoginRequest
+    {
+        public string idToken;
+    }
+
+    [Serializable]
+    public class AppleLoginRequest
+    {
+        public string idToken;
+        public string firstName;
+        public string lastName;
+    }
 }

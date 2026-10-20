@@ -48,6 +48,34 @@ namespace Api.Endpoints
             return await client.PostAsync<ChildAuthResponse>("/api/auth/child/login", data);
         }
 
+        /// <summary>Exchanges a native Google ID token (Credential Manager / iOS OAuth) for a session.</summary>
+        public async Awaitable<AuthResponse> GoogleLoginAsync(string idToken)
+        {
+            var data = new GoogleLoginRequest
+            {
+                idToken = idToken
+            };
+
+            return await client.PostAsync<AuthResponse>("/api/auth/google", data);
+        }
+
+        /// <summary>
+        /// Exchanges a native Sign in with Apple identity token for a session.
+        /// First/last name are only reported by Apple on the very first sign-in
+        /// and may be null afterwards.
+        /// </summary>
+        public async Awaitable<AuthResponse> AppleLoginAsync(string idToken, string firstName = null, string lastName = null)
+        {
+            var data = new AppleLoginRequest
+            {
+                idToken = idToken,
+                firstName = firstName,
+                lastName = lastName
+            };
+
+            return await client.PostAsync<AuthResponse>("/api/auth/apple", data);
+        }
+
         public async Awaitable<object> SendVerificationAsync(string email)
         {
             var data = new { email };
