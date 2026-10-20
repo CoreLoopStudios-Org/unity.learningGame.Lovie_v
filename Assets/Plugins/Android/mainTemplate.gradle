@@ -11,6 +11,8 @@ dependencies {
     // is required for devices on Android 13 and below.
     implementation 'androidx.credentials:credentials:1.5.0'
     implementation 'androidx.credentials:credentials-play-services-auth:1.5.0'
+    // GetGoogleIdOption / GoogleIdTokenCredential used by GoogleCredentialActivity.
+    implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
     // ComponentActivity host required by Credential Manager (pinned explicitly
     // for the GoogleCredentialActivity trampoline; resolved transitively too).
     implementation 'androidx.activity:activity:1.9.3'

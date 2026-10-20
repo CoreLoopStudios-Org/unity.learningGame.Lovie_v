@@ -17,6 +17,12 @@ namespace UI
         [SerializeField] private TextMeshProUGUI errorMessage;
         [SerializeField] private GameObject loadingIndicator;
 
+        [Header("Social Sign-In")]
+        [SerializeField] private Button googleSignInButton;
+        [SerializeField] private Button appleSignInButton;
+
+        private bool socialFlowRunning;
+
         [Header("Scene Navigation")]
         [SerializeField] private string dashboardScene = "Main Game/Parent/Parent Dashboard";
 
@@ -32,6 +38,20 @@ namespace UI
 
             if (loginButton != null)
                 loginButton.onClick.AddListener(OnLoginClicked);
+
+            if (googleSignInButton != null)
+            {
+                googleSignInButton.onClick.AddListener(OnGoogleSignInClicked);
+                // Hidden in the Editor too (unsupported there) — toggle it manually
+                // in the scene view while designing layout.
+                googleSignInButton.gameObject.SetActive(SocialLoginService.IsGoogleAvailable);
+            }
+            if (appleSignInButton != null)
+            {
+                appleSignInButton.onClick.AddListener(OnAppleSignInClicked);
+                // iOS only — auto-hidden on Android, Editor, and until iOS config exists.
+                appleSignInButton.gameObject.SetActive(SocialLoginService.IsAppleAvailable);
+            }
 
             ClearError();
             HideLoading();
@@ -66,11 +86,7 @@ namespace UI
                         return;
                     }
 
-                    if (SessionManager.Instance == null)
-                    {
-                        var sessionGo = new GameObject("SessionManager");
-                        sessionGo.AddComponent<SessionManager>();
-                    }
+                    EnsureSessionManager();
 
                     SessionManager.Instance.SetSession(response.token, response.expiresAt, "Parent", null);
                     SceneTransition.Load(dashboardScene);
@@ -92,6 +108,86 @@ namespace UI
             finally
             {
                 HideLoading();
+            }
+        }
+
+        async void OnGoogleSignInClicked()
+        {
+            if (socialFlowRunning) return;
+            socialFlowRunning = true;
+            ShowLoading();
+            ClearError();
+
+            try
+            {
+                EnsureSessionManager();
+                await SocialLoginService.LoginWithGoogle(); // sheet → backend → session stored
+                SceneTransition.Load(dashboardScene);
+            }
+            catch (SocialAuthException ex)
+            {
+                if (!ex.Cancelled) // user closed the sheet — no error spam, just stay put
+                {
+                    ShowError(ex.Code == "config_missing"
+                        ? "Google sign-in is not set up on this build."
+                        : ex.Message);
+                }
+            }
+            catch (ApiException ex)
+            {
+                HandleApiError(ex);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Google sign-in error: {ex.Message}");
+                ShowError("Something went wrong. Please try again.");
+            }
+            finally
+            {
+                socialFlowRunning = false;
+                HideLoading();
+            }
+        }
+
+        async void OnAppleSignInClicked()
+        {
+            if (socialFlowRunning) return;
+            socialFlowRunning = true;
+            ShowLoading();
+            ClearError();
+
+            try
+            {
+                EnsureSessionManager();
+                await SocialLoginService.LoginWithApple();
+                SceneTransition.Load(dashboardScene);
+            }
+            catch (SocialAuthException ex)
+            {
+                if (!ex.Cancelled) ShowError(ex.Message);
+            }
+            catch (ApiException ex)
+            {
+                HandleApiError(ex);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Apple sign-in error: {ex.Message}");
+                ShowError("Something went wrong. Please try again.");
+            }
+            finally
+            {
+                socialFlowRunning = false;
+                HideLoading();
+            }
+        }
+
+        void EnsureSessionManager()
+        {
+            if (SessionManager.Instance == null)
+            {
+                var sessionGo = new GameObject("SessionManager");
+                sessionGo.AddComponent<SessionManager>();
             }
         }
 
@@ -153,6 +249,10 @@ namespace UI
         {
             if (loginButton != null)
                 loginButton.onClick.RemoveListener(OnLoginClicked);
+            if (googleSignInButton != null)
+                googleSignInButton.onClick.RemoveListener(OnGoogleSignInClicked);
+            if (appleSignInButton != null)
+                appleSignInButton.onClick.RemoveListener(OnAppleSignInClicked);
         }
     }
 }

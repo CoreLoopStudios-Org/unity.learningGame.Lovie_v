@@ -3,7 +3,6 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
 using UnityEngine;
-
 namespace Api.EditorTools
 {
     /// <summary>
