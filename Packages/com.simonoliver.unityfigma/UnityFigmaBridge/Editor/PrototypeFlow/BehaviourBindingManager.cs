@@ -59,9 +59,9 @@ namespace UnityFigmaBridge.Editor.PrototypeFlow
             if (gameObject.name.ToUpper() == "SAFEAREA")
             {
                 // Add in a safe area component for correct resizing
-                if (gameObject.GetComponent<SafeArea>() == null)
+                if (gameObject.GetComponent<UnityFigmaBridge.Runtime.UI.SafeArea>() == null)
                 {
-                    gameObject.AddComponent<SafeArea>();
+                    gameObject.AddComponent<UnityFigmaBridge.Runtime.UI.SafeArea>();
                     // Also move pivot to top left, to make offset calc a bit easier
                     //FigmaDocumentUtils.SetPivot(gameObject.transform as RectTransform, new Vector2(0,1));
                     return true;

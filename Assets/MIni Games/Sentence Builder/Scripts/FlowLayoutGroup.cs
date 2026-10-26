@@ -30,13 +30,13 @@ namespace CoreLoop.SentenceBuilder
             float minW = padding.horizontal;
             foreach (var child in rectChildren)
                 minW = Mathf.Max(minW, LayoutUtility.GetMinWidth(child) + padding.horizontal);
-            SetLayoutInputForAxis(minW, -1f, -1f, 0);
+            SetLayoutInputForAxis(minW, -1f, -1f, -1f, 0);
         }
 
         public override void CalculateLayoutInputVertical()
         {
             float h = ComputeHeight(rectTransform.rect.width);
-            SetLayoutInputForAxis(h, h, -1f, 1);
+            SetLayoutInputForAxis(h, -1f, h, -1f, 1);
         }
 
         // ── ILayoutGroup ──────────────────────────────────────────────────────────
