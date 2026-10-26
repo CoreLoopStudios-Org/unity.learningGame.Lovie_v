@@ -1352,6 +1352,7 @@ GameObject:
   - component: {fileID: 6791200771906757881}
   - component: {fileID: 2942931113404373812}
   - component: {fileID: 2686790425175617137}
+  - component: {fileID: 6791200771906757882}
   m_Layer: 0
   m_Name: Coins
   m_TagString: Untagged
@@ -1429,10 +1430,10 @@ MonoBehaviour:
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 18
+  m_fontSizeMin: 12
   m_fontSizeMax: 56
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -2188,6 +2189,20 @@ RectTransform:
   m_AnchoredPosition: {x: -230, y: 95}
   m_SizeDelta: {x: 260.34, y: 108.9773}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &6791200771906757882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045949094163456552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6186a044f2f569478b66aabe54b57ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.CoinBalanceText
+  coinText: {fileID: 1522610633019613996}
+  prefix: 
 --- !u!222 &6890560603407948557
 CanvasRenderer:
   m_ObjectHideFlags: 0
