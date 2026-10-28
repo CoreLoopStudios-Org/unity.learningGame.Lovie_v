@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -18,11 +19,27 @@ namespace UI
 
         private void Awake()
         {
+            EnsureRaycastTarget();
+
             // Auto-find AdminNavigationController if not assigned
             if (navigationController == null && findNavControllerAutomatically)
             {
                 navigationController = FindObjectOfType<AdminNavigationController>();
             }
+        }
+
+        // A click handler only receives taps on a Graphic that raycasts. A button made of just
+        // text/icons would only react on the glyphs, so add an invisible full-area Image.
+        private void EnsureRaycastTarget()
+        {
+            if (GetComponent<Graphic>() != null)
+            {
+                return;
+            }
+
+            var hitArea = gameObject.AddComponent<Image>();
+            hitArea.color = Color.clear;
+            hitArea.raycastTarget = true;
         }
 
         public void OnPointerClick(PointerEventData eventData)
