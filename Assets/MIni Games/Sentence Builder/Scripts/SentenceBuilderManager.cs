@@ -30,6 +30,8 @@ namespace CoreLoop.SentenceBuilder
         [SerializeField] private Button shuffleButton;
         [SerializeField] private Button hintButton;
         [SerializeField] private TextMeshProUGUI hintText;
+        [Tooltip("Shows \"Round X/Y\" for the current sentence. Updated every time a sentence loads.")]
+        [SerializeField] private TextMeshProUGUI roundCounterText;
 
         [Header("Settings")]
         [SerializeField] private int initialHints = 3;
@@ -248,6 +250,9 @@ namespace CoreLoop.SentenceBuilder
 
             currentSentenceIndex = index;
             var sentenceData = levelData.sentences[index];
+
+            if (roundCounterText != null)
+                roundCounterText.text = $"Round {index + 1}/{levelData.sentences.Count}";
 
             if (scenarioImage != null)
             {

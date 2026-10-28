@@ -19,7 +19,15 @@ namespace Modules.Games.WordWizard
         [SerializeField] private TextMeshProUGUI _letterText;
         [SerializeField] private Button _button;
 
+        [Header("Selected Look")]
+        [Tooltip("Tint multiplied onto the tile while its letter is placed in the word. The tile stays tappable.")]
+        [SerializeField] private Color _selectedTint = new Color(SELECTED_TINT_CHANNEL, SELECTED_TINT_CHANNEL, SELECTED_TINT_CHANNEL, 1f);
+
+        private const float SELECTED_TINT_CHANNEL = 0.78f;
+
         private Action<WordWizardLetterItem> _onClicked;
+        private Graphic _tintTarget;
+        private Color _defaultTint = Color.white;
 
         #endregion
 
@@ -58,7 +66,29 @@ namespace Modules.Games.WordWizard
             {
                 _button.onClick.RemoveAllListeners();
                 _button.onClick.AddListener(HandleClicked);
+
+                _tintTarget = _button.targetGraphic;
+                if (_tintTarget != null)
+                {
+                    _defaultTint = _tintTarget.color;
+                }
             }
+        }
+
+        /// <summary>
+        /// Shows or clears the "selected" look (dimmed tile) without changing
+        /// whether the tile can be tapped. Selected tiles stay tappable so the
+        /// player can tap them again to take the letter back out of the word.
+        /// </summary>
+        /// <param name="isSelected">True while this letter is placed in the word.</param>
+        public void SetSelected(bool isSelected)
+        {
+            if (_tintTarget == null)
+            {
+                return;
+            }
+
+            _tintTarget.color = isSelected ? _defaultTint * _selectedTint : _defaultTint;
         }
 
         /// <summary>
@@ -86,8 +116,6 @@ namespace Modules.Games.WordWizard
 
         private void HandleClicked()
         {
-            Debug.Log($"[DIAG] Button clicked - letter={LetterChar} interactable={_button.interactable}");
-
             _onClicked?.Invoke(this);
         }
 

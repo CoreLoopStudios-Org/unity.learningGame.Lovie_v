@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Modules.GameFramework.UI;
 
 namespace CoreLoop.WordMatch
 {
@@ -36,6 +37,19 @@ namespace CoreLoop.WordMatch
 
             contentText.text = entry.Word;
             matchPoint.Setup(this);
+            EnableWholeCardDrag();
+        }
+
+        // Makes the whole card a drag handle. The line still starts and ends at the dots —
+        // the card only forwards the touch to its dot.
+        private void EnableWholeCardDrag()
+        {
+            if (matchPoint == null) return;
+
+            CardPointerRelay relay = GetComponent<CardPointerRelay>();
+            if (relay == null) relay = gameObject.AddComponent<CardPointerRelay>();
+
+            relay.Bind(matchPoint.OnPointerDown, matchPoint.OnDrag, matchPoint.OnPointerUp);
         }
 
         public void SetMatched(bool isMatched)

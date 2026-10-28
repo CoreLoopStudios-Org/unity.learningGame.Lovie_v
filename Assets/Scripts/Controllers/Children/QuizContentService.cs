@@ -29,7 +29,8 @@ namespace UI
 
     /// <summary>
     /// Finds the most recently finished story that still has untaken quizzes and
-    /// parses its questionsPayload into quiz groups.
+    /// parses its questionsPayload into quiz groups. When every quiz has been taken,
+    /// falls back to a random finished story so the quiz page never runs dry.
     /// </summary>
     public static class QuizContentService
     {
@@ -54,6 +55,24 @@ namespace UI
 
                 List<QuizGroup> groups = ParseQuizzes(quizzes, takenQuizIds, optionSlotCount);
                 if (groups.Count > 0) return groups;
+            }
+
+            // Every quiz of every finished story has been taken: replay the quizzes of a
+            // randomly chosen finished story instead of leaving the page empty.
+            if (completedStories.Count > 0)
+            {
+                var noneTaken = new HashSet<string>();
+                int startIndex = UnityEngine.Random.Range(0, completedStories.Count);
+
+                for (int offset = 0; offset < completedStories.Count; offset++)
+                {
+                    StoryReadingRecord record = completedStories[(startIndex + offset) % completedStories.Count];
+                    Quiz[] quizzes = await childApi.GetQuizzesAsync(record.storyId);
+                    if (isCancelled != null && isCancelled()) return null;
+
+                    List<QuizGroup> groups = ParseQuizzes(quizzes, noneTaken, optionSlotCount);
+                    if (groups.Count > 0) return groups;
+                }
             }
 
             return new List<QuizGroup>();
