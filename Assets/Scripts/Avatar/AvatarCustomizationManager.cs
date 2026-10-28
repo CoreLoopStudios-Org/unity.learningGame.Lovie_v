@@ -36,6 +36,30 @@ namespace Avatar
             currentSelections = new Dictionary<AvatarPartCategory, string>();
         }
 
+        private async void OnEnable()
+        {
+            if (avatarDatabase == null)
+                return;
+
+            // Server state wins over local defaults; LoadFromServerAsync falls
+            // back to PlayerPrefs/defaults when nothing is saved yet.
+            if (SessionManager.Instance != null && SessionManager.Instance.IsChildSession)
+            {
+                if (AvatarSyncService.Instance == null)
+                {
+                    var go = new GameObject("AvatarSyncService");
+                    go.AddComponent<AvatarSyncService>();
+                }
+
+                AvatarSyncService.Instance.SetAvatarManager(this);
+                await AvatarSyncService.Instance.LoadFromServerAsync();
+            }
+            else
+            {
+                LoadAvatar();
+            }
+        }
+
         private void Start()
         {
             if (avatarDatabase != null && autoLoadOnStart)
@@ -76,25 +100,6 @@ namespace Avatar
         }
 
         /// <summary>
-        /// Select part without triggering auto-save (used for batch loading)
-        /// </summary>
-        public void SelectPartWithoutSave(AvatarPartCategory category, AvatarPartItem part)
-        {
-            if (part == null)
-            {
-                return;
-            }
-
-            if (part.Category != category)
-            {
-                Debug.LogWarning($"Part category mismatch. Expected {category}, got {part.Category}");
-                return;
-            }
-
-            currentSelections[category] = part.ItemId;
-        }
-
-        /// <summary>
         /// Get currently selected part for a category
         /// </summary>
         public AvatarPartItem GetSelectedPart(AvatarPartCategory category)
@@ -114,6 +119,39 @@ namespace Avatar
         public string GetSelectedPartId(AvatarPartCategory category)
         {
             return currentSelections.TryGetValue(category, out string itemId) ? itemId : null;
+        }
+
+        /// <summary>
+        /// Apply several parts as one batch — refreshes listeners once and
+        /// saves once. Null or locked parts are skipped.
+        /// </summary>
+        public void ApplyParts(params AvatarPartItem[] parts)
+        {
+            if (avatarDatabase == null || parts == null)
+                return;
+
+            bool applied = false;
+
+            foreach (var part in parts)
+            {
+                if (part == null)
+                    continue;
+
+                if (!part.CheckUnlocked())
+                {
+                    Debug.LogWarning($"Attempted to apply locked avatar part '{part.ItemId}' — skipped");
+                    continue;
+                }
+
+                currentSelections[part.Category] = part.ItemId;
+                applied = true;
+            }
+
+            if (!applied)
+                return;
+
+            OnAvatarLoaded?.Invoke();
+            SaveAvatar();
         }
 
         /// <summary>
@@ -168,6 +206,13 @@ namespace Avatar
         /// </summary>
         public void SaveAvatar()
         {
+            WriteToPlayerPrefs();
+            SyncToServer();
+            OnAvatarSaved?.Invoke();
+        }
+
+        private void WriteToPlayerPrefs()
+        {
             var categories = Enum.GetValues(typeof(AvatarPartCategory)) as AvatarPartCategory[];
 
             foreach (var category in categories)
@@ -181,8 +226,45 @@ namespace Avatar
             }
 
             PlayerPrefs.Save();
-            SyncToServer();
-            OnAvatarSaved?.Invoke();
+        }
+
+        /// <summary>
+        /// Replace selections with a state loaded from the server (part IDs keyed
+        /// by category name). Categories missing from the state fall back to the
+        /// database defaults. Persists locally and notifies listeners to refresh.
+        /// </summary>
+        public void ApplyServerState(IDictionary<string, string> savedParts)
+        {
+            currentSelections.Clear();
+
+            var categories = Enum.GetValues(typeof(AvatarPartCategory)) as AvatarPartCategory[];
+
+            foreach (var category in categories)
+            {
+                if (category == AvatarPartCategory.None) continue;
+
+                string itemId = null;
+                savedParts?.TryGetValue(category.ToString(), out itemId);
+
+                AvatarPartItem part = null;
+                if (!string.IsNullOrEmpty(itemId))
+                {
+                    part = avatarDatabase?.GetPartById(itemId);
+                }
+
+                if (part == null)
+                {
+                    part = avatarDatabase?.GetDefaultPartForCategory(category);
+                }
+
+                if (part != null)
+                {
+                    currentSelections[category] = part.ItemId;
+                }
+            }
+
+            WriteToPlayerPrefs();
+            OnAvatarLoaded?.Invoke();
         }
 
         private async void SyncToServer()

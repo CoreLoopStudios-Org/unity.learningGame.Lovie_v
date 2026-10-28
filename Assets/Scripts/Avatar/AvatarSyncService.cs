@@ -119,14 +119,7 @@ namespace Avatar
             }
         }
 
-        // Backend stores this JSON as-is in the Child.AvatarState column — only body, hair and dress are persisted
-        private static readonly AvatarPartCategory[] SavedCategories =
-        {
-            AvatarPartCategory.BodyColor,
-            AvatarPartCategory.Hair,
-            AvatarPartCategory.Dress
-        };
-
+        // Backend stores this JSON as-is in the Child.AvatarState column
         private string ExportAvatarState()
         {
             if (avatarManager == null)
@@ -135,11 +128,11 @@ namespace Avatar
             var selections = avatarManager.GetAllSelections();
             var state = new Dictionary<string, string>();
 
-            foreach (var category in SavedCategories)
+            foreach (var category in selections)
             {
-                if (selections.TryGetValue(category, out var part) && part != null)
+                if (category.Value != null)
                 {
-                    state[category.ToString()] = part.ItemId;
+                    state[category.Key.ToString()] = category.Value.ItemId;
                 }
             }
 
@@ -156,21 +149,7 @@ namespace Avatar
                 var dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(avatarStateJson);
                 if (dict == null) return;
 
-                avatarManager.ClearSavedData();
-
-                foreach (var kvp in dict)
-                {
-                    if (Enum.TryParse(kvp.Key, out AvatarPartCategory category))
-                    {
-                        var part = avatarManager.Database?.GetPartById(kvp.Value);
-                        if (part != null)
-                        {
-                            avatarManager.SelectPartWithoutSave(category, part);
-                        }
-                    }
-                }
-
-                avatarManager.SaveAvatar();
+                avatarManager.ApplyServerState(dict);
             }
             catch (Exception e)
             {

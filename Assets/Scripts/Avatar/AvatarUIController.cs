@@ -51,6 +51,11 @@ namespace Avatar
             SetupCategoryButtons();
             SubscribeToEvents();
 
+            // Store purchases unlock items — re-show the current category so
+            // spawned buttons pick up fresh lock states.
+            Api.StoreService.Instance.OnPurchasesRefreshed += OnPurchasesRefreshed;
+            AvatarPartItem.OnAnyLockStateChanged += OnPurchasesRefreshed;
+
             if (spawnItemsOnStart)
             {
                 var firstCategory = customizationManager?.GetAvailableCategories()?.FirstOrDefault();
@@ -105,6 +110,8 @@ namespace Avatar
 
         private void OnDestroy()
         {
+            Api.StoreService.Instance.OnPurchasesRefreshed -= OnPurchasesRefreshed;
+            AvatarPartItem.OnAnyLockStateChanged -= OnPurchasesRefreshed;
             UnsubscribeFromEvents();
         }
 
@@ -429,6 +436,15 @@ namespace Avatar
         }
 
         private void OnAvatarLoaded()
+        {
+            // Refresh current category display
+            if (currentCategory != AvatarPartCategory.None)
+            {
+                ShowCategoryItems(currentCategory);
+            }
+        }
+
+        private void OnPurchasesRefreshed()
         {
             // Refresh current category display
             if (currentCategory != AvatarPartCategory.None)

@@ -88,6 +88,24 @@ namespace Avatar
             avatarSprite = sprite;
         }
 
+        /// <summary>
+        /// Raised whenever any part's lock state changes at runtime (e.g. unlock-all).
+        /// Listeners must unsubscribe on destroy — it is a static event.
+        /// </summary>
+        public static event System.Action OnAnyLockStateChanged;
+
+        /// <summary>
+        /// Set the lock flag at runtime (session only — the asset is not saved).
+        /// </summary>
+        public void SetLocked(bool locked)
+        {
+            if (isLocked == locked)
+                return;
+
+            isLocked = locked;
+            OnAnyLockStateChanged?.Invoke();
+        }
+
         #endregion
 
         #region Validation
