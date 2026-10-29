@@ -431,6 +431,12 @@ namespace CoreLoop.WordMatch
 
                 MatchPoint point = result.gameObject.GetComponent<MatchPoint>();
                 if (point == null) point = result.gameObject.GetComponentInParent<MatchPoint>();
+                if (point == null)
+                {
+                    // Released anywhere on a card counts as released on that card's dot.
+                    WordMatchItem card = result.gameObject.GetComponentInParent<WordMatchItem>();
+                    if (card != null) point = card.MatchPoint;
+                }
                 if (point != null) return point;
             }
             return null;

@@ -20,6 +20,8 @@ namespace CoreLoop.WordMatch
 
         [Header("Content")]
         [SerializeField] private int pairsPerBatch = 5;
+        [Tooltip("How many rounds one session lasts. Needs at least rounds x pairs-per-batch pairs in the content to fill every round.")]
+        [SerializeField] private int totalRounds = 5;
 
         [Header("Prefabs")]
         [SerializeField] private RhymeTimeItem leftCardPrefab;
@@ -196,7 +198,7 @@ namespace CoreLoop.WordMatch
         private void BeginSession()
         {
             _repository.Initialize();
-            _totalRounds = Mathf.Max(1, _repository.TotalPairCount / pairsPerBatch);
+            _totalRounds = Mathf.Max(1, totalRounds);
             _currentRound = 0;
 
             ResetTimer();
@@ -210,9 +212,9 @@ namespace CoreLoop.WordMatch
             _isTransitioning = true;
             ClearBoard();
 
-            if (!_repository.HasMorePairs)
+            if (!_repository.HasMorePairs || _currentRound >= _totalRounds)
             {
-                Debug.Log("[RhymeTimeManager] Pair pool exhausted for this session.");
+                Debug.Log("[RhymeTimeManager] Session finished: all rounds played or pair pool exhausted.");
                 _isTransitioning = false;
                 _timerRunning = false;
                 if (completionReporter != null)
@@ -313,6 +315,10 @@ namespace CoreLoop.WordMatch
             {
                 RhymeTimeMatchPoint candidate = result.gameObject.GetComponentInParent<RhymeTimeMatchPoint>();
                 if (candidate != null) return candidate;
+
+                // Released anywhere on a card counts as released on that card's dot.
+                RhymeTimeItem card = result.gameObject.GetComponentInParent<RhymeTimeItem>();
+                if (card != null && card.MatchPoint != null) return card.MatchPoint;
             }
 
             return null;

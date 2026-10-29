@@ -50,6 +50,20 @@ namespace UI
 
         #endregion
 
+        #region Public Methods
+
+        /// <summary>
+        /// Leaves the minigame and returns to the menu's Games page. Also callable from another
+        /// button's OnClick (for example a "game not successful" panel) so every exit goes through
+        /// this one place.
+        /// </summary>
+        public void ExitToGamesPage()
+        {
+            MiniGameNavigator.BackToMenu();
+        }
+
+        #endregion
+
         #region Private Methods
 
         private bool BackWasPressedThisFrame()
@@ -66,11 +80,6 @@ namespace UI
         private bool IsPopupOpen()
         {
             return FindAnyObjectByType<PanelCloser>() != null;
-        }
-
-        private void ExitToGamesPage()
-        {
-            MiniGameNavigator.BackToMenu();
         }
 
         #endregion

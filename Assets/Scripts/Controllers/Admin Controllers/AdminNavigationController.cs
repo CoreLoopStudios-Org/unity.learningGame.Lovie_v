@@ -58,14 +58,16 @@ namespace UI
         private void OnEnable()
         {
             AvatarItemButton.OnLockedItemTapped += HandleLockedAvatarItemTapped;
+            UnlockAllAvatarsButton.OnUnlockAllTapped += HandleLockedAvatarItemTapped;
         }
 
         private void OnDisable()
         {
             AvatarItemButton.OnLockedItemTapped -= HandleLockedAvatarItemTapped;
+            UnlockAllAvatarsButton.OnUnlockAllTapped -= HandleLockedAvatarItemTapped;
         }
 
-        // A locked avatar item was tapped - send the player to the store
+        // A locked avatar item or the "Unlock All Avatars" button was tapped - send the player to the store
         // instead of leaving the tap with no effect.
         private void HandleLockedAvatarItemTapped()
         {

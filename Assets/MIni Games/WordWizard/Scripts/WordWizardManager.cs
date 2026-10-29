@@ -56,6 +56,15 @@ namespace Modules.Games.WordWizard
         [SerializeField] private AudioSource _audioSource;
         [SerializeField] private Button _playAudioButton;
 
+        [Header("Timer")]
+        [SerializeField] private TextMeshProUGUI _timerText;
+        [Tooltip("Session length in seconds (120 = 2 minutes).")]
+        [SerializeField] private float _maxTime = 120f;
+        [SerializeField] private CanvasGroup _timeUpPopup;
+        [SerializeField] private float _timeUpDisplayDuration = 2f;
+        [SerializeField] private Button _timeUpRestartButton;
+        [SerializeField] private TextMeshProUGUI _timeUpCountdownText;
+
         [Header("Completion")]
         [SerializeField] private GameObject _completionPanel;
         [SerializeField] private GameCompletionReporter completionReporter;
@@ -71,6 +80,12 @@ namespace Modules.Games.WordWizard
         private int _correctCount;
         private bool _hasAnsweredCurrentEntry;
         private bool _isTransitioning;
+
+        private float _timeRemaining;
+        private bool _timerRunning;
+        private TextMeshProUGUI _timeUpText;
+        private float _timeUpTextOriginalSize;
+        private const float TIME_UP_FADE_SECONDS = 0.4f;
 
         #endregion
 
@@ -110,11 +125,17 @@ namespace Modules.Games.WordWizard
             completionReporter.SetGameId("word_wizard");
 
             WireButtonListeners();
+            InitializeTimer();
 
             _remainingHints = _initialHints;
             UpdateHintUI();
 
             LoadAndBeginSession();
+        }
+
+        private void Update()
+        {
+            TickTimer();
         }
 
         #endregion
@@ -142,6 +163,157 @@ namespace Modules.Games.WordWizard
 
             _currentEntryIndex = 0;
             LoadEntry(_currentEntryIndex);
+
+            _timeRemaining = _maxTime;
+            UpdateTimerDisplay();
+            _timerRunning = true;
+        }
+
+        private void InitializeTimer()
+        {
+            _timeRemaining = _maxTime;
+            UpdateTimerDisplay();
+
+            if (_timeUpPopup != null)
+            {
+                _timeUpText = _timeUpPopup.GetComponentInChildren<TextMeshProUGUI>();
+                if (_timeUpText != null)
+                {
+                    _timeUpTextOriginalSize = _timeUpText.fontSize;
+                }
+
+                _timeUpPopup.alpha = 0f;
+                _timeUpPopup.gameObject.SetActive(false);
+            }
+
+            if (_timeUpRestartButton != null)
+            {
+                _timeUpRestartButton.onClick.AddListener(RestartSession);
+            }
+        }
+
+        private void TickTimer()
+        {
+            if (!_timerRunning)
+            {
+                return;
+            }
+
+            _timeRemaining -= Time.deltaTime;
+            UpdateTimerDisplay();
+
+            if (_timeRemaining <= 0f)
+            {
+                _timeRemaining = 0f;
+                _timerRunning = false;
+                UpdateTimerDisplay();
+
+                // Cancel any pending "next word" step so nothing advances under the popup.
+                StopAllCoroutines();
+                SetInteractionEnabled(false);
+                StartCoroutine(TimeUpRoutine());
+            }
+        }
+
+        private void UpdateTimerDisplay()
+        {
+            if (_timerText == null)
+            {
+                return;
+            }
+
+            int totalSeconds = Mathf.Max(0, Mathf.FloorToInt(_timeRemaining));
+            _timerText.text = $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
+        }
+
+        // Fades the Time Up popup in, counts down a few seconds, then starts a fresh session —
+        // the same behaviour as Word Match and Sentence Builder.
+        private IEnumerator TimeUpRoutine()
+        {
+            if (_timeUpPopup != null)
+            {
+                _timeUpPopup.gameObject.SetActive(true);
+                _timeUpPopup.alpha = 0f;
+                if (_timeUpText != null)
+                {
+                    _timeUpText.fontSize = 0f;
+                }
+
+                float elapsed = 0f;
+                while (elapsed < TIME_UP_FADE_SECONDS)
+                {
+                    elapsed += Time.deltaTime;
+                    float progress = Mathf.Clamp01(elapsed / TIME_UP_FADE_SECONDS);
+                    _timeUpPopup.alpha = progress;
+                    if (_timeUpText != null)
+                    {
+                        _timeUpText.fontSize = _timeUpTextOriginalSize * progress;
+                    }
+
+                    yield return null;
+                }
+
+                _timeUpPopup.alpha = 1f;
+                if (_timeUpText != null)
+                {
+                    _timeUpText.fontSize = _timeUpTextOriginalSize;
+                }
+            }
+
+            float remaining = _timeUpDisplayDuration;
+            while (remaining > 0f)
+            {
+                if (_timeUpCountdownText != null)
+                {
+                    _timeUpCountdownText.text = Mathf.CeilToInt(remaining).ToString();
+                }
+
+                remaining -= Time.deltaTime;
+                yield return null;
+            }
+
+            RestartSession();
+        }
+
+        private void HideTimeUpPopup()
+        {
+            if (_timeUpPopup != null)
+            {
+                _timeUpPopup.alpha = 0f;
+                _timeUpPopup.gameObject.SetActive(false);
+            }
+
+            if (_timeUpText != null)
+            {
+                _timeUpText.fontSize = _timeUpTextOriginalSize;
+            }
+
+            if (_timeUpCountdownText != null)
+            {
+                _timeUpCountdownText.text = string.Empty;
+            }
+        }
+
+        // Starts over with a new batch of words: used when the Time Up popup finishes
+        // or its restart button is tapped.
+        private void RestartSession()
+        {
+            StopAllCoroutines();
+            HideTimeUpPopup();
+            ClearBoard();
+            RebuildTypedWordDisplay();
+
+            _answeredCount = 0;
+            _correctCount = 0;
+            _remainingHints = _initialHints;
+            UpdateHintUI();
+
+            if (_completionPanel != null)
+            {
+                _completionPanel.SetActive(false);
+            }
+
+            LoadAndBeginSession();
         }
 
         private void LoadEntry(int index)
@@ -221,33 +393,33 @@ namespace Modules.Games.WordWizard
         private void PlaceLetter(WordWizardLetterItem item)
         {
             _placedLetterStack.Add(item);
-            RefreshPlacedItemInteractivity();
+            RefreshPlacedItemVisuals();
             RebuildTypedWordDisplay();
         }
 
-        private void UndoLastPlacement()
+        // Takes one specific letter back out of the word, wherever it sits.
+        // The letters after it close the gap, so the word stays contiguous.
+        private void RemovePlacedLetter(WordWizardLetterItem item)
         {
-            if (_placedLetterStack.Count == 0)
+            if (!_placedLetterStack.Remove(item))
             {
                 return;
             }
 
-            WordWizardLetterItem item = _placedLetterStack[_placedLetterStack.Count - 1];
-            _placedLetterStack.RemoveAt(_placedLetterStack.Count - 1);
-
+            item.SetSelected(false);
             item.SetInteractable(true);
-            RefreshPlacedItemInteractivity();
+            RefreshPlacedItemVisuals();
             RebuildTypedWordDisplay();
         }
 
-        // Only the current top of the stack may be tapped again to undo —
-        // every other placed letter is locked out until it becomes the top.
-        private void RefreshPlacedItemInteractivity()
+        // Every placed letter shows the selected look but stays tappable,
+        // so any of them can be tapped again to remove it from the word.
+        private void RefreshPlacedItemVisuals()
         {
-            for (int i = 0; i < _placedLetterStack.Count; i++)
+            foreach (WordWizardLetterItem item in _placedLetterStack)
             {
-                bool isTop = i == _placedLetterStack.Count - 1;
-                _placedLetterStack[i].SetInteractable(isTop);
+                item.SetSelected(true);
+                item.SetInteractable(true);
             }
         }
 
@@ -352,6 +524,7 @@ namespace Modules.Games.WordWizard
         {
             foreach (WordWizardLetterItem item in _placedLetterStack)
             {
+                item.SetSelected(false);
                 item.SetInteractable(true);
             }
 
@@ -467,6 +640,8 @@ namespace Modules.Games.WordWizard
             }
             else
             {
+                _timerRunning = false;
+
                 Debug.Log($"[WordWizardManager] Word Wizard Complete: {CorrectAnswerCount}/{TotalQuestionCount} correct");
 
                 if (completionReporter != null)
@@ -487,26 +662,14 @@ namespace Modules.Games.WordWizard
 
         private void HandleLetterItemClicked(WordWizardLetterItem item)
         {
-            Debug.Log($"[DIAG] HandleLetterItemClicked - letter={item.LetterChar} isPlaced={_placedLetterStack.Contains(item)} isTopOfStack={(_placedLetterStack.Count > 0 && _placedLetterStack[_placedLetterStack.Count - 1] == item)} stackCount={_placedLetterStack.Count}");
-
             if (_isTransitioning || _hasAnsweredCurrentEntry)
             {
                 return;
             }
 
-            bool isPlaced = _placedLetterStack.Contains(item);
-
-            if (isPlaced)
+            if (_placedLetterStack.Contains(item))
             {
-                bool isTopOfStack = _placedLetterStack[_placedLetterStack.Count - 1] == item;
-
-                if (isTopOfStack)
-                {
-                    UndoLastPlacement();
-                }
-
-                // Already placed but not the current top — do nothing. Only
-                // the most recent placement can be undone.
+                RemovePlacedLetter(item);
                 return;
             }
 

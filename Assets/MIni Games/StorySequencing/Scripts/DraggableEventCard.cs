@@ -1,7 +1,9 @@
 using System;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Modules.Games.StorySequencing
 {
@@ -23,9 +25,25 @@ namespace Modules.Games.StorySequencing
                  "its own position — it must be refreshed externally after any reorder.")]
         [SerializeField] private TextMeshProUGUI _positionNumberText;
 
+        [Header("Result Marking")]
+        [Tooltip("The card background that gets tinted green/red after Check Answer. " +
+                 "Left empty, the first Image on this card is used.")]
+        [SerializeField] private Graphic _resultGraphic;
+        [SerializeField] private Color _correctColor = new Color(0.62f, 0.87f, 0.62f, 1f);
+        [SerializeField] private Color _wrongColor = new Color(1f, 0.62f, 0.62f, 1f);
+        [SerializeField] private float _resultTweenDuration = 0.25f;
+        [SerializeField] private float _resultPunchStrength = 0.08f;
+
+        private const float RESULT_PUNCH_DURATION = 0.35f;
+
         private RectTransform _rectTransform;
         private Canvas _parentCanvas;
         private Transform _originalParent;
+        private Color _defaultResultColor = Color.white;
+        private Vector3 _originalScale = Vector3.one;
+        private Sequence _resultSequence;
+        private bool _isDragEnabled = true;
+        private bool _isDragging;
 
         #endregion
 
@@ -46,6 +64,22 @@ namespace Modules.Games.StorySequencing
         {
             _rectTransform = transform as RectTransform;
             _parentCanvas = GetComponentInParent<Canvas>();
+            _originalScale = transform.localScale;
+
+            if (_resultGraphic == null)
+            {
+                _resultGraphic = GetComponentInChildren<Image>();
+            }
+
+            if (_resultGraphic != null)
+            {
+                _defaultResultColor = _resultGraphic.color;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            _resultSequence?.Kill();
         }
 
         #endregion
@@ -82,9 +116,61 @@ namespace Modules.Games.StorySequencing
             }
         }
 
+        /// <summary>
+        /// Tints this card green (right place) or red (wrong place) with a small pop, so the
+        /// player can see which sentences still need to move.
+        /// </summary>
+        /// <param name="isCorrect">True when the card sits in its correct position.</param>
+        /// <param name="delay">Seconds to wait before the animation starts (used to stagger cards).</param>
+        public void ShowResult(bool isCorrect, float delay = 0f)
+        {
+            if (_resultGraphic == null)
+            {
+                return;
+            }
+
+            KillResultSequence();
+
+            Color target = isCorrect ? _correctColor : _wrongColor;
+
+            _resultSequence = DOTween.Sequence().SetDelay(delay);
+            _resultSequence.Append(_resultGraphic.DOColor(target, _resultTweenDuration).SetEase(Ease.InOutSine));
+            _resultSequence.Join(transform.DOPunchScale(Vector3.one * _resultPunchStrength, RESULT_PUNCH_DURATION));
+            _resultSequence.OnComplete(() => transform.localScale = _originalScale);
+        }
+
+        /// <summary>Removes the green/red marking and returns the card to its normal look.</summary>
+        public void ClearResult()
+        {
+            KillResultSequence();
+
+            if (_resultGraphic != null)
+            {
+                _resultGraphic.color = _defaultResultColor;
+            }
+        }
+
+        /// <summary>Turns dragging on or off, e.g. once the correct order has been revealed.</summary>
+        /// <param name="isEnabled">Whether the player may drag this card.</param>
+        public void SetDragEnabled(bool isEnabled)
+        {
+            _isDragEnabled = isEnabled;
+        }
+
         #endregion
 
         #region Private Methods
+
+        private void KillResultSequence()
+        {
+            if (_resultSequence != null)
+            {
+                _resultSequence.Kill();
+                _resultSequence = null;
+            }
+
+            transform.localScale = _originalScale;
+        }
 
         private void FollowPointer(PointerEventData eventData)
         {
@@ -118,6 +204,12 @@ namespace Modules.Games.StorySequencing
         /// <inheritdoc />
         public void OnBeginDrag(PointerEventData eventData)
         {
+            if (!_isDragEnabled)
+            {
+                return;
+            }
+
+            _isDragging = true;
             _originalParent = transform.parent;
 
             // Reparent to the canvas root while dragging so the container's
@@ -136,12 +228,24 @@ namespace Modules.Games.StorySequencing
         /// <inheritdoc />
         public void OnDrag(PointerEventData eventData)
         {
+            if (!_isDragging)
+            {
+                return;
+            }
+
             FollowPointer(eventData);
         }
 
         /// <inheritdoc />
         public void OnEndDrag(PointerEventData eventData)
         {
+            if (!_isDragging)
+            {
+                return;
+            }
+
+            _isDragging = false;
+
             if (_originalParent != null)
             {
                 transform.SetParent(_originalParent, worldPositionStays: true);
