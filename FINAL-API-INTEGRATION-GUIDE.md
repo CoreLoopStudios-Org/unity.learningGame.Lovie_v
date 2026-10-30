@@ -130,6 +130,20 @@ The `AdminApi` class has been expanded to support extended dashboard features:
 *   **Media Upload:** Upload a `.png` or `.jpg` directly to the server using `await adminApi.UploadMediaAsync(fileBytes, "image.png")`. It returns the URL string which can be saved to a Story or Store Item.
 *   **Story Pricing (Sept 2026):** `priceInCoins` on `StoryDto` is always `>= 0` (`0 = Free, >0 = Paid`); creating/updating with a negative value returns `400 Bad Request`. Admin story responses always carry `isUnlocked: true` (admins bypass pricing) — drive any Free/Paid badge in the admin panel from `priceInCoins > 0`, never from `isUnlocked`.
 
+### New Child & Auth API Features (Added Oct 2026)
+
+**Unlock All Avatars (server-side purchase):**
+*   `POST /api/child/avatar/unlock-all` — no body, child JWT only. Deducts a fixed **999 coins** (price is owned by the backend; do not send it), returns `{ "coins": <newBalance>, "allAvatarsUnlocked": true }`.
+*   Replaces the local-only unlock in `UnlockAllPopupController` — the local `Balance - 999` deduction must be removed. On `400`, show `ex.errorMessage` verbatim (`"Not enough coins. Required: 999, Available: {X}."` or `"All avatars are already unlocked."`); on `200`, refresh `CoinWallet` with `coins` from the response.
+*   The unlock persists server-side as `"allAvatarsUnlocked": true` inside `ChildProfile.additionalData` (a JSON string from `GET /api/child/profile`). Honor that flag in `AvatarPartItem.CheckUnlocked()` so parts stay unlocked after restart. Full walkthrough: see `ECONOMY-INTEGRATION-GUIDE.md` §6.
+
+**Google & Apple Sign-In (parent app):**
+*   `POST /api/auth/google` — body `{ "idToken": "<ID token from the Google Sign-In SDK>" }`.
+*   `POST /api/auth/apple` — body `{ "idToken": "<identity token>", "firstName": "...", "lastName": "..." }`; forward the name **only on Apple's first authorization** (Apple never sends it again).
+*   Both return the standard `AuthResponse` (`{ token, tokenType, expiresAt }`) with role `Parent` — feed it into `SessionManager.SetSession` exactly like password login. **No email-verification screen** after social login; the account is already confirmed.
+*   Password login on a social-only account returns `401` with message `"This account uses Google or Apple sign-in. Please continue with your provider."` — catch that message on the login form and prompt the user to use Google/Apple. Do **not** treat it as the "verify email" case (the backend deliberately avoids the word "verify").
+*   The Google SDK must be configured with the **server client ID** the backend team provides — ID tokens minted for any other audience are rejected. Both endpoints return `400 "... not configured on the server"` until the provider client IDs are set in the backend environment.
+
 ---
 
 ## 4. Final Integration: Scene Wiring Instructions

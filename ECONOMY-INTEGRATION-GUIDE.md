@@ -210,3 +210,54 @@ public async Task AddCoinsDirectlyAsync(int coinsToAdd)
 }
 ```
 *Note: This endpoint accepts any positive value and provides no server-side verification against double-claims or spoofed amounts.*
+
+---
+
+## 6. Unlock All Avatars (999 Coins, Server-Validated)
+
+`UnlockAllPopupController` previously deducted 999 coins **locally** and unlocked parts for the session only. The backend now owns this purchase: `POST /api/child/avatar/unlock-all` deducts a fixed, server-owned price of **999 coins**, records the unlock durably, and returns the new balance. The local deduction must be removed.
+
+### Step 6A: Define the Response Model
+```csharp
+[System.Serializable]
+public class UnlockAllAvatarsResult
+{
+    public int coins;               // new balance after the purchase
+    public bool allAvatarsUnlocked; // always true on success
+}
+```
+
+### Step 6B: Call the API
+```csharp
+public async Awaitable<UnlockAllAvatarsResult> UnlockAllAvatarsAsync()
+{
+    // Empty body; the child is identified by the JWT, the price (999) lives on the server
+    return await client.PostAsync<UnlockAllAvatarsResult>("/api/child/avatar/unlock-all", new { });
+}
+```
+
+### Step 6C: Wire It Into `UnlockAllPopupController`
+```csharp
+try
+{
+    var result = await ChildApi.Instance.UnlockAllAvatarsAsync();
+    CoinWallet.Instance.UpdateBalance(result.coins);   // server balance is the truth
+    foreach (var part in database.allAvatarParts) part.SetLocked(false); // session convenience
+}
+catch (ApiException ex) when (ex.responseCode == 400)
+{
+    // Server message is written for the player; show it verbatim:
+    //   "Not enough coins. Required: 999, Available: 251."
+    //   "All avatars are already unlocked."
+    ShowStatus(string.IsNullOrWhiteSpace(ex.errorMessage) ? "Not enough coins." : ex.errorMessage);
+}
+```
+
+### Step 6D: Make the Unlock Survive Restarts
+The durable record is a flag the profile already returns. In `AvatarPartItem.CheckUnlocked()` (or `AvatarSyncService` after loading the profile), parse `ChildProfile.additionalData` (a JSON **string**) and treat the child as fully unlocked when it contains `"allAvatarsUnlocked": true`:
+```csharp
+if (profile.allAvatarsUnlocked) return true; // before the per-part checks
+```
+Notes:
+- A second call never charges again — the server refuses with `400 "All avatars are already unlocked."`
+- The `unlockPrice` field in the popup is display-only; keep it in sync with the server's 999.

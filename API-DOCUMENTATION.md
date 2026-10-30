@@ -106,6 +106,37 @@ Request: `{ "email": "..." }` → Response: `{ "message": "..." }`
 
 Request: `{ "email": "...", "otp": "654321", "newPassword": "..." }` → Response: `{ "message": "..." }`
 
+### 3.8 `POST /api/auth/google` — Sign in with Google (Parents only)
+
+The client signs the user in with the native Google Sign-In SDK and exchanges the resulting **ID token** here. The backend verifies it against Google's published keys (issuer `accounts.google.com`, audience = configured client IDs, signature, expiry, `email_verified`) and issues the normal `AuthResponse` with a `Parent` role claim.
+
+Request:
+```json
+{ "idToken": "eyJ..." }
+```
+Response: `AuthResponse`.
+
+Behaviour:
+- Google has already verified the email, so **no OTP email is sent**: a new account is created as `Parent` with `emailConfirmed = true` and no password.
+- If a Parent account with the same email already exists (matched case-insensitively), the Google identity is linked to it and the email is marked verified; the existing password keeps working.
+- `400` — `idToken` missing, or the provider is not configured on the server.
+- `401` — invalid/expired token, unverified Google email, or the email belongs to an Admin account (social sign-in is Parents only).
+- `403` — banned account.
+
+### 3.9 `POST /api/auth/apple` — Sign in with Apple (Parents only)
+
+Same exchange with Apple's identity token (issuer `https://appleid.apple.com`, audience = app Bundle ID and/or Services ID). Apple only reveals the user's name during the *first* authorization, so the client forwards it for account creation; it is ignored for existing accounts.
+
+Request:
+```json
+{ "idToken": "eyJ...", "firstName": "Jane", "lastName": "Doe" }
+```
+`firstName` / `lastName` are optional. Response and error codes as in 3.8.
+
+Notes for both providers:
+- An account created through Google/Apple has no password. `POST /api/auth/login` for it returns `401` with `"This account uses Google or Apple sign-in. Please continue with your provider."` (deliberately without the word "verify", which the parent app treats as the unverified-email flow). Such an account can add a password through the reset flow (3.6 + 3.7).
+- Server configuration: `Authentication:Google:ClientIds` and `Authentication:Apple:ClientIds`, comma-separated (env `Authentication__Google__ClientIds`, `Authentication__Apple__ClientIds`). Tokens are only accepted for these audiences.
+
 ---
 
 ## 4. Child Endpoints — `[Authorize(Roles = "Child")]`
@@ -148,18 +179,46 @@ Guarded per calendar day (login may have already claimed it — then `alreadyCla
 
 ### 4.4.1 `POST /api/child/rewards/claim` — `int` (New Total Coins)
 
-Mission-reward claim from the Unity Rewards panel. **Implemented 2026-10-06** (`feat/reward-claim` in `api.learninggame.lovie_v`): credits coins, records `ChildRewardClaim` + `RewardClaim` activity, returns new total.
+Mission-reward claim from the Unity Rewards panel. Adds `coinsAwarded` to the child's balance, records a `ChildRewardClaim` row plus a `RewardClaim` activity, and returns the new total.
 
 Request:
 ```json
 { "rewardId": "play_3_games", "coinsAwarded": 25, "dayKey": null, "isDaily": false }
 ```
 
-- `rewardId` — client catalog id (free-form string, max ~100 chars).
-- `coinsAwarded` — amount to credit. Clamp to a sane range (e.g. `1..1000`) server-side.
-- `dayKey` — `"yyyyMMdd"` for daily-reset rewards, `null` for one-time rewards.
+- `rewardId` — client catalog id (max 100 chars, required).
+- `coinsAwarded` — clamped to `1..1000`, otherwise `400`.
+- `dayKey` — `"yyyyMMdd"` for daily-reset rewards; `null` for one-time rewards (stored as `""`).
 
-Behavior: adds `coinsAwarded` to the child's balance and returns the new total. Uniqueness — unique index on `(ChildId, RewardId, DayKey)` (`dayKey` stored `""` for one-time): one-time claims are permanent; daily claims once per `dayKey`. Returns `400 Bad Request` if the claim was already processed — the Unity client treats that as "already claimed" and resyncs the balance from `GET /api/child/stats`.
+Uniqueness — unique index on `(ChildId, RewardId, DayKey)`: one-time claims are permanent (empty `dayKey`), daily claims are once per `dayKey`. A repeat claim returns `400 Bad Request` ("Reward already claimed") — the Unity client treats that as already-claimed and resyncs the balance from `GET /api/child/stats`.
+
+### 4.4.2 `POST /api/child/profile/add-coins` — `int` (New Total Coins)
+
+Directly adds a specified amount of coins to the child's balance. Bypasses all server-side economy validation except for a positive value check.
+
+Request:
+```json
+{ "coins": 100 }
+```
+
+- `coins` — must be > 0.
+Returns the child's new total coin balance.
+
+### 4.4.3 `POST /api/child/avatar/unlock-all` — `UnlockAllAvatarsDto`
+
+Unlocks **every avatar part** for the logged-in child at a fixed price of **999 coins** (price is owned by the server). No request body. The unlock is recorded durably as `"allAvatarsUnlocked": true` in the child's `additionalData` JSONB (visible in `GET /api/child/profile`) and an audit `ChildActivity` (`AvatarUnlockAll`) is written atomically with the coin deduction.
+
+Response:
+```json
+{ "coins": 501, "allAvatarsUnlocked": true }
+```
+
+Errors:
+- `400` — `"Not enough coins. Required: 999, Available: {X}."` when the balance is short (Unity shows this message verbatim).
+- `400` — `"All avatars are already unlocked."` on a repeat purchase (no double charge).
+- `401` — child not authenticated.
+
+Client note: this replaces the local-only unlock in `UnlockAllPopupController`; after a successful call, refresh the coin wallet with the returned balance and honor the `additionalData.allAvatarsUnlocked` flag when checking part locks so unlocks survive restart.
 
 ### 4.5 `GET /api/child/stories` — `StoryDto[]` (Published only)
 
@@ -210,26 +269,38 @@ Response — `ActivityLoggedDto`:
 
 🔧 Planned additive behavior + fields (GAP-2): server-side coin awards; response gains `coinsEarned`, `totalCoins`, `message`. Coins are computed server-side — client-sent amounts are never trusted.
 
-### 4.12 `GET /api/child/store/items` — `StoreItemDto[]` (ordered by reward amount)
+### 4.12 `GET /api/child/store/items` — `StoreItemDto[]` (ordered by price)
 
 `StoreItemDto`:
 ```json
 {
-  "id": "guid", "name": "Pack 1", "storeProductId": "store_pack_1",
-  "rewardCoinAmount": 100, "assetUrl": "https://...", "metadata": "{\"type\":\"iap_pack\"}",
+  "id": "guid", "name": "Golden Avatar", "priceInCoins": 100,
+  "assetUrl": "https://...", "metadata": "{\"rarity\":\"legendary\"}",
   "createdAt": "...", "updatedAt": null
 }
 ```
 
 ### 4.13 `POST /api/child/store/purchase`
 
-*(DEPRECATED: Store items are now IAP packs, so direct purchase is disabled. Only `POST /api/child/store/iap/process` is used.)*
+Request: `{ "storeItemId": "guid" }`
+
+Behavior: validates coins, **deducts immediately**, creates a `Completed` purchase in one transaction. Errors: not enough coins, already purchased. There is **no pending-approval flow**.
+
+Response — `PurchaseDto`:
+```json
+{
+  "id": "guid", "childId": "guid", "childUsername": "childuser",
+  "storeItemId": "guid", "storeItemName": "Golden Avatar", "storeItemAssetUrl": "https://...",
+  "priceInCoins": 100, "status": 1, "requestedAt": "...", "completedAt": "...",
+  "rejectionReason": null
+}
+```
 
 ### 4.14 `GET /api/child/store/my-items` — `PurchaseDto[]`
 
 ### 4.14.1 `POST /api/child/store/iap/process` — `int` (New Total Coins)
-Request: `{ "storeProductId": "string", "transactionId": "string" }`
-Behavior: Validates transaction ID uniqueness, retrieves store item by product ID, adds `rewardCoinAmount` to the child's balance, and records the IAP transaction as a `ChildPurchase` in one database transaction. Returns the new total coins amount. Returns `400 Bad Request` if the `transactionId` has already been processed (enforced by a strict unique database index).
+Request: `{ "tierId": "guid", "transactionId": "string" }`
+Behavior: Validates transaction ID uniqueness, retrieves tier, adds equivalent coins to child's balance, and records the IAP transaction in one database transaction. Returns the new total coins amount. Returns `400 Bad Request` if the `transactionId` has already been processed (enforced by a strict unique database index).
 
 ### 4.15 `GET /api/child/minigames?gameType={optional-string}` — `MiniGameContentDto[]` (Published only)
 
@@ -340,8 +411,6 @@ Response:
 }
 ```
 
-Note: `totalChildren` counts **all** created children (banned counted, only hard-deleted excluded). The former `activeChildren` (30-day window) field was removed — the dashboard kids tile now shows the total.
-
 ### 6.2 Users
 
 | Method | Route | Request | Response |
@@ -378,7 +447,7 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 ```json
 {
   "children": [{
-    "id": "guid", "fullName": "Child Full Name", "username": "childuser",
+    "id": "guid", "fullName": "Child Full Name", "username": "childuser", 
     "coins": 120, "loginStreak": 5,
     "lastActivityAt": "...", "disabledAt": null, "additionalData": "{\"level\":3}",
     "avatarState": "{\"BodyColor\":\"body-1\",\"Hair\":\"hair-2\",\"Dress\":\"dress-1\"}"
@@ -388,6 +457,7 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 ```
 
 > **Note for Admin UI:** The admin dashboard UI will use the `id`, `fullName`, and `avatarState` directly from the `children` array to render the children list. No secondary API calls are required to fetch a child's avatar or full name.
+
 
 ### 6.3 Stories — `/api/admin/stories`
 
@@ -400,10 +470,7 @@ Children are **not** rows in the users table (`UserType` has no Child member) �
 | PUT | `/{id}` | all fields optional | `true` |
 | DELETE | `/{id}` | — | `true` |
 
-> ⚠️ As of 2026-09-02 the backend source implements only `GET /` (params: `status`, `titleSearch` — **no `sortBy`**), `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}`. `GET /recent` is **not implemented**; requests return 404.
-> **Update 2026-09-17:** all endpoints in the table above are implemented, including `GET /?sortBy=newest|alphabetical` and `GET /recent`. Admin responses always carry `isUnlocked: true` (admins bypass pricing) — drive any Free/Paid badge from `priceInCoins`, not `isUnlocked`.
-
-Pricing contract: `priceInCoins` is `0 = Free, >0 = Paid`. Negative values are rejected with `400 Bad Request`, and the database enforces `PriceInCoins >= 0` on `Stories` and `StoreItems`.
+Pricing contract: `priceInCoins` is `0 = Free, >0 = Paid`. Negative values are rejected with `400 Bad Request`, and the database enforces `PriceInCoins >= 0` on `Stories` and `StoreItems`. Admin story endpoints always return `isUnlocked: true` (admins bypass pricing); free/paid rendering must use `priceInCoins`, not `isUnlocked`.
 
 ### 6.4 Quizzes — `/api/admin/quizzes`
 
@@ -421,13 +488,14 @@ Pricing contract: `priceInCoins` is `0 = Free, >0 = Paid`. Negative values are r
 
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|
-| POST | `/` | `{ "name", "storeProductId", "rewardCoinAmount", "assetUrl", "metadata"? }` | `"guid"` |
+| POST | `/` | `{ "name", "priceInCoins", "assetUrl", "metadata"? }` | `"guid"` |
+| POST | `/story/{storyId}?priceInCoins=100` | — | `"guid"` |
+
+`priceInCoins` must be `>= 0` (0 = free item); negative values are rejected with `400 Bad Request`.
 | GET | `/?minPrice=50&maxPrice=500` | — | `StoreItemDto[]` |
 | GET | `/{id}` | — | `StoreItemDto` |
 | PUT | `/{id}` | all fields optional | `true` |
 | DELETE | `/{id}` | — | `true` |
-
-> **Correction 2026-09-18:** Store items are strictly IAP coin packs. `priceInCoins` has been renamed to `rewardCoinAmount` and `storeProductId` (e.g. `store_pack_1`) added. `POST /story/{storyId}` (converting a story to an item) was removed.
 
 ### 6.6 Mini-games — `/api/admin/minigames`
 
@@ -476,20 +544,17 @@ Update request: same fields, all optional, plus `"isActive"`.
 
 ### 6.8 Admin Profile — `/api/admin/profile`
 
-> **Update 2026-09-29:** the endpoints exist on the dev API, but the deployed version has **no profile-picture field** — PUT silently drops `profilePictureUrl`/`profileImageUrl` and GET returns no picture property. A backend fix (branch `fix/admin-profile-picture`) adds `profilePictureUrl` to both DTOs, persisted in the User's `AdditionalData` JSON exactly like the parent profile (§5.8–5.9). Until that deploys, profile picture upload reports success but the picture is not saved. `POST /api/admin/media/upload` works on the dev API (verified 2026-09-29).
-
 | Method | Route | Request | Response |
 |--------|-------|---------|----------|
 | GET | `/` | — | `AdminProfileDto` |
-| PUT | `/` | `{ "email"?, "fullName"?, "profilePictureUrl"?, "currentPassword"?, "newPassword"? }` | `true` |
+| PUT | `/` | `{ "email"?, "fullName"?, "currentPassword"?, "newPassword"? }` | `true` |
 
 `AdminProfileDto`:
 ```json
 {
   "id": "guid",
   "email": "admin@example.com",
-  "fullName": "Admin Name",
-  "profilePictureUrl": "https://..."
+  "fullName": "Admin Name"
 }
 ```
 
@@ -516,7 +581,6 @@ Rule for admins/agents authoring content: never reformat or re-serialize these p
 - Rate limits (nginx): `/api/` 10 r/s, `/api/auth/` 5 r/s per IP.
 
 ### 6.9 IAP Tiers — `/api/admin/iap-tiers/{id}`
-> ⚠️ **Superseded 2026-09-18:** the store-items endpoints in 6.5 are now the IAP pack store (`storeProductId` + `rewardCoinAmount`); `POST /api/child/store/iap/process` resolves packs by `storeProductId`. Treat this section as legacy.
 `PUT /api/admin/iap-tiers/{id}`
 Request: `{ "id": "guid", "name": "Tier 1", "storeProductId": "string", "coinWeight": 100 }`
 Response: `bool`
