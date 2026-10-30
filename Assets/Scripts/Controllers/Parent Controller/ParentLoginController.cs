@@ -42,15 +42,37 @@ namespace UI
             if (googleSignInButton != null)
             {
                 googleSignInButton.onClick.AddListener(OnGoogleSignInClicked);
-                // Hidden in the Editor too (unsupported there) — toggle it manually
-                // in the scene view while designing layout.
-                googleSignInButton.gameObject.SetActive(SocialLoginService.IsGoogleAvailable);
+
+                bool googleAvailable = SocialLoginService.IsGoogleAvailable;
+                googleSignInButton.gameObject.SetActive(googleAvailable);
             }
+
             if (appleSignInButton != null)
             {
                 appleSignInButton.onClick.AddListener(OnAppleSignInClicked);
-                // iOS only — auto-hidden on Android, Editor, and until iOS config exists.
-                appleSignInButton.gameObject.SetActive(SocialLoginService.IsAppleAvailable);
+
+#if UNITY_IOS && !UNITY_EDITOR
+    appleSignInButton.gameObject.SetActive(
+        SocialLoginService.IsAppleAvailable
+    );
+#else
+                appleSignInButton.gameObject.SetActive(false);
+#endif
+            }
+
+// Set Google button width to 968 only when Apple Sign-In is inactive.
+            if (googleSignInButton != null &&
+                googleSignInButton.gameObject.activeSelf &&
+                (appleSignInButton == null || !appleSignInButton.gameObject.activeSelf))
+            {
+                RectTransform googleRect = googleSignInButton.GetComponent<RectTransform>();
+
+                if (googleRect != null)
+                {
+                    googleRect.SetSizeWithCurrentAnchors(
+                        RectTransform.Axis.Horizontal, 968f
+                    );
+                }
             }
 
             ClearError();
