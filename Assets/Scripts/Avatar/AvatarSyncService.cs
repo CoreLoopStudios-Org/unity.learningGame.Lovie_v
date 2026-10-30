@@ -50,6 +50,9 @@ namespace Avatar
 
                 var profile = await childApi.GetProfileAsync();
 
+                // Server truth for the unlock-all purchase; overwrites any stale session flag.
+                AvatarUnlockState.ReadFromAdditionalData(profile?.additionalData);
+
                 // Refresh store purchases to populate unlocked avatar items
                 if (StoreService.Instance != null)
                 {
@@ -119,14 +122,18 @@ namespace Avatar
             }
         }
 
-        // Backend stores this JSON as-is in the Child.AvatarState column
+        private const string UnlockedStateKey = "isUnlocked";
+
+        // Backend stores this JSON as-is in the Child.AvatarState column.
+        // Carries "isUnlocked": true once unlock-all is purchased so the flag
+        // persists on the backend alongside additionalData.allAvatarsUnlocked.
         private string ExportAvatarState()
         {
             if (avatarManager == null)
                 return "{}";
 
             var selections = avatarManager.GetAllSelections();
-            var state = new Dictionary<string, string>();
+            var state = new Newtonsoft.Json.Linq.JObject();
 
             foreach (var category in selections)
             {
@@ -136,7 +143,10 @@ namespace Avatar
                 }
             }
 
-            return Newtonsoft.Json.JsonConvert.SerializeObject(state);
+            if (AvatarUnlockState.AllUnlocked)
+                state[UnlockedStateKey] = true;
+
+            return state.ToString(Newtonsoft.Json.Formatting.None);
         }
 
         private void ApplyAvatarState(string avatarStateJson)
@@ -148,6 +158,15 @@ namespace Avatar
             {
                 var dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(avatarStateJson);
                 if (dict == null) return;
+
+                // Newtonsoft coerces the JSON bool to "True" here — only ever sets the flag true.
+                if (dict.TryGetValue(UnlockedStateKey, out string unlockedRaw) &&
+                    bool.TryParse(unlockedRaw, out bool unlocked) && unlocked)
+                {
+                    AvatarUnlockState.SetAllUnlocked(true);
+                }
+
+                dict.Remove(UnlockedStateKey);
 
                 avatarManager.ApplyServerState(dict);
             }

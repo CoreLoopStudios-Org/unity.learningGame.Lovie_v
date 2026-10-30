@@ -45,6 +45,13 @@ namespace Api.Models
     }
 
     [Serializable]
+    public class UnlockAllAvatarsResult
+    {
+        public int coins; // new balance after the server-side 999-coin deduction
+        public bool allAvatarsUnlocked; // always true on success
+    }
+
+    [Serializable]
     public class ActivityLogged
     {
         public string id;

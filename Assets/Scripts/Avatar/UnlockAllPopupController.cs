@@ -1,4 +1,6 @@
+using System;
 using Api;
+using Api.Endpoints;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,9 +8,11 @@ using UnityEngine.UI;
 namespace Avatar
 {
     /// <summary>
-    /// "Unlock all avatars" popup — local only. Deducts the price from the
-    /// wallet and clears the lock flag on every avatar part in the database
-    /// for the current session. Attach to the popup panel and wire refs.
+    /// "Unlock all avatars" popup — the purchase lives on the backend
+    /// (POST /api/child/avatar/unlock-all, fixed server-owned 999 coins,
+    /// ECONOMY-INTEGRATION-GUIDE §6). On success the wallet is synced to the
+    /// returned balance, every part unlocks for the session, and the flag is
+    /// persisted through the avatar state. Attach to the popup panel and wire refs.
     /// </summary>
     public class UnlockAllPopupController : MonoBehaviour
     {
@@ -22,6 +26,7 @@ namespace Avatar
         [SerializeField] private GameObject popupPanel;
 
         [Header("Settings")]
+        [Tooltip("Display only — the server owns the real price.")]
         [SerializeField] private int unlockPrice = 999;
 
         private bool processing;
@@ -49,39 +54,80 @@ namespace Avatar
             }
         }
 
-        private void OnUnlockClicked()
+        private async void OnUnlockClicked()
         {
             if (processing)
                 return;
 
-            if (CoinWallet.Instance == null)
-            {
-                ShowStatus("Wallet is not available.");
-                return;
-            }
-
-            if (CoinWallet.Instance.Balance < unlockPrice)
-            {
-                ShowStatus("Not enough coins.");
-                return;
-            }
-
             processing = true;
             SetUnlockButtonInteractable(false);
 
-            CoinWallet.Instance.UpdateBalance(CoinWallet.Instance.Balance - unlockPrice);
-
-            UnlockAllParts();
-
-            // Unlock done — nothing left to buy in this session.
-            if (unlockAllBanner != null)
+            try
             {
-                unlockAllBanner.interactable = false;
+                var apiClient = ApiClient.Instance;
+                apiClient.Initialize(ApiConfig.Instance);
+                var childApi = new ChildApi(apiClient);
+
+                var result = await childApi.UnlockAllAvatarsAsync();
+
+                if (result == null || !result.allAvatarsUnlocked)
+                {
+                    ShowStatus("Unlock failed. Please try again.");
+                    return;
+                }
+
+                // Server already deducted the coins — sync the wallet to its balance.
+                if (CoinWallet.Instance != null)
+                {
+                    CoinWallet.Instance.UpdateBalance(result.coins);
+                }
+
+                AvatarUnlockState.SetAllUnlocked(true);
+                UnlockAllParts();
+                PersistToServer();
+
+                // Unlock done — nothing left to buy.
+                if (unlockAllBanner != null)
+                {
+                    unlockAllBanner.interactable = false;
+                }
+
+                ClosePopup();
+            }
+            catch (ApiException ex)
+            {
+                // Server messages are player-facing ("Not enough coins. Required: 999,
+                // Available: X." / "All avatars are already unlocked.") — show verbatim.
+                ShowStatus(string.IsNullOrEmpty(ex.errorMessage)
+                    ? "Something went wrong. Please try again."
+                    : ex.errorMessage);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Unlock-all failed: {ex.Message}");
+                ShowStatus("Something went wrong. Please try again.");
+            }
+            finally
+            {
+                processing = false;
+                SetUnlockButtonInteractable(true);
+            }
+        }
+
+        // Rewrites the avatar state JSON with "isUnlocked": true and PUTs it to
+        // /api/child/avatar so the unlock survives restarts (alongside the server's
+        // additionalData.allAvatarsUnlocked record).
+        private void PersistToServer()
+        {
+            if (AvatarSyncService.Instance == null)
+                return;
+
+            if (customizationManager != null)
+            {
+                AvatarSyncService.Instance.SetAvatarManager(customizationManager);
             }
 
-            processing = false;
-            SetUnlockButtonInteractable(true);
-            ClosePopup();
+            _ = AvatarSyncService.Instance.SaveToServerAsync();
         }
 
         private void ClosePopup()
@@ -96,16 +142,14 @@ namespace Avatar
             }
         }
 
-        private int UnlockAllParts()
+        private void UnlockAllParts()
         {
             var database = customizationManager != null ? customizationManager.Database : null;
             if (database == null)
             {
                 ShowStatus("Avatar database is not assigned.");
-                return 0;
+                return;
             }
-
-            int unlockedCount = 0;
 
             var categories = System.Enum.GetValues(typeof(AvatarPartCategory)) as AvatarPartCategory[];
             foreach (var category in categories)
@@ -118,12 +162,9 @@ namespace Avatar
                     if (part != null && part.IsLocked)
                     {
                         part.SetLocked(false);
-                        unlockedCount++;
                     }
                 }
             }
-
-            return unlockedCount;
         }
 
         private void SetUnlockButtonInteractable(bool value)
