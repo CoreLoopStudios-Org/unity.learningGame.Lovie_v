@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using Audio;
 
 namespace Modules.GameFramework.UI
 {
@@ -64,6 +65,8 @@ namespace Modules.GameFramework.UI
             {
                 _questionTitleText.text = questionText;
             }
+
+            GameVoice.Speak(questionText);
 
             for (int i = 0; i < _options.Count; i++)
             {

@@ -12,6 +12,8 @@ public class FloatingObject : MonoBehaviour
     [SerializeField] private Button _button; // ← ADD THIS
 
     public string Word { get; private set; }
+    /// <summary>This object's RectTransform, used to check whether it is on screen.</summary>
+    public RectTransform RectTransform => _rectTransform != null ? _rectTransform : (_rectTransform = GetComponent<RectTransform>());
     public FloatingObjectType ObjectType { get; private set; }
 
     private FloatingObjectConfigSO _config;

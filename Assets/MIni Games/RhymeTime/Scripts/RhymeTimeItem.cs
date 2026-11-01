@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Modules.GameFramework.UI;
+using Audio;
 
 namespace CoreLoop.WordMatch
 {
@@ -49,7 +50,14 @@ namespace CoreLoop.WordMatch
             CardPointerRelay relay = GetComponent<CardPointerRelay>();
             if (relay == null) relay = gameObject.AddComponent<CardPointerRelay>();
 
-            relay.Bind(matchPoint.OnPointerDown, matchPoint.OnDrag, matchPoint.OnPointerUp);
+            relay.Bind(
+                eventData =>
+                {
+                    GameVoice.Speak(entry != null ? entry.Word : null);
+                    matchPoint.OnPointerDown(eventData);
+                },
+                matchPoint.OnDrag,
+                matchPoint.OnPointerUp);
         }
 
         public void SetMatched(bool isMatched)

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Modules.GameFramework.UI;
+using Audio;
 
 namespace Modules.Games.PrefixSuffix
 {
@@ -458,8 +459,18 @@ namespace Modules.Games.PrefixSuffix
             }
 
             ShowFeedback(isCorrect);
+            SpeakCurrentWord();
             SetInteractionEnabled(false);
             StartCoroutine(AdvanceAfterDelayRoutine());
+        }
+
+        // Reads the word currently shown in the preview (root word plus chosen prefix/suffix).
+        private void SpeakCurrentWord()
+        {
+            if (_rootWordText != null)
+            {
+                GameVoice.Speak(_rootWordText.text);
+            }
         }
 
         private void ShowFeedback(bool isCorrect)
