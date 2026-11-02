@@ -1,4 +1,5 @@
 #if UNITY_IOS
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -9,13 +10,18 @@ namespace Api.EditorTools
     /// <summary>
     /// Patches the generated Xcode project after an iOS build so native social
     /// sign-in works:
+    ///  - links AuthenticationServices.framework into UnityFramework (NativeAuth.mm
+    ///    uses it; Unity does not autolink frameworks for bare .mm source plugins
+    ///    and the Xcode build fails with undefined AS* symbols without this),
+    ///  - adds the Sign in with Apple entitlement + capability to the main target
+    ///    (entitlements file FIRST — this Unity version's AddCapability throws
+    ///    "entitlementsFilePath was empty" otherwise, killing the whole step),
     ///  - registers the Google OAuth redirect URL scheme
-    ///    (com.googleusercontent.apps.&lt;iOS client ID&gt;) in Info.plist,
-    ///  - adds the Sign in with Apple entitlement and capability to the main
-    ///    target (the provisioning profile must include the capability — see
-    ///    Assets/Scripts/API/SocialAuth/README.md).
+    ///    (com.googleusercontent.apps.&lt;iOS client ID&gt;) in Info.plist.
     /// The Google client ID is read from the ApiConfig asset so the build stays
     /// in sync with what the runtime uses.
+    /// Success/failure is logged explicitly — check the Console for
+    /// "[NativeAuthPostProcess]" after every iOS export.
     /// </summary>
     public static class NativeAuthPostProcess
     {
@@ -27,44 +33,51 @@ namespace Api.EditorTools
         {
             if (buildTarget != BuildTarget.iOS) return;
 
-            string projectPath = PBXProject.GetPBXProjectPath(buildPath);
-            PBXProject project = new PBXProject();
-            project.ReadFromFile(projectPath);
-
-            string mainTarget = project.GetUnityMainTargetGuid();
-
-            AddAppleSignInCapability(project, projectPath, mainTarget, buildPath);
-            AddGoogleUrlScheme(buildPath);
-
-            project.WriteToFile(projectPath);
-        }
-
-        private static void AddAppleSignInCapability(PBXProject project, string projectPath, string mainTarget, string buildPath)
-        {
-            project.AddCapability(mainTarget, PBXCapabilityType.SignInWithApple);
-
-            // AddCapability flips the Xcode capability, but with manual signing
-            // the entitlements file is what actually matters — make sure it
-            // exists, is linked and holds the key (idempotent).
-            string entitlementsRel = project.GetBuildPropertyForAnyConfig(mainTarget, "CODE_SIGN_ENTITLEMENTS");
-            if (string.IsNullOrEmpty(entitlementsRel))
+            try
             {
-                entitlementsRel = "Unity-iPhone/Unity-iPhone.entitlements";
-                project.SetBuildProperty(mainTarget, "CODE_SIGN_ENTITLEMENTS", entitlementsRel);
+                string projectPath = PBXProject.GetPBXProjectPath(buildPath);
+                PBXProject project = new PBXProject();
+                project.ReadFromFile(projectPath);
+
+                string mainTarget = project.GetUnityMainTargetGuid();
+
+                // 1. Link AuthenticationServices into UnityFramework — the target
+                //    NativeAuth.mm compiles into.
+                project.AddFrameworkToProject(project.GetUnityFrameworkTargetGuid(), "AuthenticationServices.framework", false);
+
+                // 2. Entitlements file must exist and be linked BEFORE AddCapability.
+                string entitlementsRel = project.GetBuildPropertyForAnyConfig(mainTarget, "CODE_SIGN_ENTITLEMENTS");
+                if (string.IsNullOrEmpty(entitlementsRel))
+                {
+                    entitlementsRel = "Unity-iPhone/Unity-iPhone.entitlements";
+                    project.SetBuildProperty(mainTarget, "CODE_SIGN_ENTITLEMENTS", entitlementsRel);
+                }
+
+                string entitlementsAbs = Path.Combine(buildPath, entitlementsRel);
+                Directory.CreateDirectory(Path.GetDirectoryName(entitlementsAbs) ?? buildPath);
+
+                PlistDocument entitlements = new PlistDocument();
+                if (File.Exists(entitlementsAbs)) entitlements.ReadFromFile(entitlementsAbs);
+
+                if (entitlements.root[AppleSignInEntitlementKey] == null)
+                {
+                    entitlements.root.CreateArray(AppleSignInEntitlementKey).AddString("Default");
+                }
+                entitlements.WriteToFile(entitlementsAbs);
+
+                project.AddCapability(mainTarget, PBXCapabilityType.SignInWithApple, entitlementsRel);
+
+                // 3. Google OAuth redirect scheme.
+                AddGoogleUrlScheme(buildPath);
+
+                project.WriteToFile(projectPath);
+                Debug.Log("[NativeAuthPostProcess] Applied: AuthenticationServices framework, Sign in with Apple entitlement + capability, Google URL scheme.");
             }
-
-            string entitlementsAbs = Path.Combine(buildPath, entitlementsRel);
-            Directory.CreateDirectory(Path.GetDirectoryName(entitlementsAbs) ?? buildPath);
-
-            PlistDocument entitlements = new PlistDocument();
-            if (File.Exists(entitlementsAbs)) entitlements.ReadFromFile(entitlementsAbs);
-
-            if (entitlements.root[AppleSignInEntitlementKey] == null)
+            catch (Exception e)
             {
-                entitlements.root.CreateArray(AppleSignInEntitlementKey).AddString("Default");
+                Debug.LogException(new Exception(
+                    "[NativeAuthPostProcess] FAILED — native social sign-in will not work in this build. See inner exception.", e));
             }
-
-            entitlements.WriteToFile(entitlementsAbs);
         }
 
         private static void AddGoogleUrlScheme(string buildPath)

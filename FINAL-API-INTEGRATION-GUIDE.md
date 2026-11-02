@@ -130,6 +130,33 @@ The `AdminApi` class has been expanded to support extended dashboard features:
 *   **Media Upload:** Upload a `.png` or `.jpg` directly to the server using `await adminApi.UploadMediaAsync(fileBytes, "image.png")`. It returns the URL string which can be saved to a Story or Store Item.
 *   **Story Pricing (Sept 2026):** `priceInCoins` on `StoryDto` is always `>= 0` (`0 = Free, >0 = Paid`); creating/updating with a negative value returns `400 Bad Request`. Admin story responses always carry `isUnlocked: true` (admins bypass pricing) — drive any Free/Paid badge in the admin panel from `priceInCoins > 0`, never from `isUnlocked`.
 
+### New Child & Auth API Features (Added Oct 2026)
+
+**Unlock All Avatars (server-side purchase):**
+*   `POST /api/child/avatar/unlock-all` — no body, child JWT only. Deducts a fixed **999 coins** (price is owned by the backend; do not send it), returns `{ "coins": <newBalance>, "allAvatarsUnlocked": true }`.
+*   Replaces the local-only unlock in `UnlockAllPopupController` — the local `Balance - 999` deduction must be removed. On `400`, show `ex.errorMessage` verbatim (`"Not enough coins. Required: 999, Available: {X}."` or `"All avatars are already unlocked."`); on `200`, refresh `CoinWallet` with `coins` from the response.
+*   The unlock persists server-side as `"allAvatarsUnlocked": true` inside `ChildProfile.additionalData` (a JSON string from `GET /api/child/profile`). Honor that flag in `AvatarPartItem.CheckUnlocked()` so parts stay unlocked after restart. Full walkthrough: see `ECONOMY-INTEGRATION-GUIDE.md` §6.
+
+**Google & Apple Sign-In (parent app) — IMPLEMENTED in `Assets/Scripts/API/SocialAuth/`:**
+*   **Do not integrate an external SDK.** The project ships a plugin-free implementation: `NativeAuth.cs` drives Android Credential Manager (Java bridge `Assets/Plugins/Android/AuthBridge.java`) and iOS `ASAuthorizationAppleIDProvider` / Google OAuth+PKCE (ObjC `Assets/Plugins/iOS/NativeAuth.mm`). UI code should only call `SocialLoginService`.
+*   Usage from a login screen (see `ParentLoginController` for the wired example):
+    ```csharp
+    if (!SocialLoginService.IsGoogleAvailable) { /* hide the Google button */ }
+    try {
+        AuthResponse auth = await SocialLoginService.LoginWithGoogle(); // or LoginWithApple()
+        // success — SessionManager already holds the Parent session; proceed to the parent home scene
+    } catch (SocialAuthException e) when (e.Cancelled) {
+        // user dismissed the native sheet — stay on the login screen, no error popup
+    } catch (Exception e) {
+        // show e.Message (backend failures arrive as ApiException with the server's message)
+    }
+    ```
+*   **Configuration lives in `ApiConfig.asset`**: `googleServerClientId` (Android) and `googleIosClientId` (iOS) — both must stay in the backend's `Authentication__Google__ClientIds` list, since the backend only accepts ID tokens minted for listed audiences. Apple needs no client-side config (audience = bundle id `com.loviev.imagineme`, expected in the backend's `Authentication__Apple__ClientIds`).
+*   On iOS builds, `Assets/Editor/iOS/NativeAuthPostProcess.cs` automatically adds the Google redirect URL scheme and the Sign in with Apple entitlement/capability — nothing to configure in Xcode.
+*   Platform availability: `IsGoogleAvailable` = Android or iOS (requires the respective client id); `IsAppleAvailable` = iOS only. Hide the buttons accordingly; native flows never run in the Editor.
+*   Password login on a social-only account returns `401` with message `"This account uses Google or Apple sign-in. Please continue with your provider."` — catch that message on the login form and prompt the user to use Google/Apple. Do **not** treat it as the "verify email" case (the backend deliberately avoids the word "verify").
+*   `SocialAuthSmokeTest.cs` in the same folder exercises the flow on device during development.
+
 ---
 
 ## 4. Final Integration: Scene Wiring Instructions

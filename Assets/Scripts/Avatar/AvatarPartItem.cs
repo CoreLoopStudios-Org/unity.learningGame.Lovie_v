@@ -138,6 +138,8 @@ namespace Avatar
         {
             if (isDefault || !isLocked) return true;
 
+            if (AvatarUnlockState.AllUnlocked) return true;
+
             if (Api.StoreService.Instance != null && Api.StoreService.Instance.IsPartUnlocked(itemId))
             {
                 return true;
@@ -152,6 +154,8 @@ namespace Avatar
         public bool CheckUnlocked()
         {
             if (isDefault || !isLocked) return true;
+
+            if (AvatarUnlockState.AllUnlocked) return true;
 
             if (Api.StoreService.Instance != null && Api.StoreService.Instance.IsPartUnlocked(itemId))
             {

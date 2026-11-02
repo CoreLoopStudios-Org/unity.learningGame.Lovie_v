@@ -42,6 +42,15 @@ namespace Api.Endpoints
             return await client.PostAsync<int>("/api/child/profile/add-coins", data);
         }
 
+        // Fixed 999-coin unlock-all purchase (price owned by the server — send no
+        // amount, ECONOMY-INTEGRATION-GUIDE §6). 400 = "Not enough coins. Required:
+        // 999, Available: X." or "All avatars are already unlocked." (repeat call
+        // never double-charges).
+        public async Awaitable<UnlockAllAvatarsResult> UnlockAllAvatarsAsync()
+        {
+            return await client.PostAsync<UnlockAllAvatarsResult>("/api/child/avatar/unlock-all", new { });
+        }
+
         public async Awaitable<Story[]> GetStoriesAsync()
         {
             return await client.GetAsync<Story[]>("/api/child/stories");
