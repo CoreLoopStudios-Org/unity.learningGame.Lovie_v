@@ -132,30 +132,39 @@ public final class GoogleCredentialActivity extends ComponentActivity
 
     private void handleResult(GetCredentialResponse response)
     {
-        Credential credential = response.getCredential();
+        Credential credential = response != null ? response.getCredential() : null;
         if (credential instanceof CustomCredential
                 && GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(credential.getType()))
         {
-            GoogleIdTokenCredential googleCredential = GoogleIdTokenCredential.createFrom(credential.getData());
-            filterByAuthorizedAccounts = true;
-            final String idToken = googleCredential.getIdToken();
-            runOnUiThread(() -> {
-                AuthBridge.sendGoogleSuccess(idToken,
-                        googleCredential.getId(),
-                        googleCredential.getDisplayName(),
-                        googleCredential.getGivenName(),
-                        googleCredential.getFamilyName(),
-                        googleCredential.getProfilePictureUri() == null
-                                ? null
-                                : googleCredential.getProfilePictureUri().toString());
-                finish();
-            });
+            try
+            {
+                GoogleIdTokenCredential googleCredential = GoogleIdTokenCredential.createFrom(credential.getData());
+                filterByAuthorizedAccounts = true;
+                final String idToken = googleCredential.getIdToken();
+                runOnUiThread(() -> {
+                    AuthBridge.sendGoogleSuccess(idToken,
+                            googleCredential.getId(),
+                            googleCredential.getDisplayName(),
+                            googleCredential.getGivenName(),
+                            googleCredential.getFamilyName(),
+                            googleCredential.getProfilePictureUri() == null
+                                    ? null
+                                    : googleCredential.getProfilePictureUri().toString());
+                    finish();
+                });
+            }
+            catch (Exception e)
+            {
+                filterByAuthorizedAccounts = true;
+                finishWithFailure("credential_parsing_error", e.getMessage());
+            }
         }
         else
         {
             filterByAuthorizedAccounts = true;
+            String type = credential != null ? credential.getType() : "null";
             finishWithFailure("unexpected_credential",
-                    "Credential Manager returned an unexpected credential type: " + credential.getType());
+                    "Credential Manager returned an unexpected credential type: " + type);
         }
     }
 

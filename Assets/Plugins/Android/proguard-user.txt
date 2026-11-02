@@ -1,0 +1,29 @@
+# -----------------------------------------------------------------------------
+# Unity & Native Bridge Keep Rules
+# -----------------------------------------------------------------------------
+
+# Keep Lovie native social auth bridge and trampoline activity called from Unity C# via JNI reflection
+-keep class com.lovie.auth.** { *; }
+-keepclassmembers class com.lovie.auth.** { *; }
+
+# Keep Lovie TTS bridge called from Unity C# via JNI reflection
+-keep class com.lovie.tts.** { *; }
+-keepclassmembers class com.lovie.tts.** { *; }
+
+# -----------------------------------------------------------------------------
+# Google Credential Manager & Google ID Rules
+# -----------------------------------------------------------------------------
+
+# Android Credential Manager core and Play Services integration
+-keep class androidx.credentials.** { *; }
+-keepclassmembers class androidx.credentials.** { *; }
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** { *; }
+
+# Google ID library (GetGoogleIdOption, GoogleIdTokenCredential, etc.)
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keepclassmembers class com.google.android.libraries.identity.googleid.** { *; }
+
+# Suppress Proguard/R8 warnings for credential manager dependencies
+-dontwarn androidx.credentials.**
+-dontwarn com.google.android.libraries.identity.googleid.**

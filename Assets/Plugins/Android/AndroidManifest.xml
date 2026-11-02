@@ -33,6 +33,7 @@
                   android:exported="false"
                   android:excludeFromRecents="true"
                   android:noHistory="true"
+                  android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
                   android:theme="@android:style/Theme.Translucent.NoTitleBar"
                   tools:node="merge" />
     </application>
