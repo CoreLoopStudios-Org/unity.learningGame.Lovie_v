@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Modules.GameFramework.UI;
+using Audio;
 
 namespace CoreLoop.WordMatch
 {
@@ -134,20 +135,25 @@ namespace CoreLoop.WordMatch
 
         private async void PlayAudio()
         {
-            if (audioSource == null || entry == null) return;
+            if (entry == null) return;
 
-            if (entry.audioClip != null)
+            if (audioSource != null && entry.audioClip != null)
             {
                 audioSource.PlayOneShot(entry.audioClip);
+                return;
             }
-            else if (!string.IsNullOrEmpty(entry.audioUrl))
+
+            if (audioSource != null && !string.IsNullOrEmpty(entry.audioUrl))
             {
                 var clip = await Api.RemoteAssetCache.Instance.GetAudioAsync(entry.audioUrl);
                 if (clip != null && audioSource != null)
                 {
                     audioSource.PlayOneShot(clip);
+                    return;
                 }
             }
+
+            GameVoice.Speak(entry.word);
         }
     }
 }

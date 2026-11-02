@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Audio;
 
 namespace Modules.Games.StorySequencing
 {
@@ -15,7 +16,7 @@ namespace Modules.Games.StorySequencing
     /// leaving StorySequencingManager to decide where it ends up in the
     /// list.
     /// </summary>
-    public class DraggableEventCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class DraggableEventCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         #region Fields
 
@@ -200,6 +201,12 @@ namespace Modules.Games.StorySequencing
         /// so the manager can resolve the resulting list position.
         /// </summary>
         public event Action<DraggableEventCard, Vector2> OnCardDropped;
+
+        /// <summary>Reads the card's sentence aloud when it is tapped (not dragged).</summary>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            GameVoice.Speak(_eventText != null ? _eventText.text : null);
+        }
 
         /// <inheritdoc />
         public void OnBeginDrag(PointerEventData eventData)

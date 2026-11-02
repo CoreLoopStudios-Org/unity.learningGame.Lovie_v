@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Modules.GameFramework.UI;
+using Audio;
 
 namespace CoreLoop.ListenWord
 {
@@ -239,20 +240,25 @@ namespace CoreLoop.ListenWord
 
         private async void PlayWordAudio()
         {
-            if (audioSource == null || currentWordData == null) return;
+            if (currentWordData == null) return;
 
-            if (currentWordData.audioClip != null)
+            if (audioSource != null && currentWordData.audioClip != null)
             {
                 audioSource.PlayOneShot(currentWordData.audioClip);
+                return;
             }
-            else if (!string.IsNullOrEmpty(currentWordData.audioUrl))
+
+            if (audioSource != null && !string.IsNullOrEmpty(currentWordData.audioUrl))
             {
                 var clip = await Api.RemoteAssetCache.Instance.GetAudioAsync(currentWordData.audioUrl);
                 if (clip != null && audioSource != null)
                 {
                     audioSource.PlayOneShot(clip);
+                    return;
                 }
             }
+
+            GameVoice.Speak(currentWordData.targetWord);
         }
 
         private async void LoadReferenceImage(string url)

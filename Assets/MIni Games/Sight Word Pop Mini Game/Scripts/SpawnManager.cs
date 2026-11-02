@@ -30,6 +30,8 @@ public class SpawnManager : MonoBehaviour
     [Tooltip("Minimum distance between any two objects at spawn time.")]
     [SerializeField] private float _minSpawnDistance = 350f;
 
+    private const float VISIBLE_MARGIN = 150f;
+
     private readonly Dictionary<FloatingObjectType, ObjectPool> _pools
         = new Dictionary<FloatingObjectType, ObjectPool>();
 
@@ -49,6 +51,32 @@ public class SpawnManager : MonoBehaviour
     #region Properties
 
     public IReadOnlyList<FloatingObject> ActiveObjects => _activeObjects;
+
+    /// <summary>
+    /// True once every word of the round has been spawned and each remaining object has
+    /// floated fully into view. The game waits for this before it starts speaking words.
+    /// </summary>
+    public bool AreAllWordsVisible
+    {
+        get
+        {
+            if (_wordQueueIndex < _wordQueue.Count)
+            {
+                return false;
+            }
+
+            float visibleBottomY = -(_spawnArea.rect.height * 0.5f) + VISIBLE_MARGIN;
+            foreach (FloatingObject obj in _activeObjects)
+            {
+                if (obj != null && obj.RectTransform.anchoredPosition.y < visibleBottomY)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
 
     private float SpawnBelowScreenY => -(_spawnArea.rect.height * 0.5f) - 200f;
     private float TopBoundaryY => (_spawnArea.rect.height * 0.5f) + 200f;

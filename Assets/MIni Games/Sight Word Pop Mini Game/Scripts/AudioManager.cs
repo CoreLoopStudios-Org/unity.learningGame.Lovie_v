@@ -74,10 +74,16 @@ public class AudioManager : MonoBehaviour
         else if (!string.IsNullOrEmpty(entry.audioUrl))
         {
             var clip = await Api.RemoteAssetCache.Instance.GetAudioAsync(entry.audioUrl);
+            if (clip == null)
+            {
+                global::Audio.GameVoice.Speak(entry.word);
+            }
+
             PlayWord(clip);
         }
         else
         {
+            global::Audio.GameVoice.Speak(entry.word);
             PlayWord((AudioClip)null);
         }
     }

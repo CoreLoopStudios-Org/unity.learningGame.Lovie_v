@@ -51,6 +51,8 @@ public class GameManager : MonoBehaviour
     private int _missedWords;
 
     private Coroutine _audioLoopRoutine;
+    private const float VISIBLE_WAIT_TIMEOUT = 30f;
+    private const float VISIBLE_SETTLE_SECONDS = 0.6f;
 
     private IWordProvider _wordProvider;
 
@@ -200,6 +202,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private IEnumerator AudioLoop()
     {
+        yield return WaitForWordsToBeVisible();
+
         while (CurrentState == GameState.Playing)
         {
             if (_roundWords == null || _roundWords.Count == 0) yield break;
@@ -225,6 +229,21 @@ public class GameManager : MonoBehaviour
             // Advance to next word (loop through the list)
             _currentTargetIndex = (_currentTargetIndex + 1) % _roundWords.Count;
         }
+    }
+
+    // Holds the first spoken word until every word object has floated fully into view.
+    private IEnumerator WaitForWordsToBeVisible()
+    {
+        float waited = 0f;
+        while (SpawnManager.Instance != null
+               && !SpawnManager.Instance.AreAllWordsVisible
+               && waited < VISIBLE_WAIT_TIMEOUT)
+        {
+            waited += Time.deltaTime;
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(VISIBLE_SETTLE_SECONDS);
     }
 
     // ─────────────────────────────────────────────

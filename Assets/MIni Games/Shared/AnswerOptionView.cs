@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Audio;
 
 namespace Modules.GameFramework.UI
 {
@@ -149,6 +150,7 @@ namespace Modules.GameFramework.UI
             }
 
             _isInputLocked = true;
+            GameVoice.Speak(_optionText != null ? _optionText.text : null);
             _feedback.PlayTapPop(() => OnOptionSelected?.Invoke(this));
         }
 

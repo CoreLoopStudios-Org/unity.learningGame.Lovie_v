@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ImagineMe.API;
+using Audio;
 
 namespace Modules.Games.WordWizard
 {
@@ -593,15 +594,13 @@ namespace Modules.Games.WordWizard
 
         private void PlayAudio()
         {
-            // No AudioClip field/resolution strategy exists yet for this
-            // content model — this intentionally no-ops until one is added.
-            // Kept as its own method (rather than inlined into the button
-            // listener) so a future clip lookup can slot in here without
-            // touching how the button is wired.
-            if (_audioSource == null)
+            // The content model has no recorded clip, so the word is read with device speech.
+            if (_roundEntries == null || _currentEntryIndex < 0 || _currentEntryIndex >= _roundEntries.Count)
             {
                 return;
             }
+
+            GameVoice.Speak(_roundEntries[_currentEntryIndex].TargetWord);
         }
 
         private void SetInteractionEnabled(bool isEnabled)
