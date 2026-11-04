@@ -31,10 +31,7 @@ namespace Media
         [SerializeField] private string _uploadFileNamePrefix = "story_background";
 
         [Header("Preview")]
-        [Tooltip("Seconds the preview stays fully visible after a pick.")]
-        [SerializeField, Min(0f)] private float _previewVisibleSeconds = 3f;
-
-        [Tooltip("Preview pop-in / fade-out duration (UI pop-in standard: 0.15-0.25s).")]
+        [Tooltip("Preview pop-in duration (UI pop-in standard: 0.15-0.25s).")]
         [SerializeField, Range(0f, 1f)] private float _previewAnimationDuration = 0.25f;
 
         [Tooltip("Scale the preview starts from before popping to full size.")]
@@ -61,8 +58,6 @@ namespace Media
         public string PickerTitle => _pickerTitle;
 
         public string UploadFileNamePrefix => _uploadFileNamePrefix;
-
-        public float PreviewVisibleSeconds => _previewVisibleSeconds;
 
         public float PreviewAnimationDuration => _previewAnimationDuration;
 

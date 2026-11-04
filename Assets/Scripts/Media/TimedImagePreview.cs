@@ -1,12 +1,11 @@
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Media
 {
     [RequireComponent(typeof(RawImage))]
-    public sealed class TimedImagePreview : MonoBehaviour, IPointerClickHandler
+    public sealed class TimedImagePreview : MonoBehaviour
     {
         #region Fields
 
@@ -45,9 +44,6 @@ namespace Media
             _sequence = DOTween.Sequence()
                 .Append(_image.DOFade(1f, duration).SetEase(Ease.InOutSine))
                 .Join(transform.DOScale(Vector3.one, duration).SetEase(Ease.OutBack))
-                .AppendInterval(config.PreviewVisibleSeconds)
-                .Append(_image.DOFade(0f, duration).SetEase(Ease.InOutSine))
-                .OnComplete(HideImmediately)
                 .SetLink(gameObject);
         }
 
@@ -60,15 +56,6 @@ namespace Media
                 _image.texture = null;
 
             gameObject.SetActive(false);
-        }
-
-        #endregion
-
-        #region Events / Callbacks
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            HideImmediately();
         }
 
         #endregion

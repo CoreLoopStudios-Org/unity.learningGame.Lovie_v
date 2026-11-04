@@ -12,6 +12,7 @@ namespace UI
     {
         // Backend ContentStatus: None=0, Draft=1, Published=2.
         private const int PublishedStatus = 2;
+        private const float SuccessMessageDurationSeconds = 2f;
 
         [Header("Form Fields")]
         [SerializeField] private TMP_InputField titleInput;
@@ -31,6 +32,7 @@ namespace UI
         private ApiClient apiClient;
         private AdminApi adminApi;
         private bool isUploading;
+        private int statusMessageVersion;
 
         private void Awake()
         {
@@ -110,6 +112,7 @@ namespace UI
                 }
 
                 ShowStatus(message);
+                _ = HideStatusAfterDelayAsync();
                 ClearForm();
             }
             catch (ApiException ex)
@@ -161,11 +164,23 @@ namespace UI
 
         private void ShowStatus(string message)
         {
+            statusMessageVersion++;
             if (statusFeedbackText != null)
             {
                 statusFeedbackText.text = message;
                 statusFeedbackText.gameObject.SetActive(true);
             }
+        }
+
+        private async Awaitable HideStatusAfterDelayAsync()
+        {
+            int versionAtShow = statusMessageVersion;
+            await Awaitable.WaitForSecondsAsync(SuccessMessageDurationSeconds);
+            if (this == null || versionAtShow != statusMessageVersion)
+                return;
+
+            if (statusFeedbackText != null)
+                statusFeedbackText.gameObject.SetActive(false);
         }
 
         [Serializable]
