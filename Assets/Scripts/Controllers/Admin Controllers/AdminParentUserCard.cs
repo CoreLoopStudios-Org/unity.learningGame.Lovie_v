@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using Api;
 using Api.Models;
 
 namespace UI
@@ -7,6 +8,7 @@ namespace UI
     public class AdminParentUserCard : MonoBehaviour
     {
         [Header("UI Elements")]
+        [SerializeField] private UnityEngine.UI.Image profileImage;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI idText;
         [SerializeField] private UnityEngine.UI.Button banButton;
@@ -46,6 +48,30 @@ namespace UI
             {
                 idText.text = user?.id ?? string.Empty;
             }
+
+            ApplyProfilePicture(user?.profilePictureUrl);
+        }
+
+        private void ApplyProfilePicture(string url)
+        {
+            if (profileImage == null) return;
+
+            if (string.IsNullOrEmpty(url))
+            {
+                profileImage.sprite = null;
+                return;
+            }
+
+            _ = LoadProfileImageAsync(url);
+        }
+
+        private async Awaitable LoadProfileImageAsync(string url)
+        {
+            Sprite sprite = await RemoteAssetCache.Instance.GetSpriteAsync(url);
+
+            // The card can be destroyed while the download is in flight.
+            if (sprite != null && profileImage != null)
+                profileImage.sprite = sprite;
         }
 
         private void OnBanClicked()

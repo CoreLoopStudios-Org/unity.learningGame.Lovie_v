@@ -17,6 +17,8 @@ namespace UI
         [Header("Feedback")]
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
 
+        public static event Action StoriesChanged;
+
         private ApiClient apiClient;
         private AdminApi adminApi;
         private int requestId;
@@ -28,6 +30,25 @@ namespace UI
             apiClient = ApiClient.Instance;
             apiClient.Initialize(ApiConfig.Instance);
             adminApi = new AdminApi(apiClient);
+
+            StoriesChanged += OnStoriesChanged;
+        }
+
+        private void OnDestroy()
+        {
+            StoriesChanged -= OnStoriesChanged;
+        }
+
+        public static void NotifyStoriesChanged()
+        {
+            StoriesChanged?.Invoke();
+        }
+
+        private void OnStoriesChanged()
+        {
+            // When disabled, OnEnable refreshes anyway.
+            if (!isActiveAndEnabled) return;
+            _ = RefreshAsync();
         }
 
         private void OnEnable()

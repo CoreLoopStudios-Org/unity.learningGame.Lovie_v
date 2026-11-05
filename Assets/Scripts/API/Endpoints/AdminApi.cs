@@ -48,6 +48,7 @@ namespace Api.Models
         public string disabledAt;
         public string createdAt;
         public string additionalData;
+        public string profilePictureUrl;
     }
     [Serializable]
     public class PaginatedUsers

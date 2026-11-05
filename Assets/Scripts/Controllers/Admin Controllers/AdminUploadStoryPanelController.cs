@@ -114,6 +114,7 @@ namespace UI
                 ShowStatus(message);
                 _ = HideStatusAfterDelayAsync();
                 ClearForm();
+                AdminStoriesPanelController.NotifyStoriesChanged();
             }
             catch (ApiException ex)
             {
