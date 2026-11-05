@@ -51,6 +51,16 @@ namespace Api
             }
         }
 
+        // Runs before any scene object Awake/OnEnable, so controllers that read
+        // SessionManager.Instance in OnEnable never see null (SceneBootstrap only
+        // created it in Start(), which is too late for direct scene launches).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void AutoCreate()
+        {
+            if (instance != null) return;
+            new GameObject("SessionManager").AddComponent<SessionManager>();
+        }
+
         void Awake()
         {
             if (instance != null && instance != this)

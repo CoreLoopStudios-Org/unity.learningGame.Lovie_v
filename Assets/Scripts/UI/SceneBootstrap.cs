@@ -64,12 +64,6 @@ namespace UI
 
         private async void Start()
         {
-            if (SessionManager.Instance == null)
-            {
-                var sessionGo = new GameObject("SessionManager");
-                sessionGo.AddComponent<SessionManager>();
-            }
-
             // Wire API 401 errors to session expiry handling
             ApiClient.Instance.OnSessionExpired += SessionManager.Instance.HandleSessionExpired;
 
