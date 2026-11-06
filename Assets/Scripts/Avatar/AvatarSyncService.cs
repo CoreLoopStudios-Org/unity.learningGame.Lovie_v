@@ -124,6 +124,14 @@ namespace Avatar
 
         private const string UnlockedStateKey = "isUnlocked";
 
+        // Last avatarState JSON confirmed by the server — written on every load/save.
+        public const string AvatarStatePrefsKey = "AvatarState_Server";
+
+        public static string GetCachedAvatarState()
+        {
+            return PlayerPrefs.GetString(AvatarStatePrefsKey, string.Empty);
+        }
+
         // Backend stores this JSON as-is in the Child.AvatarState column.
         // Carries "isUnlocked": true once unlock-all is purchased so the flag
         // persists on the backend alongside additionalData.allAvatarsUnlocked.
@@ -178,7 +186,7 @@ namespace Avatar
 
         private void SaveToPlayerPrefs(string avatarStateJson)
         {
-            PlayerPrefs.SetString("AvatarState_Server", avatarStateJson);
+            PlayerPrefs.SetString(AvatarStatePrefsKey, avatarStateJson);
             PlayerPrefs.Save();
         }
 

@@ -7,9 +7,9 @@ namespace Avatar
     // Renders body/hair/dress sprites onto fixed UI Image slots from an avatarState JSON
     public static class AvatarSlotRenderer
     {
-        public static void Apply(string avatarStateJson, AvatarPartDatabase database, Image bodyImage, Image hairImage, Image dressImage, bool fallbackToDefaults = true)
+        public static void Apply(string avatarStateJson, AvatarPartDatabase database, Image bodyImage, Image hairImage, Image dressImage, Image shoesImage = null, bool fallbackToDefaults = true)
         {
-            if (bodyImage == null && hairImage == null && dressImage == null)
+            if (bodyImage == null && hairImage == null && dressImage == null && shoesImage == null)
                 return;
 
             if (database == null)
@@ -28,6 +28,7 @@ namespace Avatar
                     SetSlot(FindPart(state, AvatarPartCategory.BodyColor, database), bodyImage);
                     SetSlot(FindPart(state, AvatarPartCategory.Hair, database), hairImage);
                     SetSlot(FindPart(state, AvatarPartCategory.Dress, database), dressImage);
+                    SetSlot(shoesImage != null ? FindPart(state, AvatarPartCategory.Shoes, database) : null, shoesImage);
                     return;
                 }
             }
@@ -38,6 +39,7 @@ namespace Avatar
                 SetSlot(null, bodyImage);
                 SetSlot(null, hairImage);
                 SetSlot(null, dressImage);
+                SetSlot(null, shoesImage);
                 return;
             }
 
@@ -45,6 +47,22 @@ namespace Avatar
             SetSlot(database.GetDefaultPartForCategory(AvatarPartCategory.BodyColor), bodyImage);
             SetSlot(database.GetDefaultPartForCategory(AvatarPartCategory.Hair), hairImage);
             SetSlot(database.GetDefaultPartForCategory(AvatarPartCategory.Dress), dressImage);
+            SetSlot(shoesImage != null ? database.GetDefaultPartForCategory(AvatarPartCategory.Shoes) : null, shoesImage);
+        }
+
+        // Prefers an explicitly assigned database, then any manager in the scene,
+        // then the project's Resources copy — leaderboard-style pages may sit in
+        // scenes where no AvatarCustomizationManager exists.
+        public static AvatarPartDatabase ResolveDatabase(AvatarPartDatabase assigned)
+        {
+            if (assigned != null)
+                return assigned;
+
+            var manager = Object.FindFirstObjectByType<AvatarCustomizationManager>();
+            if (manager != null && manager.Database != null)
+                return manager.Database;
+
+            return Resources.Load<AvatarPartDatabase>("Avatar Data/AvatarDatabase");
         }
 
         private static AvatarPartItem FindPart(Dictionary<string, string> state, AvatarPartCategory category, AvatarPartDatabase database)
