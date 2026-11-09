@@ -16,6 +16,7 @@ namespace UI
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI scoreText;
         [SerializeField] private TextMeshProUGUI scoreToNextText; // "N pts to #M" chase line
+        [SerializeField] private TextMeshProUGUI positionToNext;
 
         [Header("Avatar")]
         [SerializeField] private Image bodyImage;
@@ -66,7 +67,8 @@ namespace UI
             // Null (unranked or already #1) or zero — nothing to chase, hide the line.
             if (nextRank.HasValue && pointsToNext.HasValue && pointsToNext.Value > 0)
             {
-                scoreToNextText.text = $"{pointsToNext.Value} pts to #{nextRank.Value}";
+                scoreToNextText.text = $"{pointsToNext.Value}";
+                positionToNext.text = $"#{nextRank.Value}";
                 scoreToNextText.gameObject.SetActive(true);
             }
             else
