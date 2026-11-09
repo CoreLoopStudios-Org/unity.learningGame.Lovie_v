@@ -301,6 +301,7 @@ namespace UI
         Profile,
         Progress,
         Settings,
+        LeaderBoard,
         Games,
         Store,
         Stories_Item,
