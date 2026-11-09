@@ -111,7 +111,7 @@ namespace UI
         // back on the Games page.
         private static void RequestGamesPageOnLoad()
         {
-            AdminNavigationController.PendingPage = AdminPageType.Games;
+            AdminNavigationController.PendingPage = AdminPageType.Home;
         }
 
         public static void SetLastPlayed(MiniGame game)
