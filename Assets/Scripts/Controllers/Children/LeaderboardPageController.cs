@@ -17,6 +17,8 @@ namespace UI
         [SerializeField] private LeaderboardBoardType boardType = LeaderboardBoardType.Weekly;
         [SerializeField, Range(1, 100)] private int pageSize = 10;
 
+        private const int PodiumSize = 3;
+
         [Header("Views")]
         [SerializeField] private LeaderboardPodiumView podiumView;
         [SerializeField] private LeaderboardOwnRankView ownRankView;
@@ -65,8 +67,9 @@ namespace UI
                 if (podiumView != null)
                     podiumView.Render(TopThree(page1));
 
+                // The podium shows the top three; the list continues from rank 4.
                 if (rankListView != null)
-                    await rankListView.AppendPageAsync(page1);
+                    await rankListView.AppendPageAsync(page1, skipFirst: PodiumSize);
             }
             catch (Exception ex)
             {
@@ -110,7 +113,7 @@ namespace UI
             if (page?.entries == null)
                 return top;
 
-            for (int i = 0; i < page.entries.Count && i < 3; i++)
+            for (int i = 0; i < page.entries.Count && i < PodiumSize; i++)
             {
                 if (page.entries[i] != null)
                     top.Add(page.entries[i]);

@@ -64,7 +64,8 @@ namespace UI
         }
 
         // Seeds the view with an already-fetched page (page 1, shared with the podium).
-        public async Awaitable AppendPageAsync(LeaderboardPage page)
+        // skipFirst drops the page's first entries (e.g. the podium's top three).
+        public async Awaitable AppendPageAsync(LeaderboardPage page, int skipFirst = 0)
         {
             if (page == null || content == null || cardPrefab == null)
             {
@@ -75,7 +76,15 @@ namespace UI
             nextPage = page.page + 1;
             hasMore = page.page < page.totalPages && page.entries != null && page.entries.Count > 0;
 
-            Spawn(page.entries);
+            List<LeaderboardEntry> entries = page.entries;
+            if (entries != null && skipFirst > 0)
+            {
+                entries = entries.Count > skipFirst
+                    ? entries.GetRange(skipFirst, entries.Count - skipFirst)
+                    : new List<LeaderboardEntry>();
+            }
+
+            Spawn(entries);
             await FillViewportIfShortAsync();
         }
 
