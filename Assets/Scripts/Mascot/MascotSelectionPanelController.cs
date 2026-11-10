@@ -45,6 +45,7 @@ namespace Mascot
 
         [Header("Debug State")]
         [SerializeField] private string stagedMascotId;
+        
 
         public string StagedMascotId => stagedMascotId;
         public IReadOnlyList<MascotSelectionButton> MascotButtons => mascotButtons;
@@ -248,7 +249,6 @@ namespace Mascot
 
         public void ClosePanel()
         {
-            
             panelRoot.SetActive(false);
         }
 
