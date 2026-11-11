@@ -1,0 +1,4 @@
+# Lovie native plugins are reached from C# only via JNI string lookups
+# (AndroidJavaClass("com.lovie...")), which R8 cannot see — without these
+# keep rules release builds strip the classes and the plugins fail on device.
+-keep class com.lovie.** { *; }
