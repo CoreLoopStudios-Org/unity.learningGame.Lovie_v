@@ -92,7 +92,10 @@ namespace Api.EditorTools
                 return;
             }
 
-            string scheme = GoogleUrlSchemePrefix + clientId;
+            // Must match Google's REVERSED_CLIENT_ID: the client ID without the
+            // ".apps.googleusercontent.com" domain suffix, else Google rejects the
+            // redirect with redirect_uri_mismatch.
+            string scheme = GoogleUrlSchemePrefix + clientId.Replace(".apps.googleusercontent.com", "");
 
             string plistPath = Path.Combine(buildPath, "Info.plist");
             PlistDocument plist = new PlistDocument();

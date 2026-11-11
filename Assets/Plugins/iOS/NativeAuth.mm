@@ -97,8 +97,10 @@ static NSString *LovieAuthSha256Base64Url(NSString *input)
     NSData *digestData = [NSData dataWithBytes:digest length:sizeof(digest)];
 
     NSString *base64 = [digestData base64EncodedStringWithOptions:0];
-    return [[base64 stringByReplacingOccurrencesOfString:@"+" withString:@"-"]
+    NSString *urlSafe = [[base64 stringByReplacingOccurrencesOfString:@"+" withString:@"-"]
         stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+    // Google rejects code_challenge values that keep base64 "=" padding.
+    return [urlSafe stringByReplacingOccurrencesOfString:@"=" withString:@""];
 }
 
 // Best-effort JWT payload decode so the C# side gets the profile without
@@ -141,9 +143,14 @@ static NSDictionary *LovieAuthJwtPayload(NSString *jwt)
     return instance;
 }
 
+// Google's registered redirect scheme is the REVERSED_CLIENT_ID from the
+// GoogleService-Info.plist: the client ID WITHOUT the ".apps.googleusercontent.com"
+// domain suffix (com.googleusercontent.apps.<numeric-hash>). Including the
+// suffix makes Google reject the request with redirect_uri_mismatch.
 - (NSString *)redirectSchemeForClientId:(NSString *)clientId
 {
-    return [NSString stringWithFormat:@"com.googleusercontent.apps.%@", clientId];
+    NSString *trimmed = [clientId stringByReplacingOccurrencesOfString:@".apps.googleusercontent.com" withString:@""];
+    return [NSString stringWithFormat:@"com.googleusercontent.apps.%@", trimmed];
 }
 
 - (void)signInWithClientId:(NSString *)clientId
