@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System;
 
 namespace Audio
@@ -75,6 +76,12 @@ namespace Audio
         private float sfxVolume = 1f;
         private AudioClip currentBGM;
 
+        // BGM plays only in the Main Menu scene; everything else (login, parent
+        // portal, admin, minigames) pauses it. Position is tracked manually so
+        // resume continues exactly where it stopped.
+        private const string BgmSceneName = "Main Menu";
+        private float pausedBGMTime = -1f;
+
         // Events for UI binding
         public event Action<bool> OnBGMStateChanged;
         public event Action<bool> OnSFXStateChanged;
@@ -107,6 +114,28 @@ namespace Audio
             if (instance == this)
             {
                 recreationSuppressed = true;
+            }
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == BgmSceneName)
+            {
+                ResumeBGM();
+            }
+            else
+            {
+                PauseBGM();
             }
         }
 
@@ -156,7 +185,16 @@ namespace Audio
         {
             if (clip == null) return;
 
+            // Same track already active (playing or paused): continue it in
+            // place instead of restarting from the beginning.
+            if (bgmSource.clip == clip && (bgmSource.isPlaying || pausedBGMTime >= 0f))
+            {
+                ResumeBGM();
+                return;
+            }
+
             currentBGM = clip;
+            pausedBGMTime = -1f;
 
             if (!isBGMEnabled)
             {
@@ -196,6 +234,8 @@ namespace Audio
         /// </summary>
         public void StopBGM(bool fadeOut = true)
         {
+            pausedBGMTime = -1f;
+
             if (fadeOut)
             {
                 StartCoroutine(FadeOutBGM());
@@ -207,21 +247,38 @@ namespace Audio
         }
 
         /// <summary>
-        /// Pauses the current background music.
+        /// Pauses the current background music, remembering the position so
+        /// ResumeBGM continues from the same spot instead of restarting.
         /// </summary>
         public void PauseBGM()
         {
+            if (bgmSource.clip == null || !bgmSource.isPlaying) return;
+
+            pausedBGMTime = bgmSource.time;
             bgmSource.Pause();
         }
 
         /// <summary>
-        /// Resumes the paused background music.
+        /// Resumes the paused background music from where it was paused.
         /// </summary>
         public void ResumeBGM()
         {
-            if (isBGMEnabled)
+            if (!isBGMEnabled || bgmSource.clip == null || pausedBGMTime < 0f) return;
+
+            float resumeTime = pausedBGMTime % bgmSource.clip.length;
+            pausedBGMTime = -1f;
+
+            if (bgmSource.isPlaying)
             {
-                bgmSource.UnPause();
+                // The pause was lost (e.g. audio device reinit) and the track
+                // restarted from 0 — seek back to where it was paused.
+                bgmSource.time = resumeTime;
+            }
+            else
+            {
+                bgmSource.volume = bgmVolume;
+                bgmSource.Play();
+                bgmSource.time = resumeTime;
             }
         }
 
@@ -236,7 +293,11 @@ namespace Audio
 
             if (isBGMEnabled)
             {
-                if (currentBGM != null && !bgmSource.isPlaying)
+                if (pausedBGMTime >= 0f)
+                {
+                    ResumeBGM();
+                }
+                else if (currentBGM != null && !bgmSource.isPlaying)
                 {
                     StartCoroutine(FadeInBGM(currentBGM));
                 }
@@ -266,7 +327,11 @@ namespace Audio
 
             if (isBGMEnabled)
             {
-                if (currentBGM != null && !bgmSource.isPlaying)
+                if (pausedBGMTime >= 0f)
+                {
+                    ResumeBGM();
+                }
+                else if (currentBGM != null && !bgmSource.isPlaying)
                 {
                     bgmSource.clip = currentBGM;
                     bgmSource.Play();
@@ -406,6 +471,7 @@ namespace Audio
             }
 
             bgmSource.Stop();
+            pausedBGMTime = -1f;
             bgmSource.volume = isBGMEnabled ? bgmVolume : 0f;
         }
 
