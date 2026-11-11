@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -13,6 +14,10 @@ namespace UI
     /// </summary>
     public class PanelCloser : MonoBehaviour, IPointerClickHandler
     {
+        /// <summary>Fired the moment a close is triggered — before the shrink
+        /// animation — so listeners (e.g. TTS) can react immediately.</summary>
+        public event Action Closing;
+
         [Header("Panel to Close")]
         [SerializeField] private GameObject panelToClose;
 
@@ -77,6 +82,7 @@ namespace UI
                 return;
             }
 
+            Closing?.Invoke();
             StartCoroutine(AnimateClose(panelToClose));
         }
 

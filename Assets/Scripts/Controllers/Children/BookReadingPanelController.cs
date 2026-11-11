@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using Api;
 using Api.Models;
+using Audio;
 
 namespace UI
 {
@@ -36,6 +37,7 @@ namespace UI
         private bool isTurningPage;
         private bool completionRecorded;
         private float readingStartTime;
+        private PanelCloser panelCloser;
 
         public Story Story { get; private set; }
 
@@ -55,10 +57,23 @@ namespace UI
             SwipeDetector swipe = gameObject.AddComponent<SwipeDetector>();
             swipe.SwipeLeft += HandleNextClicked;
             swipe.SwipeRight += HandleBackClicked;
+
+            // Stop narration the instant the close button is tapped, not after
+            // the shrink animation finishes.
+            panelCloser = GetComponentInChildren<PanelCloser>(true);
+            if (panelCloser != null)
+            {
+                panelCloser.Closing += StopNarration;
+            }
         }
 
         private void OnDestroy()
         {
+            if (panelCloser != null)
+            {
+                panelCloser.Closing -= StopNarration;
+            }
+
             if (nextButton != null)
             {
                 nextButton.onClick.RemoveListener(HandleNextClicked);
@@ -68,6 +83,12 @@ namespace UI
             {
                 backButton.onClick.RemoveListener(HandleBackClicked);
             }
+        }
+
+        private void OnDisable()
+        {
+            // Panel closed/destroyed — cut off any page narration immediately.
+            StopNarration();
         }
 
         public void Setup(Story story)
@@ -131,6 +152,9 @@ namespace UI
         {
             isTurningPage = true;
             SetButtonsInteractive(false);
+
+            // Page changed — the old page's narration no longer applies.
+            StopNarration();
 
             // Vanish the current text instantly, then swap the page.
             if (storyText != null)
@@ -201,6 +225,15 @@ namespace UI
             {
                 backButton.interactable = interactive;
             }
+        }
+
+        private void StopNarration()
+        {
+            // Guard so a panel closed without ever pressing play doesn't
+            // lazily spin up the TTS singleton.
+            if (!MobileTTS.HasInstance) return;
+
+            MobileTTS.Instance.Stop();
         }
 
         private void UpdateControls()

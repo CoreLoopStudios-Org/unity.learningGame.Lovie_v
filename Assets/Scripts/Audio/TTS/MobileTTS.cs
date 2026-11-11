@@ -45,6 +45,10 @@ namespace Audio
         /// <summary>True once the native engine finished initializing.</summary>
         public bool IsReady => backend != NativeBackend.Unsupported && nativeReady;
 
+        /// <summary>True when the singleton already exists — lets callers stop
+        /// speech without lazily spinning up a fresh instance.</summary>
+        public static bool HasInstance => instance != null;
+
         /// <summary>True while an utterance is currently being spoken.</summary>
         public bool IsSpeaking
         {
