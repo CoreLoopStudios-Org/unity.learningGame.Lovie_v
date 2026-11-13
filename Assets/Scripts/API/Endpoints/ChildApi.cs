@@ -81,9 +81,10 @@ namespace Api.Endpoints
             return await client.GetAsync<Quiz>($"/api/child/quizzes/{id}");
         }
 
-        public async Awaitable<ActivityLogged> LogStoryActivityAsync(string storyId, string payload)
+        // durationSeconds (API doc §4.9) feeds the server-side reading-time aggregates (§4.11.1).
+        public async Awaitable<ActivityLogged> LogStoryActivityAsync(string storyId, string payload, int durationSeconds = 0)
         {
-            var data = new { storyId, payload };
+            var data = new { storyId, payload, durationSeconds };
             return await client.PostAsync<ActivityLogged>("/api/child/activities/story", data);
         }
 
@@ -93,9 +94,11 @@ namespace Api.Endpoints
             return await client.PostAsync<ActivityLogged>("/api/child/activities/quiz", data);
         }
 
-        public async Awaitable<ActivityLogged> LogGameActivityAsync(string payload)
+        // durationSeconds is a top-level field (API doc §4.9) feeding the most-played-games
+        // playtime stats (§6.1.1); the payload must carry gameName for game matching.
+        public async Awaitable<ActivityLogged> LogGameActivityAsync(string payload, int durationSeconds = 0)
         {
-            var data = new { payload };
+            var data = new { payload, durationSeconds };
             return await client.PostAsync<ActivityLogged>("/api/child/activities/game", data);
         }
 

@@ -57,7 +57,6 @@ namespace UI
             public string title;
             public string name;
             public float score;
-            public int durationSeconds;
         }
 
         private void Awake()
@@ -134,10 +133,11 @@ namespace UI
             {
                 ChildDetail detail = await parentApi.GetChildAsync(childId);
                 ChildActivity[] activities = await parentApi.GetChildActivitiesAsync(childId);
+                ReadingTime readingTime = await parentApi.GetChildReadingTimeAsync(childId);
 
                 if (id != requestId || !isActiveAndEnabled) return;
 
-                RenderChild(detail, activities);
+                RenderChild(detail, activities, readingTime);
             }
             catch (Exception ex)
             {
@@ -146,7 +146,7 @@ namespace UI
             }
         }
 
-        private void RenderChild(ChildDetail detail, ChildActivity[] activities)
+        private void RenderChild(ChildDetail detail, ChildActivity[] activities, ReadingTime readingTime)
         {
             if (childNameText != null)
             {
@@ -171,8 +171,6 @@ namespace UI
             int storiesRead = 0;
             float quizScoreSum = 0f;
             int quizCount = 0;
-            int todayReadingSeconds = 0;
-            DateTime todayUtc = DateTime.UtcNow.Date;
 
             if (activities != null)
             {
@@ -187,8 +185,6 @@ namespace UI
                     {
                         case ActivityType.StoryRead:
                             storiesRead++;
-                            if (payload != null && ParseTime(activity.createdAt).ToUniversalTime().Date == todayUtc)
-                                todayReadingSeconds += Mathf.Max(0, payload.durationSeconds);
                             break;
 
                         case ActivityType.QuizAttempt:
@@ -203,7 +199,7 @@ namespace UI
             }
 
             if (readingTimeText != null)
-                readingTimeText.text = $"{todayReadingSeconds / 60:00}m";
+                readingTimeText.text = $"{Mathf.Max(0, readingTime?.dailySeconds ?? 0) / 60:00}m";
 
             if (storiesCompletedText != null)
                 storiesCompletedText.text = storiesRead.ToString();

@@ -201,13 +201,13 @@ public class ApiSmokeTest : MonoBehaviour
             var gamePayload = new
             {
                 gameId = "rhyme_time",
-                score = 100,
-                durationSeconds = 90
+                gameName = "RhymeTime",
+                score = 100
             };
 
             string payloadJson = JsonUtility.ToJson(gamePayload);
 
-            ActivityLogged activity = await childApi.LogGameActivityAsync(payloadJson);
+            ActivityLogged activity = await childApi.LogGameActivityAsync(payloadJson, 90);
 
             Debug.Log($"✅ Activity logged:");
             Debug.Log($"  - Activity ID: {activity.id}");

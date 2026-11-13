@@ -24,6 +24,31 @@ namespace Api.Models
         public string category;
         public string thumbnailUrl;
     }
+
+    // GET /api/admin/analytics/most-watched-stories — StoryWatchStatsDto (API doc §6.1.1)
+    [Serializable]
+    public class StoryWatchStats
+    {
+        public string storyId;
+        public string title;
+        public string category;
+        public string thumbnailUrl;
+        public int totalWatchSeconds;
+        public int readCount;
+    }
+
+    // GET /api/admin/analytics/most-played-games — GamePlayStatsDto (§6.1.1);
+    // gameId is null when the payload gameName matched no MiniGameContent row.
+    [Serializable]
+    public class GamePlayStats
+    {
+        public string gameId;
+        public string gameType;
+        public string title;
+        public string thumbnailUrl;
+        public int totalPlaySeconds;
+        public int playCount;
+    }
     
     // phone is not in the backend AdminProfileDto yet —
     // JsonUtility leaves it null until the backend adds it.
@@ -101,6 +126,17 @@ namespace Api.Endpoints
         public async Awaitable<AdminStats> GetStatsAsync()
         {
             return await client.GetAsync<AdminStats>("/api/admin/stats");
+        }
+
+        // Duration-ranked analytics (API doc §6.1.1); topN is clamped server-side to 1–50.
+        public async Awaitable<StoryWatchStats[]> GetMostWatchedStoriesAsync(int topN = 10)
+        {
+            return await client.GetAsync<StoryWatchStats[]>($"/api/admin/analytics/most-watched-stories?topN={topN}");
+        }
+
+        public async Awaitable<GamePlayStats[]> GetMostPlayedGamesAsync(int topN = 10)
+        {
+            return await client.GetAsync<GamePlayStats[]>($"/api/admin/analytics/most-played-games?topN={topN}");
         }
 
         // Stories CRUD
