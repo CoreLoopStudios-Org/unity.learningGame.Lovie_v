@@ -32,6 +32,7 @@ namespace UI
 
         [Header("Overview Section")]
         [SerializeField] private TextMeshProUGUI readingTimeText;
+        [SerializeField] private TextMeshProUGUI weeklyReadingTimeText;
         [SerializeField] private TextMeshProUGUI storiesCompletedText;
         [SerializeField] private TextMeshProUGUI newWordsText;
 
@@ -130,10 +131,11 @@ namespace UI
             {
                 ChildDetail detail = await parentApi.GetChildAsync(childId);
                 ChildActivity[] activities = await parentApi.GetChildActivitiesAsync(childId);
+                ReadingTime readingTime = await parentApi.GetChildReadingTimeAsync(childId);
 
                 if (id != requestId || !isActiveAndEnabled) return;
 
-                RenderChild(detail, activities);
+                RenderChild(detail, activities, readingTime);
             }
             catch (Exception ex)
             {
@@ -142,7 +144,7 @@ namespace UI
             }
         }
 
-        private void RenderChild(ChildDetail detail, ChildActivity[] activities)
+        private void RenderChild(ChildDetail detail, ChildActivity[] activities, ReadingTime readingTime)
         {
             if (childNameText != null)
             {
@@ -194,7 +196,10 @@ namespace UI
                 gamesPlayedText.text = gamesPlayed.ToString();
 
             if (readingTimeText != null)
-                readingTimeText.text = FormatTotalReadingTime(totalReadingSeconds);
+                readingTimeText.text = FormatReadingTime(totalReadingSeconds);
+
+            if (weeklyReadingTimeText != null)
+                weeklyReadingTimeText.text = FormatReadingTime(Mathf.Max(0, readingTime?.weeklySeconds ?? 0));
 
             // Payload has no completion flag, so completed = read until the API grows one.
             if (storiesCompletedText != null)
@@ -228,7 +233,7 @@ namespace UI
             }
         }
 
-        private static string FormatTotalReadingTime(int totalSeconds)
+        private static string FormatReadingTime(int totalSeconds)
         {
             int minutes = totalSeconds / 60;
 
@@ -259,6 +264,7 @@ namespace UI
             if (gamesPlayedText != null) gamesPlayedText.text = "0";
             if (coinsText != null) coinsText.text = "0";
             if (readingTimeText != null) readingTimeText.text = "0m";
+            if (weeklyReadingTimeText != null) weeklyReadingTimeText.text = "0m";
             if (storiesCompletedText != null) storiesCompletedText.text = "0";
             if (newWordsText != null) newWordsText.text = "0";
         }

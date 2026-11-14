@@ -24,6 +24,9 @@ namespace UI
         [SerializeField] private AdminTopContentCard[] storySlots;
         [SerializeField] private AdminTopContentCard[] gameSlots;
 
+        // topN for the analytics endpoints — matches the fixed slot count.
+        private const int TopContentCount = 3;
+
         private ApiClient apiClient;
         private AdminApi adminApi;
         private int requestId;
@@ -50,28 +53,34 @@ namespace UI
 
             int id = ++requestId;
 
+            AdminStats stats = await FetchQuietlyAsync(adminApi.GetStatsAsync(), "stats");
+            StoryWatchStats[] watchedStories = await FetchQuietlyAsync(adminApi.GetMostWatchedStoriesAsync(TopContentCount), "most-watched-stories");
+            GamePlayStats[] playedGames = await FetchQuietlyAsync(adminApi.GetMostPlayedGamesAsync(TopContentCount), "most-played-games");
+
+            // A newer request started or panel was disabled while awaiting.
+            if (id != requestId || !isActiveAndEnabled) return;
+
+            ApplySummary(stats);
+            FillSlots(storySlots, MapContent(watchedStories, s => new TopContent { name = s.title, category = s.category, thumbnailUrl = s.thumbnailUrl }));
+            FillSlots(gameSlots, MapContent(playedGames, g => new TopContent { name = g.title, category = g.gameType, thumbnailUrl = g.thumbnailUrl }));
+        }
+
+        // One list failing (e.g. analytics endpoint not deployed yet) must not
+        // blank the rest of the panel — return null, the slots just clear.
+        private async Awaitable<T> FetchQuietlyAsync<T>(Awaitable<T> request, string label) where T : class
+        {
             try
             {
-                AdminStats stats = await adminApi.GetStatsAsync();
-
-                // A newer request started or panel was disabled while awaiting.
-                if (id != requestId || !isActiveAndEnabled) return;
-
-                ApplyStats(stats);
-            }
-            catch (ApiException ex)
-            {
-                if (id == requestId)
-                    Debug.LogWarning($"[AdminHomePanelController] Failed to load stats: {ex.Message}");
+                return await request;
             }
             catch (Exception ex)
             {
-                if (id == requestId)
-                    Debug.LogWarning($"[AdminHomePanelController] Failed to load stats: {ex.Message}");
+                Debug.LogWarning($"[AdminHomePanelController] Failed to load {label}: {ex.Message}");
+                return null;
             }
         }
 
-        private void ApplyStats(AdminStats stats)
+        private void ApplySummary(AdminStats stats)
         {
             if (stats == null) return;
 
@@ -79,9 +88,18 @@ namespace UI
             if (totalStoriesText != null) totalStoriesText.text = stats.totalStories.ToString();
             if (totalKidsUsersText != null) totalKidsUsersText.text = stats.totalChildren.ToString();
             if (totalParentsText != null) totalParentsText.text = stats.totalParents.ToString();
+        }
 
-            FillSlots(storySlots, stats.mostWatchedStories);
-            FillSlots(gameSlots, stats.mostPlayedGames);
+        private static TopContent[] MapContent<T>(T[] items, Func<T, TopContent> map)
+        {
+            if (items == null) return null;
+
+            var result = new TopContent[items.Length];
+            for (int i = 0; i < items.Length; i++)
+            {
+                result[i] = items[i] == null ? null : map(items[i]);
+            }
+            return result;
         }
 
         /// <summary>

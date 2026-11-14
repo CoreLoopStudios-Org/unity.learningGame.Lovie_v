@@ -14,6 +14,7 @@ namespace Api
         public string id;
         public string endpoint;
         public string payload;
+        public int durationSeconds;
         public string createdAt;
     }
 
@@ -63,7 +64,7 @@ namespace Api
             InvokeRepeating(nameof(CheckAndFlushQueue), 5f, 15f);
         }
 
-        public void EnqueueActivity(string endpoint, string payload)
+        public void EnqueueActivity(string endpoint, string payload, int durationSeconds = 0)
         {
             try
             {
@@ -72,6 +73,7 @@ namespace Api
                     id = Guid.NewGuid().ToString(),
                     endpoint = endpoint,
                     payload = payload,
+                    durationSeconds = durationSeconds,
                     createdAt = DateTime.UtcNow.ToString("o")
                 };
 
@@ -136,7 +138,7 @@ namespace Api
                             // Route by endpoint type
                             if (item.endpoint.Contains("story", System.StringComparison.OrdinalIgnoreCase))
                             {
-                                result = await childApi.LogStoryActivityAsync(item.endpoint, item.payload);
+                                result = await childApi.LogStoryActivityAsync(item.endpoint, item.payload, item.durationSeconds);
                             }
                             else if (item.endpoint.Contains("quiz", System.StringComparison.OrdinalIgnoreCase))
                             {
@@ -145,7 +147,7 @@ namespace Api
                             else
                             {
                                 // Game activities only need payload
-                                result = await childApi.LogGameActivityAsync(item.payload);
+                                result = await childApi.LogGameActivityAsync(item.payload, item.durationSeconds);
                             }
 
                             if (result != null)

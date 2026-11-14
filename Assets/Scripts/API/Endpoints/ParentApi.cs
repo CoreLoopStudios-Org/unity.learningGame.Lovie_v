@@ -15,6 +15,16 @@ namespace Api.Models
         public string email;
         public string profilePictureUrl;
     }
+
+    // GET /api/parent/children/{id}/reading-time — ReadingTimeDto (API doc §5.7.1)
+    [Serializable]
+    public class ReadingTime
+    {
+        public string childId;
+        public int dailySeconds;
+        public int weeklySeconds;
+        public int totalSeconds;
+    }
 }
 
 namespace Api.Endpoints
@@ -104,6 +114,12 @@ namespace Api.Endpoints
         public async Awaitable<ChildActivity[]> GetChildActivitiesAsync(string id)
         {
             return await client.GetAsync<ChildActivity[]>($"/api/parent/children/{id}/activities");
+        }
+
+        // Daily = since 00:00 UTC today, weekly = rolling 7 days, total = all time (API doc §5.7.1).
+        public async Awaitable<ReadingTime> GetChildReadingTimeAsync(string id)
+        {
+            return await client.GetAsync<ReadingTime>($"/api/parent/children/{id}/reading-time");
         }
     }
 }

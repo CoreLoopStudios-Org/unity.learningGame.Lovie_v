@@ -263,21 +263,24 @@ namespace Api
             // The backend awards exactly the payload `coins` value (the game's
             // MiniGameInfo amount, 100/day cap across games) and returns the
             // authoritative balance in the response.
+            // gameName must be in the payload — analytics group plays by it, matched
+            // against MiniGameContent title/gameType; durationSeconds goes top-level.
             string payloadJson = JsonConvert.SerializeObject(new
             {
                 gameId = result.GameId,
+                gameName = ResolveGameName(result),
                 score = result.Score,
                 correctCount = result.CorrectCount,
                 totalCount = result.TotalCount,
-                durationSeconds = result.DurationSeconds,
                 coins = coinReward
             });
+            int durationSeconds = Mathf.RoundToInt(result.DurationSeconds);
 
             try
             {
                 if (childApi != null)
                 {
-                    response = await childApi.LogGameActivityAsync(payloadJson);
+                    response = await childApi.LogGameActivityAsync(payloadJson, durationSeconds);
                     activityLogged = true;
 
                     if (response != null && response.totalCoins > 0)
@@ -305,7 +308,7 @@ namespace Api
                 Debug.LogWarning($"[GameCompletionService] API warning: {ex.Message}");
                 if (!activityLogged)
                 {
-                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", payloadJson);
+                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", payloadJson, durationSeconds);
                 }
                 await RefreshWalletAfterFailedAwardAsync();
                 ShowCompletionPanel(result, coinReward);
@@ -315,11 +318,19 @@ namespace Api
                 Debug.LogError($"[GameCompletionService] Error reporting completion: {ex.Message}");
                 if (!activityLogged)
                 {
-                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", payloadJson);
+                    OfflineActivityQueue.Instance?.EnqueueActivity("/api/child/activities/game", payloadJson, durationSeconds);
                 }
                 await RefreshWalletAfterFailedAwardAsync();
                 ShowCompletionPanel(result, coinReward);
             }
+        }
+
+        // Analytics match plays by payload gameName against MiniGameContent title/gameType;
+        // the navigator enum name is that identifier, GameId is the editor-entry fallback.
+        private static string ResolveGameName(GameResult result)
+        {
+            var lastPlayed = UI.MiniGameNavigator.LastPlayed;
+            return lastPlayed.HasValue ? lastPlayed.Value.ToString() : result.GameId;
         }
 
         // The reward is defined per game on its MiniGameInfo SO (shown on the games-page

@@ -256,9 +256,9 @@ Note: questions are inside the `questionsPayload` JSON **string** — there is n
 
 | Endpoint | Request body |
 |----------|--------------|
-| `POST /api/child/activities/story` | `{ "storyId": "guid", "payload": "{\"pagesRead\":10,\"timeSpent\":300}" }` |
-| `POST /api/child/activities/quiz` | `{ "quizId": "guid", "payload": "{\"score\":85,\"timeSpent\":120}" }` |
-| `POST /api/child/activities/game` | `{ "payload": "{\"gameId\":\"rhyme_time\",\"score\":500,\"durationSeconds\":90}" }` |
+| `POST /api/child/activities/story` | `{ "storyId": "guid", "payload": "{\"pagesRead\":10,\"timeSpent\":300}", "durationSeconds": 300 }` — `durationSeconds` (optional int) is stored on the activity and feeds the reading-time aggregates (§4.11.1) and most-watched-stories (§6.1.1) |
+| `POST /api/child/activities/quiz` | `{ "quizId": "guid", "payload": "{\"score\":85,\"timeSpent\":120}" }` — payload MUST contain `quizId` and `score` (0–100) or no coins/points are computed |
+| `POST /api/child/activities/game` | `{ "payload": "{\"gameId\":\"rhyme_time\",\"gameName\":\"RhymeTime\",\"score\":500}", "durationSeconds": 90 }` — `durationSeconds` (optional int, top-level) feeds the most-played-games playtime stats (§6.1.1); the payload `gameName` is matched against MiniGameContent title/gameType — plays without it are excluded from those stats |
 
 `payload` is an opaque JSON string owned by the client.
 
@@ -268,6 +268,20 @@ Response — `ActivityLoggedDto`:
 ```
 
 🔧 Planned additive behavior + fields (GAP-2): server-side coin awards; response gains `coinsEarned`, `totalCoins`, `message`. Coins are computed server-side — client-sent amounts are never trusted.
+
+### 4.11.1 `GET /api/child/reading-time` — `ReadingTimeDto` (Redis-cached 60 s)
+
+Reading-time aggregates for the logged-in child, derived from `StoryRead` activities that carry a `durationSeconds` value (§4.9). Result is cached server-side (60 s TTL) and evicted whenever a duration-bearing story read is logged, so it reflects fresh sessions immediately.
+
+- **Daily**: sum of durations logged since 00:00 UTC today.
+- **Weekly**: sum over a rolling 7-day window.
+- **Total**: sum of all durations ever logged.
+
+```json
+{ "childId": "guid", "dailySeconds": 480, "weeklySeconds": 2100, "totalSeconds": 9800 }
+```
+
+Errors: `401` if the JWT has no child identity; `404` if the child record is missing.
 
 ### 4.12 `GET /api/child/store/items` — `StoreItemDto[]` (ordered by price)
 
@@ -365,6 +379,16 @@ Response: `true`
 [{ "id": "guid", "childId": "guid", "activityType": 1, "payload": "{...}", "createdAt": "..." }]
 ```
 
+### 5.7.1 `GET /api/parent/children/{id}/reading-time` — `ReadingTimeDto` (Redis-cached 60 s)
+
+Reading-time aggregates (daily/weekly/total seconds) for one of the parent's own children — same shape and semantics as §4.11.1.
+
+```json
+{ "childId": "guid", "dailySeconds": 480, "weeklySeconds": 2100, "totalSeconds": 9800 }
+```
+
+Errors: `401` if not a Parent; `404` if the child does not exist or belongs to another parent (ownership is verified before the cache, so cached results never bypass authorization).
+
 ### 5.8 `GET /api/parent/profile` — `ParentProfileDto`
 
 ```json
@@ -410,6 +434,30 @@ Response:
   "totalEarnings": 1500
 }
 ```
+
+`mostWatchedStories`/`mostPlayedGames` above are ranked by **count** (top 3). For duration-ranked lists see §6.1.1.
+
+### 6.1.1 Duration-ranked content analytics (2026-11-13, Redis-cached 60 s)
+
+#### `GET /api/admin/analytics/most-watched-stories?topN=10` — `StoryWatchStatsDto[]`
+
+Stories ranked by total watch/reading seconds summed from `StoryRead` activities that carry `durationSeconds` (§4.9). `topN` clamped to 1–50 (default 10). Rows logged before durations existed count toward `readCount` with 0 seconds. Ties break by count. Payload `storyId` is read case-insensitively (`storyId`/`StoryId`); the top-level request `storyId` is injected into the stored payload by the backend.
+
+```json
+[{ "storyId": "guid", "title": "Story 1", "category": "Adventure",
+   "thumbnailUrl": "...", "totalWatchSeconds": 12400, "readCount": 87 }]
+```
+
+#### `GET /api/admin/analytics/most-played-games?topN=10` — `GamePlayStatsDto[]`
+
+Games ranked by total playtime seconds summed from `GamePlayed` activities. Requires clients to send `durationSeconds` top-level on `POST /api/child/activities/game` (§4.9; optional — legacy rows count plays with 0 seconds). Game identity is the payload `gameName` string matched against MiniGameContent `title` or `gameType`; plays without a `gameName` payload key are excluded entirely, and unmatched names return `gameId: null` with the raw name as `title`.
+
+```json
+[{ "gameId": "guid-or-null", "gameType": "RhymeTime", "title": "Rhyme Time Pairs",
+   "thumbnailUrl": "...", "totalPlaySeconds": 8300, "playCount": 120 }]
+```
+
+Both lists are cached server-side (60 s TTL, self-expiring) — repeated calls within the window skip the aggregation query.
 
 ### 6.2 Users
 

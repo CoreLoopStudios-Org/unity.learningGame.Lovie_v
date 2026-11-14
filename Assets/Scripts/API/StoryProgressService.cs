@@ -49,27 +49,28 @@ namespace Api
             RewardProgressStore.ReportProgress("story_complete");
 
             // "isComplete" rides in the payload — the DB has no completion column.
+            int timeSpent = Mathf.RoundToInt(Time.unscaledTime - readingStartTime);
             string payload = JsonConvert.SerializeObject(new
             {
                 isComplete = true,
                 pagesRead = pageCount,
-                timeSpent = Mathf.RoundToInt(Time.unscaledTime - readingStartTime)
+                timeSpent
             });
-            _ = ReportCompletionAsync(story, payload);
+            _ = ReportCompletionAsync(story, payload, timeSpent);
         }
 
-        private static async Awaitable ReportCompletionAsync(Story story, string payload)
+        private static async Awaitable ReportCompletionAsync(Story story, string payload, int durationSeconds)
         {
             try
             {
                 var apiClient = ApiClient.Instance;
                 apiClient.Initialize(ApiConfig.Instance);
-                await new ChildApi(apiClient).LogStoryActivityAsync(story.id, payload);
+                await new ChildApi(apiClient).LogStoryActivityAsync(story.id, payload, durationSeconds);
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[StoryProgressService] Story completion log failed, queuing offline: {ex.Message}");
-                OfflineActivityQueue.Instance?.EnqueueActivity(story.id, payload);
+                OfflineActivityQueue.Instance?.EnqueueActivity(story.id, payload, durationSeconds);
             }
         }
 
