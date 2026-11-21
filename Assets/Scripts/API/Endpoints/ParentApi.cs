@@ -121,5 +121,17 @@ namespace Api.Endpoints
         {
             return await client.GetAsync<ReadingTime>($"/api/parent/children/{id}/reading-time");
         }
+
+        // POST /api/parent/profile/send-deletion-otp (API doc §5.11) — no request body.
+        public async Awaitable<object> SendDeletionOtpAsync()
+        {
+            return await client.PostAsync<object>("/api/parent/profile/send-deletion-otp", new { });
+        }
+
+        // POST /api/parent/profile/delete-account (API doc §5.12) — 204 on success.
+        public async Awaitable<bool> DeleteAccountAsync(string otp)
+        {
+            return await client.PostAsync<bool>("/api/parent/profile/delete-account", new { otp });
+        }
     }
 }
